@@ -16,6 +16,7 @@
 #include <string.h>
 #include "api_bridge.h"
 #include "innotech_ble.h"
+#include "innotech_utils.h"
 
 #include "esp_system.h"
 #include "esp_log.h"
@@ -352,9 +353,20 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                             notify_data[i] = i % 0xff;
                         }
                         //the size of notify_data[] need less than MTU size
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_A],
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_E],
                                                 sizeof(notify_data), notify_data, false);
-                    }else if (descr_value == 0x0002){
+                    }
+                    else if (descr_value == 0x0000){
+                        ESP_LOGI(GATTS_TABLE_TAG, "notify/indicate disable ");
+                    }else{
+                        ESP_LOGE(GATTS_TABLE_TAG, "unknown descr value");
+                        esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
+                    }
+
+                }
+                else if (heart_rate_handle_table[IDX_CHAR_CFG_C] == param->write.handle && param->write.len == 2){
+                    uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
+                    if (descr_value == 0x0002){
                         ESP_LOGI(GATTS_TABLE_TAG, "indicate enable");
                         uint8_t indicate_data[15];
                         for (int i = 0; i < sizeof(indicate_data); ++i)
@@ -362,7 +374,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                             indicate_data[i] = i % 0xff;
                         }
                         //the size of indicate_data[] need less than MTU size
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_A],
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C],
                                             sizeof(indicate_data), indicate_data, true);
                     }
                     else if (descr_value == 0x0000){
@@ -372,6 +384,33 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                         esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
                     }
 
+                }
+                else if (heart_rate_handle_table[IDX_CHAR_VAL_B] == param->write.handle && param->write.len == 20)
+                {
+                    uint8_t msg_id = param->write.value[0];
+                    uint8_t cmd = param->write.value[1];
+                    uint8_t frame_seq = param->write.value[2] & 0xF;
+                    uint8_t toatal_frame = (param->write.value[2] >> 4) & 0xF;
+                    uint8_t frame_len = param->write.value[3];
+
+                    if(cmd == 0x10)
+                    {
+                        uint8_t random[16] = {0};
+                        uint8_t combined[1024] = {0};
+                        uint8_t output[32];
+                        uint8_t ble_key[16] = {0};
+                        uint8_t iv[16] = {0}; // 16字节的初始化向量
+                        uint8_t cipher[1024];
+
+                        ESP_LOGI(GATTS_TABLE_TAG, "indicate enable");
+                        hex_array_to_string(&(param->write.value[4]), frame_len, random);
+                        sprintf((char *)combined, "%s,%s,%s,%s", random, "B4", "C411E10077EF", "5c21d4ce60faad62e9488aa62768fe81");
+                        sha256_encrypt(combined, strlen((char *)combined), output);
+                        strncpy((char *)ble_key, (char *)output, 16);
+                        strncpy((char *)iv, (char *)random, 16);
+
+                        aes128_cbc_encrypt(ble_key, iv, random, 16, cipher);
+                    }
                 }
                 /* send response when param->write.need_rsp is true*/
                 if (param->write.need_rsp){
