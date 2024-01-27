@@ -12,31 +12,34 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <openssl/sha.h>
-#include <openssl/aes.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/aes.h>
 #include "innotech_utils.h"
 
 void hex_array_to_string(unsigned char* hexArray, int length, unsigned char* output) 
 {
     for (int i = 0; i < length; i++) 
     {
-        sprintf(output + (i * 2), "%02x", hexArray[i]);
+        sprintf((char *)output + (i * 2), "%02x", hexArray[i]);
     }
     output[length * 2] = '\0';
 }
 
 void sha256_encrypt(unsigned char *input, size_t len, unsigned char *output)
 {
-    SHA256_CTX context;
-    SHA256_Init(&context);
-    SHA256_Update(&context, input, len);
-    SHA256_Final(output, &context);
+    mbedtls_sha256_context context;
+    mbedtls_sha256_init(&context);
+    mbedtls_sha256_starts(&context, false);
+    mbedtls_sha256_update(&context, input, len);
+    mbedtls_sha256_finish(&context, output);
+    mbedtls_sha256_free(&context);
 }
 
-void aes128_cbc_encrypt(unsigned char *key, cunsigned char *iv, unsigned char *input, size_t len, unsigned char *output)
+void aes128_cbc_encrypt(unsigned char *key, unsigned char *iv, unsigned char *input, size_t len, unsigned char *output)
 {
-    AES_KEY aesKey;
-    AES_set_encrypt_key(key, 128, &aesKey);
-    AES_cbc_encrypt(input, output, len, &aesKey, iv, AES_ENCRYPT);
+    mbedtls_aes_context aesKey;
+    mbedtls_aes_setkey_enc(&aesKey, key, 128);
+    mbedtls_aes_crypt_cbc(&aesKey, MBEDTLS_AES_ENCRYPT, len, iv, input, output);
+    mbedtls_aes_free(&aesKey);
 }
 

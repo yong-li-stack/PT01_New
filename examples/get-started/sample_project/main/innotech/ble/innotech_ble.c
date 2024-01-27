@@ -48,6 +48,12 @@ static uint8_t adv_config_done       = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
 
+uint8_t noncestr[16] = {0};
+uint8_t combined[1024] = {0};
+uint8_t output[32];
+uint8_t ble_key[16] = {0};
+uint8_t iv[16] = {0}; // 16字节的初始化向量
+uint8_t cipher[1024];
 typedef struct {
     uint8_t                 *prepare_buf;
     int                     prepare_len;
@@ -341,6 +347,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
         case ESP_GATTS_WRITE_EVT:
             if (!param->write.is_prep){
                 // the data length of gattc write  must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
+                printf("GATT_WRITE_EVT, handle = %d, value len = %ld", param->write.conn_id, param->write.trans_id);
                 ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
                 esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
                 if (heart_rate_handle_table[IDX_CHAR_CFG_E] == param->write.handle && param->write.len == 2){
@@ -395,21 +402,26 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
 
                     if(cmd == 0x10)
                     {
-                        uint8_t random[16] = {0};
-                        uint8_t combined[1024] = {0};
-                        uint8_t output[32];
-                        uint8_t ble_key[16] = {0};
-                        uint8_t iv[16] = {0}; // 16字节的初始化向量
-                        uint8_t cipher[1024];
-
-                        ESP_LOGI(GATTS_TABLE_TAG, "indicate enable");
-                        hex_array_to_string(&(param->write.value[4]), frame_len, random);
-                        sprintf((char *)combined, "%s,%s,%s,%s", random, "B4", "C411E10077EF", "5c21d4ce60faad62e9488aa62768fe81");
+                        hex_array_to_string(&(param->write.value[4]), frame_len, noncestr);
+                        sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "B4", "C411E10077EF", "5c21d4ce60faad62e9488aa62768fe81");
                         sha256_encrypt(combined, strlen((char *)combined), output);
                         strncpy((char *)ble_key, (char *)output, 16);
-                        strncpy((char *)iv, (char *)random, 16);
+                        strncpy((char *)iv, (char *)noncestr, 16);
 
-                        aes128_cbc_encrypt(ble_key, iv, random, 16, cipher);
+                        aes128_cbc_encrypt(ble_key, iv, noncestr, 16, cipher);
+
+                        esp_gatt_rsp_t gatt_rsp = {0};
+                        gatt_rsp.attr_value.len = 20;
+                        gatt_rsp.attr_value.handle = param->write.handle;
+                        gatt_rsp.attr_value.offset = param->write.offset;
+                        gatt_rsp.attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
+                        gatt_rsp.attr_value.value[0] = msg_id;
+                        gatt_rsp.attr_value.value[1] = 0x11;
+                        gatt_rsp.attr_value.value[2] = 0;
+                        gatt_rsp.attr_value.value[3] = 0x10;
+                        memcpy(&(gatt_rsp.attr_value.value[4]), cipher, 16);
+                        esp_log_buffer_hex(GATTS_TABLE_TAG, gatt_rsp.attr_value.value, 20);
+                        esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, &gatt_rsp);
                     }
                 }
                 /* send response when param->write.need_rsp is true*/
