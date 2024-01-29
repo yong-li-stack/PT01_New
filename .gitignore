@@ -33,7 +33,6 @@ components/**/sdkconfig.old
 # Example project files
 examples/**/build/
 examples/**/build_esp*_*/
-examples/**/sdkconfig
 examples/**/sdkconfig.old
 
 # Doc build artifacts
