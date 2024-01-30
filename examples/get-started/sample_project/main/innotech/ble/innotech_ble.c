@@ -49,11 +49,11 @@ static uint8_t adv_config_done       = 0;
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
 
 uint8_t noncestr[16] = {0};
-uint8_t combined[1024] = {0};
+uint8_t combined[128] = {0};
 uint8_t output[32];
 uint8_t ble_key[16] = {0};
-uint8_t iv[16] = {0}; // 16字节的初始化向量
-uint8_t cipher[1024];
+uint8_t iv[16] = {0}; // 16 byte initialization vector
+uint8_t cipher[16];
 typedef struct {
     uint8_t                 *prepare_buf;
     int                     prepare_len;
@@ -162,12 +162,12 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
 
     /* Characteristic Declaration */
     [IDX_CHAR_B]      =
-    {{ESP_GATT_RSP_BY_APP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_WRITE,
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_WRITE,
       CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_read_write}},
 
     /* Characteristic Value */
     [IDX_CHAR_VAL_B]  =
-    {{ESP_GATT_RSP_BY_APP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_B, ESP_GATT_PERM_WRITE,
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_B, ESP_GATT_PERM_WRITE,
       GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
 
     /* Characteristic Declaration */
@@ -347,70 +347,36 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
         case ESP_GATTS_WRITE_EVT:
             if (!param->write.is_prep){
                 // the data length of gattc write  must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
-                printf("GATT_WRITE_EVT, handle = %d, value len = %ld", param->write.conn_id, param->write.trans_id);
                 ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
                 esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-                if (heart_rate_handle_table[IDX_CHAR_CFG_E] == param->write.handle && param->write.len == 2){
-                    uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
-                    if (descr_value == 0x0001){
-                        ESP_LOGI(GATTS_TABLE_TAG, "notify enable");
-                        uint8_t notify_data[15];
-                        for (int i = 0; i < sizeof(notify_data); ++i)
-                        {
-                            notify_data[i] = i % 0xff;
-                        }
-                        //the size of notify_data[] need less than MTU size
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_E],
-                                                sizeof(notify_data), notify_data, false);
-                    }
-                    else if (descr_value == 0x0000){
-                        ESP_LOGI(GATTS_TABLE_TAG, "notify/indicate disable ");
-                    }else{
-                        ESP_LOGE(GATTS_TABLE_TAG, "unknown descr value");
-                        esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-                    }
-
-                }
-                else if (heart_rate_handle_table[IDX_CHAR_CFG_C] == param->write.handle && param->write.len == 2){
-                    uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
-                    if (descr_value == 0x0002){
-                        ESP_LOGI(GATTS_TABLE_TAG, "indicate enable");
-                        uint8_t indicate_data[15];
-                        for (int i = 0; i < sizeof(indicate_data); ++i)
-                        {
-                            indicate_data[i] = i % 0xff;
-                        }
-                        //the size of indicate_data[] need less than MTU size
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C],
-                                            sizeof(indicate_data), indicate_data, true);
-                    }
-                    else if (descr_value == 0x0000){
-                        ESP_LOGI(GATTS_TABLE_TAG, "notify/indicate disable ");
-                    }else{
-                        ESP_LOGE(GATTS_TABLE_TAG, "unknown descr value");
-                        esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-                    }
-
-                }
-                else if (heart_rate_handle_table[IDX_CHAR_VAL_B] == param->write.handle && param->write.len == 20)
+                
+                if (heart_rate_handle_table[IDX_CHAR_VAL_B] == param->write.handle && param->write.len == 20)
                 {
                     uint8_t msg_id = param->write.value[0];
                     uint8_t cmd = param->write.value[1];
                     uint8_t frame_seq = param->write.value[2] & 0xF;
                     uint8_t toatal_frame = (param->write.value[2] >> 4) & 0xF;
                     uint8_t frame_len = param->write.value[3];
-
+                    
                     if(cmd == 0x10)
                     {
-                        hex_array_to_string(&(param->write.value[4]), frame_len, noncestr);
+                        hex_array_to_string(param->write.value+4, frame_len, noncestr);
                         sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "B4", "C411E10077EF", "5c21d4ce60faad62e9488aa62768fe81");
                         sha256_encrypt(combined, strlen((char *)combined), output);
-                        strncpy((char *)ble_key, (char *)output, 16);
-                        strncpy((char *)iv, (char *)noncestr, 16);
-
+                        memcpy((char *)ble_key, (char *)output, 16);
+                        memcpy((char *)iv, (char *)param->write.value+4, 16);
                         aes128_cbc_encrypt(ble_key, iv, noncestr, 16, cipher);
 
-                        esp_gatt_rsp_t gatt_rsp = {0};
+                        uint8_t data[20] = {0};
+                        data[0] = msg_id;
+                        data[1] = 0x11;
+                        data[2] = 0;
+                        data[3] = 0x10;
+                        memcpy(data+4, cipher, 16);
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_B], 20, data, false);
+                        ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                        esp_log_buffer_hex(GATTS_TABLE_TAG, data, 20);
+                        /*esp_gatt_rsp_t gatt_rsp = {0};
                         gatt_rsp.attr_value.len = 20;
                         gatt_rsp.attr_value.handle = param->write.handle;
                         gatt_rsp.attr_value.offset = param->write.offset;
@@ -421,7 +387,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                         gatt_rsp.attr_value.value[3] = 0x10;
                         memcpy(&(gatt_rsp.attr_value.value[4]), cipher, 16);
                         esp_log_buffer_hex(GATTS_TABLE_TAG, gatt_rsp.attr_value.value, 20);
-                        esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, &gatt_rsp);
+                        esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, &gatt_rsp);*/
                     }
                 }
                 /* send response when param->write.need_rsp is true*/
