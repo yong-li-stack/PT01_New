@@ -136,6 +136,7 @@ void innotech_lcd_process(void)
 
 void innotech_lcd_init(void)
 {
+    innotech_set_gpio_level(1, 1);
     ESP_LOGI(TAG, "Install 3-wire SPI panel IO");
     spi_line_config_t line_config = {
         .cs_io_type = IO_TYPE_GPIO,

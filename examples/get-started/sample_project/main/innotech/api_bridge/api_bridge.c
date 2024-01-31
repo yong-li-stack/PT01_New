@@ -141,3 +141,13 @@ void innotech_flash_init(void)
     }
     ESP_ERROR_CHECK(err);
 }
+
+int innotech_read_gpio_level(int pin)
+{
+    return gpio_get_level(pin);
+}
+
+void innotech_set_gpio_level(int pin, uint32_t level)
+{
+    gpio_set_level(pin, level);
+}

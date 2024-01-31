@@ -29,5 +29,8 @@ void innotech_flash_read(char * key, char* data, size_t data_size);
 void innotech_flash_write(char * key, char* data, size_t data_size);
 void innotech_flash_init(void);
 
+int innotech_read_gpio_level(int pin);
+void innotech_set_gpio_level(int pin, uint32_t level);
+
 #endif
 
