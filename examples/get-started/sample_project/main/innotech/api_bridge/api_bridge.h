@@ -31,6 +31,7 @@ void innotech_flash_init(void);
 
 int innotech_read_gpio_level(int pin);
 void innotech_set_gpio_level(int pin, uint32_t level);
+void innotech_gpio_mode_init(uint8_t gpio_num, uint8_t mode, uint8_t down, uint8_t up);
 
 #endif
 

@@ -151,3 +151,15 @@ void innotech_set_gpio_level(int pin, uint32_t level)
 {
     gpio_set_level(pin, level);
 }
+
+void innotech_gpio_mode_init(uint8_t gpio_num, uint8_t mode, uint8_t down, uint8_t up)
+{
+     gpio_config_t cfg = {
+            .pin_bit_mask = BIT64(gpio_num),
+            .mode = mode,
+            .pull_up_en = up,
+            .pull_down_en = down,
+            .intr_type = GPIO_INTR_DISABLE
+        };
+    gpio_config(&cfg);
+}
