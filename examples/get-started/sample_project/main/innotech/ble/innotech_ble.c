@@ -25,6 +25,7 @@
 #include "esp_gatts_api.h"
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
+#include "esp_mac.h"
 
 #define GATTS_TABLE_TAG "INNOTECH_GATTS"
 
@@ -48,18 +49,12 @@ static uint8_t adv_config_done       = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
 
-uint8_t noncestr[16] = {0};
-uint8_t combined[128] = {0};
-uint8_t output[32];
 uint8_t ble_key[16] = {0};
 uint8_t iv[16] = {0}; // 16 byte initialization vector
-uint8_t cipher[16];
 typedef struct {
     uint8_t                 *prepare_buf;
     int                     prepare_len;
 } prepare_type_env_t;
-
-static prepare_type_env_t prepare_write_env;
 
 #if 0
 static uint8_t raw_adv_data[] = {
@@ -72,9 +67,9 @@ static uint8_t raw_adv_data[] = {
         /* device name */
         0x0f, 0x09, 'E', 'S', 'P', '_', 'G', 'A', 'T', 'T', 'S', '_', 'D','E', 'M', 'O'
 };
-#endif
+#endif//C411E10077EF
 static uint8_t raw_adv_data[] = {
-        0x0F, 0xFF, 0x12, 0x07, 0xB1, 0x03, 0xB4, 0x00, 0x00, 0x00, 0x9E, 0xF9, 0xFF, 0xE2, 0x27, 0x48,
+        0x0F, 0xFF, 0x12, 0x07, 0xB1, 0x03, 0xB4, 0x00, 0x00, 0x00, 0xEF, 0x77, 0x00, 0xE1, 0x11, 0xC4,
         /* service uuid */
         0x03, 0x03, 0xB3, 0xFE,
 };
@@ -162,12 +157,12 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
 
     /* Characteristic Declaration */
     [IDX_CHAR_B]      =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_WRITE,
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
       CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_read_write}},
 
     /* Characteristic Value */
     [IDX_CHAR_VAL_B]  =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_B, ESP_GATT_PERM_WRITE,
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_B, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
       GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
 
     /* Characteristic Declaration */
@@ -256,65 +251,6 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     }
 }
 
-void example_prepare_write_event_env(esp_gatt_if_t gatts_if, prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param)
-{
-    ESP_LOGI(GATTS_TABLE_TAG, "prepare write, handle = %d, value len = %d", param->write.handle, param->write.len);
-    esp_gatt_status_t status = ESP_GATT_OK;
-    if (prepare_write_env->prepare_buf == NULL) {
-        prepare_write_env->prepare_buf = (uint8_t *)malloc(PREPARE_BUF_MAX_SIZE * sizeof(uint8_t));
-        prepare_write_env->prepare_len = 0;
-        if (prepare_write_env->prepare_buf == NULL) {
-            ESP_LOGE(GATTS_TABLE_TAG, "%s, Gatt_server prep no mem", __func__);
-            status = ESP_GATT_NO_RESOURCES;
-        }
-    } else {
-        if(param->write.offset > PREPARE_BUF_MAX_SIZE) {
-            status = ESP_GATT_INVALID_OFFSET;
-        } else if ((param->write.offset + param->write.len) > PREPARE_BUF_MAX_SIZE) {
-            status = ESP_GATT_INVALID_ATTR_LEN;
-        }
-    }
-    /*send response when param->write.need_rsp is true */
-    if (param->write.need_rsp){
-        esp_gatt_rsp_t *gatt_rsp = (esp_gatt_rsp_t *)malloc(sizeof(esp_gatt_rsp_t));
-        if (gatt_rsp != NULL){
-            gatt_rsp->attr_value.len = param->write.len;
-            gatt_rsp->attr_value.handle = param->write.handle;
-            gatt_rsp->attr_value.offset = param->write.offset;
-            gatt_rsp->attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
-            memcpy(gatt_rsp->attr_value.value, param->write.value, param->write.len);
-            esp_err_t response_err = esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, status, gatt_rsp);
-            if (response_err != ESP_OK){
-               ESP_LOGE(GATTS_TABLE_TAG, "Send response error");
-            }
-            free(gatt_rsp);
-        }else{
-            ESP_LOGE(GATTS_TABLE_TAG, "%s, malloc failed", __func__);
-        }
-    }
-    if (status != ESP_GATT_OK){
-        return;
-    }
-    memcpy(prepare_write_env->prepare_buf + param->write.offset,
-           param->write.value,
-           param->write.len);
-    prepare_write_env->prepare_len += param->write.len;
-
-}
-
-void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param){
-    if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC && prepare_write_env->prepare_buf){
-        esp_log_buffer_hex(GATTS_TABLE_TAG, prepare_write_env->prepare_buf, prepare_write_env->prepare_len);
-    }else{
-        ESP_LOGI(GATTS_TABLE_TAG,"ESP_GATT_PREP_WRITE_CANCEL");
-    }
-    if (prepare_write_env->prepare_buf) {
-        free(prepare_write_env->prepare_buf);
-        prepare_write_env->prepare_buf = NULL;
-    }
-    prepare_write_env->prepare_len = 0;
-}
-
 static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
 {
     switch (event) {
@@ -350,59 +286,86 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
                 esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
                 
-                if (heart_rate_handle_table[IDX_CHAR_VAL_B] == param->write.handle && param->write.len == 20)
+                uint8_t msg_id = param->write.value[0];
+                uint8_t cmd = param->write.value[1];
+                uint8_t frame_seq = param->write.value[2] & 0xF;
+                uint8_t toatal_frame = (param->write.value[2] >> 4) & 0xF;
+                uint8_t frame_len = param->write.value[3];
+                uint8_t data[20] = {0};
+                uint8_t len = 0;
+                
+                if(cmd == 0x10)
                 {
-                    uint8_t msg_id = param->write.value[0];
-                    uint8_t cmd = param->write.value[1];
-                    uint8_t frame_seq = param->write.value[2] & 0xF;
-                    uint8_t toatal_frame = (param->write.value[2] >> 4) & 0xF;
-                    uint8_t frame_len = param->write.value[3];
-                    
-                    if(cmd == 0x10)
-                    {
-                        hex_array_to_string(param->write.value+4, frame_len, noncestr);
-                        sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "B4", "C411E10077EF", "5c21d4ce60faad62e9488aa62768fe81");
-                        sha256_encrypt(combined, strlen((char *)combined), output);
-                        memcpy((char *)ble_key, (char *)output, 16);
-                        memcpy((char *)iv, (char *)param->write.value+4, 16);
-                        aes128_cbc_encrypt(ble_key, iv, noncestr, 16, cipher);
+                    uint8_t noncestr[16] = {0};
+                    uint8_t combined[128] = {0};
+                    uint8_t output[32] = {0};
+                    uint8_t cipher[16] = {0};
 
-                        uint8_t data[20] = {0};
-                        data[0] = msg_id;
-                        data[1] = 0x11;
-                        data[2] = 0;
-                        data[3] = 0x10;
-                        memcpy(data+4, cipher, 16);
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_B], 20, data, false);
-                        ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
-                        esp_log_buffer_hex(GATTS_TABLE_TAG, data, 20);
-                        /*esp_gatt_rsp_t gatt_rsp = {0};
-                        gatt_rsp.attr_value.len = 20;
-                        gatt_rsp.attr_value.handle = param->write.handle;
-                        gatt_rsp.attr_value.offset = param->write.offset;
-                        gatt_rsp.attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
-                        gatt_rsp.attr_value.value[0] = msg_id;
-                        gatt_rsp.attr_value.value[1] = 0x11;
-                        gatt_rsp.attr_value.value[2] = 0;
-                        gatt_rsp.attr_value.value[3] = 0x10;
-                        memcpy(&(gatt_rsp.attr_value.value[4]), cipher, 16);
-                        esp_log_buffer_hex(GATTS_TABLE_TAG, gatt_rsp.attr_value.value, 20);
-                        esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, &gatt_rsp);*/
-                    }
+                    hex_array_to_string(param->write.value+4, frame_len, noncestr);
+                    sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "000000b4", "c411e10077ef", "5c21d4ce60faad62e9488aa62768fe81");
+                    sha256_encrypt(combined, strlen((char *)combined), output);
+                    memcpy((char *)ble_key, (char *)output, 16);
+                    aes128_cbc_encrypt(ble_key, iv, noncestr, 16, cipher);
+
+                    data[len++] = msg_id;
+                    data[len++] = 0x11;
+                    data[len++] = 0;
+                    data[len++] = 0x10;
+                    memcpy(data+4, cipher, 16);
+                    len += 16;
+                    esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], 20, data, false);
+                    ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
                 }
+                else if (cmd == 0x12)
+                {
+                    data[len++] = msg_id;
+                    data[len++] = 0x13;
+                    data[len++] = 0x00;
+                    data[len++] = 0x01;
+                    data[len++] = 0x00;
+                    esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
+                    ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+                }
+                else if (cmd == 0x14)
+                {
+                    data[len++] = msg_id;
+                    data[len++] = 0x15;
+                    data[len++] = 0x00;
+                    data[len++] = 0x01;
+                    data[len++] = 0x01;
+                    esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
+                    ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+                }
+                else if (cmd == 0x0d)
+                {
+                    uint8_t cipher[128] = {0};
+                    uint8_t dec_plain[32] = {0};
+                    memcpy((char *)cipher, (char *)param->write.value+4, 32);
+                    aes128_cbc_decrypt(ble_key, iv, cipher, 32, dec_plain);
+                    
+                    /*data[len++] = msg_id;
+                    data[len++] = 0x0F;
+                    data[len++] = 0x00;
+                    data[len++] = 0x01;
+                    data[len++] = 0x01;
+                    esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
+                    ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);*/
+                }
+
                 /* send response when param->write.need_rsp is true*/
                 if (param->write.need_rsp){
                     esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
                 }
-            }else{
-                /* handle prepare write */
-                example_prepare_write_event_env(gatts_if, &prepare_write_env, param);
             }
       	    break;
         case ESP_GATTS_EXEC_WRITE_EVT:
             // the length of gattc prepare write data must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
             ESP_LOGI(GATTS_TABLE_TAG, "ESP_GATTS_EXEC_WRITE_EVT");
-            example_exec_write_event_env(&prepare_write_env, param);
+            //example_exec_write_event_env(&prepare_write_env, param);
             break;
         case ESP_GATTS_MTU_EVT:
             ESP_LOGI(GATTS_TABLE_TAG, "ESP_GATTS_MTU_EVT, MTU %d", param->mtu.mtu);
@@ -489,6 +452,10 @@ void innotech_ble_init(void)
 {
     esp_err_t ret;
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+
+    //uint8_t base_mac_addr[6] = {0xEF, 0x77, 0x00, 0xE1, 0x11, 0xC4};
+    uint8_t base_mac_addr[6] = {0xC4, 0x11, 0xE1, 0x00, 0x77, 0xED};
+    esp_iface_mac_addr_set(base_mac_addr, ESP_MAC_BASE);
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     ret = esp_bt_controller_init(&bt_cfg);
