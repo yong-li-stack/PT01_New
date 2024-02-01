@@ -22,9 +22,15 @@ extern "C"
 /* Exported macro -----------------------------------------------------------*/
 
 /* Exported constants --------------------------------------------------------*/
-
+typedef struct
+{
+    uint8_t ssid_len;
+	uint8_t ssid[32];
+    uint8_t pwd_len;
+	uint8_t password[64];
+} wifi_param_t;
 /* Exported functions ------------------------------------------------------- */
-void wifi_init_sta(uint8_t *wifi_ssid, uint8_t *wifi_password);
+void wifi_init_sta(wifi_param_t wifi);
 
 #ifdef __cplusplus
 }

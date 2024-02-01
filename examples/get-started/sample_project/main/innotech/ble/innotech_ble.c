@@ -376,7 +376,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
                     ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
                     esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
-                    //wifi_init_sta(wifi);
+                    wifi_init_sta(wifi);
                 }
 
                 /* send response when param->write.need_rsp is true*/

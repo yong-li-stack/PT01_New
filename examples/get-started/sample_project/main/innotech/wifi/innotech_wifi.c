@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "api_bridge.h"
+#include "innotech_wifi.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -74,7 +75,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-void wifi_init_sta(uint8_t *wifi_ssid, uint8_t *wifi_password)
+void wifi_init_sta(wifi_param_t wifi)
 {
     s_wifi_event_group = xEventGroupCreate();
 
@@ -105,8 +106,8 @@ void wifi_init_sta(uint8_t *wifi_ssid, uint8_t *wifi_password)
             .sae_h2e_identifier = H2E_IDENTIFIER,
         },
     };
-    memcpy(wifi_config.sta.ssid, wifi_ssid, strlen((const char*)wifi_ssid));
-    memcpy(wifi_config.sta.password, wifi_ssid, strlen((const char*)wifi_password));
+    memcpy(wifi_config.sta.ssid, wifi.ssid, wifi.ssid_len);
+    memcpy(wifi_config.sta.password, wifi.password, wifi.pwd_len);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
@@ -121,11 +122,11 @@ void wifi_init_sta(uint8_t *wifi_ssid, uint8_t *wifi_password)
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) 
     {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi_ssid, wifi_password);
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
     } 
     else if (bits & WIFI_FAIL_BIT) 
     {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi_ssid, wifi_password);
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi.ssid, wifi.password);
     }
     else 
     {
