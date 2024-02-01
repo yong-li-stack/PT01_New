@@ -358,13 +358,11 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     {
                         wifi.ssid_len = dec_plain[3];
                         hex_array_to_string(dec_plain+4, wifi.ssid_len, wifi.ssid);
-                        printf("ssid: %s len: %d\r\n", (char *)wifi.ssid, wifi.ssid_len);
                     }
                     if(dec_plain[4+wifi.ssid_len] == 0x02)
                     {
                         wifi.pwd_len = dec_plain[5+wifi.ssid_len];
                         hex_array_to_string(dec_plain+6+wifi.ssid_len, wifi.pwd_len, wifi.password);
-                        printf("password: %s len: %d\r\n", (char *)wifi.password, wifi.pwd_len);
                     }
                     
                     data[len++] = msg_id;
