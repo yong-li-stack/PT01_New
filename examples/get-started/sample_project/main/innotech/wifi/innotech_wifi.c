@@ -29,6 +29,9 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "mqtt_client.h"
+#include "mqtt_ca.h"
+
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -38,13 +41,146 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-static const char *TAG = "wifi station";
+static const char *TAG = "INNOTECH_WIFI";
 
 static int s_retry_num = 0;
 
 #define ESP_MAXIMUM_RETRY  5
-
 #define H2E_IDENTIFIER ""
+
+/*Broker Address：${YourProductKey}.iot-as-mqtt.${YourRegionId}.aliyuncs.com*/
+#define   Aliyun_host       "k0pjvS74W3M.iot-as-mqtt.cn-shanghai.aliyuncs.com"
+#define   Aliyun_port       8883
+/*Client ID：     ${ClientID}|securemode=${Mode},signmethod=${SignMethod}|*/
+#define   Aliyun_client_id  "lyfpzq|securemode=2,signmethod=hmacsha1,timestamp=1704972500483|"
+/*User Name：     ${DeviceName}&${ProductKey}*/
+#define   Aliyun_username   "lyf_pzq&k0pjvS74W3M"
+/*使用官网 MQTT_Password 工具生成*/
+#define   Aliyun_password   "8618C8681874B00CD66011AE13E0349F85222ADC"
+
+#define   AliyunSubscribeTopic_user_get     "/k0pjvS74W3M/lyf_pzq/user/get"
+#define   AliyunPublishTopic_user_update    "/k0pjvS74W3M/lyf_pzq/user/update"
+
+#if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
+static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
+#else
+extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_eclipseprojects_io_pem_start");
+#endif
+extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
+
+//
+// Note: this function is for testing purposes only publishing part of the active partition
+//       (to be checked against the original binary)
+//
+static void send_binary(esp_mqtt_client_handle_t client)
+{
+    //esp_partition_mmap_handle_t out_handle;
+    //const void *binary_address;
+    //const esp_partition_t *partition = esp_ota_get_running_partition();
+    //esp_partition_mmap(partition, 0, partition->size, ESP_PARTITION_MMAP_DATA, &binary_address, &out_handle);
+    // sending only the configured portion of the partition (if it's less than the partition size)
+    //int binary_size = MIN(CONFIG_BROKER_BIN_SIZE_TO_SEND, partition->size);
+    int msg_id = esp_mqtt_client_publish(client, "/topic/binary", "hello", sizeof("hello"), 0, 0);
+    ESP_LOGI(TAG, "binary sent with msg_id=%d", msg_id);
+}
+
+/*
+ * @brief Event handler registered to receive MQTT events
+ *
+ *  This function is called by the MQTT client event loop.
+ *
+ * @param handler_args user data registered to the event.
+ * @param base Event base for the handler(always MQTT Base in this example).
+ * @param event_id The id for the received event.
+ * @param event_data The data for the event, esp_mqtt_event_handle_t.
+ */
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
+    esp_mqtt_event_handle_t event = event_data;
+    esp_mqtt_client_handle_t client = event->client;
+    int msg_id;
+    switch ((esp_mqtt_event_id_t)event_id) {
+    case MQTT_EVENT_CONNECTED:
+        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+        msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
+        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+        break;
+    case MQTT_EVENT_DISCONNECTED:
+        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+        break;
+
+    case MQTT_EVENT_SUBSCRIBED:
+        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
+        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+        break;
+    case MQTT_EVENT_UNSUBSCRIBED:
+        ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+        break;
+    case MQTT_EVENT_PUBLISHED:
+        ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+        break;
+    case MQTT_EVENT_DATA:
+        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+        printf("DATA=%.*s\r\n", event->data_len, event->data);
+        if (strncmp(event->data, "send binary please", event->data_len) == 0) {
+            ESP_LOGI(TAG, "Sending the binary");
+            send_binary(client);
+        }
+        break;
+    case MQTT_EVENT_ERROR:
+        ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+            ESP_LOGI(TAG, "Last error code reported from esp-tls: 0x%x", event->error_handle->esp_tls_last_esp_err);
+            ESP_LOGI(TAG, "Last tls stack error number: 0x%x", event->error_handle->esp_tls_stack_err);
+            ESP_LOGI(TAG, "Last captured errno : %d (%s)",  event->error_handle->esp_transport_sock_errno,
+                     strerror(event->error_handle->esp_transport_sock_errno));
+        } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
+            ESP_LOGI(TAG, "Connection refused error: 0x%x", event->error_handle->connect_return_code);
+        } else {
+            ESP_LOGW(TAG, "Unknown error type: 0x%x", event->error_handle->error_type);
+        }
+        break;
+    default:
+        ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+        break;
+    }
+}
+
+static void mqtt_app_start(void)
+{
+    esp_mqtt_client_config_t mqtt_cfg = {
+        .broker.verification.certificate = (const char *)ali_ca_cert,
+		.broker.address.hostname = Aliyun_host,
+		.broker.address.port = Aliyun_port,
+        .broker.address.transport = MQTT_TRANSPORT_OVER_SSL,
+		.credentials.client_id = Aliyun_client_id,
+		.credentials.username = Aliyun_username,
+		.credentials.authentication.password = Aliyun_password,
+
+    };
+
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
+    esp_mqtt_client_start(client);
+
+    char mqtt_publish_data3[] = "mqtt i am esp32";
+    uint8_t num = 0;
+    while(1)
+    {
+       esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, mqtt_publish_data3, strlen(mqtt_publish_data3), 1, 0);
+       vTaskDelay(2000 / portTICK_PERIOD_MS);
+	   if(num++ > 5) break;
+	}
+}
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
@@ -89,7 +225,7 @@ void wifi_init_sta(wifi_param_t wifi)
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &, NULL, &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
     wifi_config_t wifi_config = 
@@ -123,6 +259,7 @@ void wifi_init_sta(wifi_param_t wifi)
     if (bits & WIFI_CONNECTED_BIT) 
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
+        mqtt_app_start();
     } 
     else if (bits & WIFI_FAIL_BIT) 
     {
