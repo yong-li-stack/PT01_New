@@ -29,7 +29,11 @@ typedef struct
     uint8_t pwd_len;
 	uint8_t password[64];
 } wifi_param_t;
+
+typedef void (*callback)(int);
+
 /* Exported functions ------------------------------------------------------- */
+void innotech_wifi_state_report(callback function);
 void wifi_init_sta(wifi_param_t wifi);
 
 #ifdef __cplusplus

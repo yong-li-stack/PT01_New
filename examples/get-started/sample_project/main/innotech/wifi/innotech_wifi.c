@@ -68,6 +68,12 @@ extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_ecl
 #endif
 extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
 
+callback wifi_connect_result = NULL;
+void innotech_wifi_state_report(callback function) 
+{
+    wifi_connect_result = function;
+}
+
 //
 // Note: this function is for testing purposes only publishing part of the active partition
 //       (to be checked against the original binary)
@@ -108,9 +114,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
         ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+        
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -225,7 +229,7 @@ void wifi_init_sta(wifi_param_t wifi)
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
     wifi_config_t wifi_config = 
@@ -260,10 +264,18 @@ void wifi_init_sta(wifi_param_t wifi)
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
         mqtt_app_start();
+        if (wifi_connect_result != NULL)
+        {
+            wifi_connect_result(1);
+        }
     } 
     else if (bits & WIFI_FAIL_BIT) 
     {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi.ssid, wifi.password);
+        if (wifi_connect_result != NULL)
+        {
+            wifi_connect_result(0);
+        }
     }
     else 
     {

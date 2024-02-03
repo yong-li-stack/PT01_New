@@ -207,6 +207,31 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
       sizeof(uint16_t), sizeof(heart_measurement_ccc), (uint8_t *)heart_measurement_ccc}},
 };
 
+static void innotech_ble_report_wifi_state(int state)
+{
+    uint8_t data[20] = {0};
+    uint8_t payload[16] = {0};
+    uint8_t cipher[16] = {0};
+    uint8_t len = 0;
+
+    data[len++] = 0x00;
+    data[len++] = 0x0C;
+    data[len++] = 0x00;
+    data[len++] = 0x05;
+
+    payload[0] = 0x06;
+    payload[1] = 0x03;
+    payload[2] = 0xF0;
+    payload[3] = 0x01;
+    payload[4] = state;
+    aes128_cbc_encrypt(ble_key, iv, payload, 16, cipher);
+    memcpy(data+4, cipher, 16);
+    len += 16;
+    esp_ble_gatts_send_indicate(heart_rate_profile_tab[PROFILE_APP_IDX].gatts_if, heart_rate_profile_tab[PROFILE_APP_IDX].conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
+    ESP_LOGE(GATTS_TABLE_TAG, "device report:");
+    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+}
+
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     switch (event) {
@@ -289,8 +314,6 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 
                 uint8_t msg_id = param->write.value[0];
                 uint8_t cmd = param->write.value[1];
-                uint8_t frame_seq = param->write.value[2] & 0xF;
-                uint8_t toatal_frame = (param->write.value[2] >> 4) & 0xF;
                 uint8_t frame_len = param->write.value[3];
                 uint8_t data[20] = {0};
                 uint8_t len = 0;
@@ -347,12 +370,8 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     uint8_t dec_plain[32] = {0};
                     memcpy((char *)cipher, (char *)param->write.value+4, 32);
                     aes128_cbc_decrypt(ble_key, iv, cipher, 32, dec_plain);
-                    
-                    
-                    uint8_t type = dec_plain[0];
-                    uint8_t length = dec_plain[1];
-                    wifi_param_t wifi;
 
+                    wifi_param_t wifi;
                     memset(&wifi, 0, sizeof(wifi_param_t));
                     if(dec_plain[2] == 0x01)
                     {
@@ -525,6 +544,6 @@ void innotech_ble_init(void)
     if (local_mtu_ret){
         ESP_LOGE(GATTS_TABLE_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
-
+    innotech_wifi_state_report(innotech_ble_report_wifi_state);
 }
 
