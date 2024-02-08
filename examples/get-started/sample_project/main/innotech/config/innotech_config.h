@@ -25,14 +25,34 @@ extern "C"
 
 /* Exported constants --------------------------------------------------------*/
 
+
+typedef struct _innotech_timer_t{
+    uint8_t schedule_id[50];
+    bool enable;//0-disable,1-enable
+    bool is_valid;//0-not executable,1-executable(Not executable indicates that the timer is not initialized)
+    bool onoff;//0-off,1-on
+    uint8_t time[256];
+    uint8_t repeat[256];
+}innotech_timer_t;
+
+typedef struct _innotech_count_down_t{  //for sleep
+    uint8_t schedule_id[50];
+    int32_t time_left;//Value range: 1 to 86399(unit: minute)
+    bool onoff;//0-off,1-on
+    uint8_t timestamp[64];//String UTC timestamp (milliseconds)
+    bool is_running;//0-not executable,1-executable
+}innotech_count_down_t;
 typedef struct _innotech_config_t
 {
     uint8_t flash_init[4];
-    bool plug_power;
-    bool lcd_power;
+    bool power_switch;
+    bool lcd_switch;
+    bool brightness_switch;
     uint8_t lcd_brightness;
+    bool memory;
+    innotech_timer_t timer[5];
+    innotech_count_down_t sleep[3];
 } innotech_config_t;
-
 
 /* Exported functions ------------------------------------------------------- */
 uint8_t innotech_config_check(void);

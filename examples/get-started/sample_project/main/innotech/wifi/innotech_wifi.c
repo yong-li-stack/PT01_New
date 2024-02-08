@@ -16,6 +16,7 @@
 #include <string.h>
 #include "api_bridge.h"
 #include "innotech_wifi.h"
+#include "innotech_mqtt_json.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -74,20 +75,13 @@ void innotech_wifi_state_report(callback function)
     wifi_connect_result = function;
 }
 
-//
-// Note: this function is for testing purposes only publishing part of the active partition
-//       (to be checked against the original binary)
-//
-static void send_binary(esp_mqtt_client_handle_t client)
+void mqtt_send_device_status(esp_mqtt_client_handle_t client)
 {
-    //esp_partition_mmap_handle_t out_handle;
-    //const void *binary_address;
-    //const esp_partition_t *partition = esp_ota_get_running_partition();
-    //esp_partition_mmap(partition, 0, partition->size, ESP_PARTITION_MMAP_DATA, &binary_address, &out_handle);
-    // sending only the configured portion of the partition (if it's less than the partition size)
-    //int binary_size = MIN(CONFIG_BROKER_BIN_SIZE_TO_SEND, partition->size);
-    int msg_id = esp_mqtt_client_publish(client, "/topic/binary", "hello", sizeof("hello"), 0, 0);
-    ESP_LOGI(TAG, "binary sent with msg_id=%d", msg_id);
+    char payload[2048] = {0};
+    char tranid[] = "1234567890";
+    char get_cmd[] = "status";
+    mqtt_json_pack(PERM_READ, get_cmd, tranid, payload);
+    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
 }
 
 /*
@@ -105,16 +99,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
+ 
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-        
+        mqtt_send_device_status(client);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -122,8 +111,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -135,10 +123,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        if (strncmp(event->data, "send binary please", event->data_len) == 0) {
-            ESP_LOGI(TAG, "Sending the binary");
-            send_binary(client);
-        }
+
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -175,15 +160,6 @@ static void mqtt_app_start(void)
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
     esp_mqtt_client_start(client);
-
-    char mqtt_publish_data3[] = "mqtt i am esp32";
-    uint8_t num = 0;
-    while(1)
-    {
-       esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, mqtt_publish_data3, strlen(mqtt_publish_data3), 1, 0);
-       vTaskDelay(2000 / portTICK_PERIOD_MS);
-	   if(num++ > 5) break;
-	}
 }
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)

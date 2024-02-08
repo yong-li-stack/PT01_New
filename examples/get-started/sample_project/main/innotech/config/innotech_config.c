@@ -39,11 +39,35 @@ uint8_t innotech_config_check(void)
 
 void innotech_default_device_config(void)
 {   
+    uint8_t i = 0;
+
     memset(&innotech_config, 0, sizeof(innotech_config_t));
     memcpy(innotech_config.flash_init, config_init_check, 4);
-    innotech_config.plug_power     = true;
-    innotech_config.lcd_power      = true;
-    innotech_config.lcd_brightness = 100;
+    innotech_config.power_switch      = true;
+    innotech_config.lcd_switch        = true;
+    innotech_config.brightness_switch = true;
+    innotech_config.lcd_brightness    = 100;
+
+    for(i = 0; i < 5; i++)
+    {
+        memset(innotech_config.timer[i].schedule_id, 0, 50);
+        innotech_config.timer[i].enable = 0;
+        innotech_config.timer[i].is_valid = 0;
+        innotech_config.timer[i].onoff = 0;
+        memset(innotech_config.timer[i].time, 0, 256);
+        memset(innotech_config.timer[i].repeat, 0, 256);
+    }
+
+    for(i = 0; i < 3; i++)
+    {
+        memset(innotech_config.sleep[i].schedule_id, 0, 50);
+        innotech_config.sleep[i].time_left = 0;  
+        innotech_config.sleep[i].onoff = 0;
+        memset(innotech_config.sleep[i].timestamp, 0, 64);
+        innotech_config.sleep[i].is_running = 0;
+    }
+
+    innotech_config.memory = false;
 
     memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
 	memcpy(innotech_buf, &innotech_config, sizeof(innotech_config_t));
@@ -78,11 +102,6 @@ void innotech_config_init(void)
     
     memset(&copy_config, 0, sizeof(innotech_config_t));
     memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
-
-    /*if(innotech_reboot_flag_get() == 0)
-    {
-        innotech_config.power = true;
-    }*/
 
     for(i = 0; i < 4; i++)
     {
