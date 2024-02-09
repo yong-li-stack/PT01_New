@@ -47,9 +47,19 @@ void innotech_device_service_handle(void *args)
         if(++time_tick >= 500)
         {
             time_tick = 0;
-            //innotech_relay_state_save();
+            if(innotech_config_check())
+            {
+                innotech_config_data_save();
+                printf("save innotech config data ok !!!\r\n");
+            }
         }
         vTaskDelay(20 / portTICK_PERIOD_MS);
+       /*static int tick = 0;
+        if(++tick >= 50)
+        {
+            tick = 0;
+            printf("heap size: %ld\r\n", innotech_get_heap_size());
+        }*/
     }    
 }
 

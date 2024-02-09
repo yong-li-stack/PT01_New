@@ -37,6 +37,40 @@ uint8_t innotech_config_check(void)
     return config_modify;
 }
 
+void innotech_config_printf(void)
+{
+    uint8_t i = 0;
+
+    printf("/*****************************************************************************\r\n");
+    printf("*____________________________________________________________________________\r\n");
+    printf("flash_init: %d %d %d %d\r\n", innotech_config.flash_init[0], innotech_config.flash_init[1], innotech_config.flash_init[2], innotech_config.flash_init[3]);
+    printf("power_switch: %d\r\n", innotech_config.power_switch);
+    printf("lcd_switch: %d\r\n", innotech_config.lcd_switch);
+    printf("brightness_switch: %d\r\n", innotech_config.brightness_switch);
+    printf("lcd_brightness: %d\r\n", innotech_config.lcd_brightness);
+    for(i = 0; i < 5; i++)
+    {
+        printf("timer[%d].schedule_id: %s\r\n", i, innotech_config.timer[i].schedule_id);
+        printf("timer[%d].enable: %d\r\n", i, innotech_config.timer[i].enable);
+        printf("timer[%d].is_valid: %d\r\n", i, innotech_config.timer[i].is_valid);
+        printf("timer[%d].onoff: %d\r\n", i, innotech_config.timer[i].onoff);
+        printf("timer[%d].time: %s\r\n", i, innotech_config.timer[i].time);
+        printf("timer[%d].repeat: %s\r\n", i, innotech_config.timer[i].repeat);
+    }
+
+    for(i = 0; i < 3; i++)
+    {
+        printf("sleep[%d].schedule_id: %s\r\n", i, innotech_config.sleep[i].schedule_id);
+        printf("sleep[%d].time_left: %ld\r\n", i, innotech_config.sleep[i].time_left);
+        printf("sleep[%d].onoff: %d\r\n", i, innotech_config.sleep[i].onoff);
+        printf("sleep[%d].timestamp: %sd\r\n", i, innotech_config.sleep[i].timestamp);
+        printf("sleep[%d].is_running: %d\r\n", i, innotech_config.sleep[i].is_running);
+    }
+    printf("memory: %d\r\n", innotech_config.memory);
+    printf("*____________________________________________________________________________\r\n");
+    printf("*****************************************************************************/\r\n");
+}
+
 void innotech_default_device_config(void)
 {   
     uint8_t i = 0;
@@ -111,6 +145,7 @@ void innotech_config_init(void)
             break;
         }
     }
+    innotech_config_printf();
 }
 
 
