@@ -50,17 +50,17 @@ static int s_retry_num = 0;
 #define H2E_IDENTIFIER ""
 
 /*Broker Address：${YourProductKey}.iot-as-mqtt.${YourRegionId}.aliyuncs.com*/
-#define   Aliyun_host       "k0pjvS74W3M.iot-as-mqtt.cn-shanghai.aliyuncs.com"
-#define   Aliyun_port       8883
+#define   Aliyun_host       "g8uj3GQEAGp.iot-as-mqtt.cn-shanghai.aliyuncs.com"
+#define   Aliyun_port       1883
 /*Client ID：     ${ClientID}|securemode=${Mode},signmethod=${SignMethod}|*/
-#define   Aliyun_client_id  "lyfpzq|securemode=2,signmethod=hmacsha1,timestamp=1704972500483|"
+#define   Aliyun_client_id  "112244|securemode=2,signmethod=hmacsha1,timestamp=1708511023184|"
 /*User Name：     ${DeviceName}&${ProductKey}*/
-#define   Aliyun_username   "lyf_pzq&k0pjvS74W3M"
+#define   Aliyun_username   "C411E10077EF&g8uj3GQEAGp"
 /*使用官网 MQTT_Password 工具生成*/
-#define   Aliyun_password   "8618C8681874B00CD66011AE13E0349F85222ADC"
+#define   Aliyun_password   "716DE2339BE90E4FF9BCDF905C7A7D667DC3C893"
 
-#define   AliyunSubscribeTopic_user_get     "/k0pjvS74W3M/lyf_pzq/user/get"
-#define   AliyunPublishTopic_user_update    "/k0pjvS74W3M/lyf_pzq/user/update"
+#define   AliyunSubscribeTopic_user_get     "/g8uj3GQEAGp/C411E10077EF/user/get"
+#define   AliyunPublishTopic_user_update    "/g8uj3GQEAGp/C411E10077EF/user/update"
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
