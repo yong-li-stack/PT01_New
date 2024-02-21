@@ -59,8 +59,9 @@ void aes128_cbc_decrypt(unsigned char *key, unsigned char *iv, unsigned char *in
     unsigned char iv_copy[16]={0};
 
     memcpy((char *)iv_copy, (char *)iv, 16);
+    
     mbedtls_aes_init(&aes_Key);
     mbedtls_aes_setkey_dec(&aes_Key, key, 128);
-    mbedtls_aes_crypt_cbc(&aes_Key, MBEDTLS_AES_DECRYPT, len, iv, input, output);
+    mbedtls_aes_crypt_cbc(&aes_Key, MBEDTLS_AES_DECRYPT, len, iv_copy, input, output);
     mbedtls_aes_free(&aes_Key);
 }
