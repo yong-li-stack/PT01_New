@@ -224,18 +224,7 @@ static void innotech_ble_report_wifi_state(int state)
     payload[2] = 0xF0;
     payload[3] = 0x01;
     payload[4] = state;
-    payload[5] = 0x0B;
-    payload[6] = 0x0B;
-    payload[7] = 0x0B;
-    payload[8] = 0x0B;
-    payload[9] = 0x0B;
-    payload[10] = 0x0B;
-    payload[11] = 0x0B;
-    payload[12] = 0x0B;
-    payload[13] = 0x0B;
-    payload[14] = 0x0B;
-    payload[15] = 0x0B;
-
+    memset(payload+5, 0x0B, 11);
     aes128_cbc_encrypt(ble_key, iv, payload, 16, cipher);
     memcpy(data+4, cipher, 16);
     len += 16;
@@ -367,21 +356,39 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 }
                 else if (cmd == 0x14)
                 {
-                    data[len++] = msg_id;
-                    data[len++] = 0x15;
-                    data[len++] = 0x00;
-                    data[len++] = 0x01;
-                    data[len++] = 0x01;
-                    esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
-                    ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
-                    esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+                    uint8_t cipher[16] = {0};
+                    uint8_t dec_plain[16] = {0};
+                
+                    aes128_cbc_decrypt(ble_key, iv, param->write.value+4, 16, dec_plain);
+                    uint8_t result = dec_plain[0];
+
+                    if (result == 0x00)
+                    {
+                        //设备解绑
+                    }
+                    else if (result == 0x01)
+                    {
+                        data[len++] = msg_id;
+                        data[len++] = 0x15;
+                        data[len++] = 0x00;
+                        data[len++] = 0x01;
+                        data[len++] = 0x01;
+                        memset(data+len, 0x0F, 15);
+                        aes128_cbc_encrypt(ble_key, iv, data+4, 16, cipher);
+                        memcpy(data+4, cipher, 16);
+                        len += 15;
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
+                        ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
+                        esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+                    }
                 }
                 else if (cmd == 0x0d)
                 {
                     uint8_t cipher[64] = {0};
                     uint8_t dec_plain[32] = {0};
                     memcpy((char *)cipher, (char *)param->write.value+4, 32);
- 
+                    aes128_cbc_decrypt(ble_key, iv, cipher, 32, dec_plain);
+
                     wifi_param_t wifi;
                     memset(&wifi, 0, sizeof(wifi_param_t));
                     if(dec_plain[2] == 0x01)
