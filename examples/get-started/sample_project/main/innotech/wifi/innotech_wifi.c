@@ -59,8 +59,8 @@ static int s_retry_num = 0;
 /*使用官网 MQTT_Password 工具生成*/
 #define   Aliyun_password   "716DE2339BE90E4FF9BCDF905C7A7D667DC3C893"
 
-#define   AliyunSubscribeTopic_user_get     "/g8uj3GQEAGp/C411E10077EF/user/get"
-#define   AliyunPublishTopic_user_update    "/g8uj3GQEAGp/C411E10077EF/user/update"
+#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
+#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
