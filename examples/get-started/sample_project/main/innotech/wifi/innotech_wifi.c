@@ -77,15 +77,25 @@ void innotech_wifi_state_report(callback function)
 
 void mqtt_send_device_status(esp_mqtt_client_handle_t client)
 {
-    char payload[2048] = {0};
-    char tranid[] = "1234567890";
+    char payload[1024] = {0};
     char get_cmd[] = "status";
-    mqtt_json_pack(PERM_READ, get_cmd, tranid, payload);
+    mqtt_json_pack(get_cmd, payload);
     esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
     if (wifi_connect_result != NULL)
     {
         wifi_connect_result(1);
     }
+}
+
+void mqtt_send_data_reply(esp_mqtt_client_handle_t client, char *set_topic, char *id, char *version)
+{
+    char payload[1024] = {0};
+    char reply_topic[256] = {0};
+
+    sprintf(reply_topic, "%s_reply", set_topic);
+    //printf("reply_topic=%s\r\n", reply_topic);
+    mqtt_json_pack_reply(id, version, payload);
+    esp_mqtt_client_publish(client, reply_topic, payload, strlen(payload), 0, 0);
 }
 
 /*
@@ -106,6 +116,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     char method[32] = {0};
     char id[12] = {0};
     char version[10] = {0};
+    char topic[256] = {0};
     int ret = PERM_INVALID;
  
     switch ((esp_mqtt_event_id_t)event_id) {
@@ -134,9 +145,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ret = mqtt_json_unpack(event->data, method, id, version);
         if(ret == PERM_WRITE)
         {
-            
+            memcpy(topic, event->topic, event->topic_len);
+            mqtt_send_data_reply(client, topic, id, version);
         }
-
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");

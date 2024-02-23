@@ -26,7 +26,8 @@ typedef enum _data_permission_e{
 }data_permission_e;
 
 data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char *version);
-int mqtt_json_pack(data_permission_e perm_data, char *cmd, char *tranid, char *package_msg);
+void mqtt_json_pack_reply(char *id, char *version, char *package_msg);
+int mqtt_json_pack(char *cmd, char *package_msg);
 int mqtt_json_last_will(char *result, char * timestamp, char *package_msg);
 
 #ifdef __cplusplus
