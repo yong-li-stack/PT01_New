@@ -22,20 +22,10 @@ extern "C"
 typedef enum _data_permission_e{
     PERM_INVALID=-1,        
     PERM_READ=0,
-    PERM_WRITENUM=1,
-    PERM_WRITESTR=2
+    PERM_WRITE=1,
 }data_permission_e;
 
-typedef enum _mqtt_result_e{     
-    RES_MQTT_FAIL = 0,
-    RES_MQTT_SUC = 1
-}mqtt_result_e;
-
-
-#define MSG_BUF_LEN_SUB 600
-#define MAX_SEND_BUF 2048
-
-//data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *get_app_topic, char *get_tranid,char *get_data,int *get_data_len);
+data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char *version);
 int mqtt_json_pack(data_permission_e perm_data, char *cmd, char *tranid, char *package_msg);
 int mqtt_json_last_will(char *result, char * timestamp, char *package_msg);
 

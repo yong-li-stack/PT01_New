@@ -246,174 +246,107 @@ int mqtt_json_pack(data_permission_e perm_data, char *cmd, char *tranid, char *p
     
     return 0;
 }
-#if 0
-static void mqtt_json_unpack_data(cJSON *jsondata, char *get_data, int *get_data_len)
+
+static void mqtt_json_unpack_params(cJSON *paramsObject)
 {
-    if( (jsondata == NULL) || (get_data == NULL) || (get_data_len == NULL) )
+    if(paramsObject == NULL)
     {
-        Ihoment_printf(IHOMENT_WARNING, "unpack_data null\n");
+        printf("unpack_params null\n");
         return;
     }
-    cJSON *valObject;
-    valObject = cJSON_GetObjectItem(jsondata, "val");
-    memcpy((void *)get_data, (void *)&valObject->valueint, sizeof(valObject->valueint)); //cmd
-    *get_data_len = sizeof(valObject->valueint);
-    Ihoment_printf(IHOMENT_DEBUG, "unpack data %d, sizeof %d\n", *(int *)get_data, *get_data_len);
-    return;
-}
+    cJSON *data_Object;
+    innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
 
-static void mqtt_json_unpack_type(cJSON *jsondata, char *get_data)
-{
-    if( (jsondata == NULL) || (get_data == NULL))
+    if( (data_Object = cJSON_GetObjectItem(paramsObject, "PowerSwitch")) != NULL )
     {
-        Ihoment_printf(IHOMENT_WARNING, "unpack_data null\n");
-        return;
+        innotech_config->power_switch = data_Object->valueint;
+        printf("power_switch=%d\r\n", innotech_config->power_switch);
     }
-    cJSON *valObject;
-    valObject = cJSON_GetObjectItem(jsondata, "type");
-	get_data[0] = valObject->valueint;
-    Ihoment_printf(IHOMENT_DEBUG, "unpack type %d\n", *(int *)get_data);
-    return;
-}
-
-//timer
-static void mqtt_json_unpack_timer(cJSON *jsondata, char *get_data, int *get_data_len){
-    if(jsondata == NULL || get_data == NULL || get_data_len == NULL){
-        Ihoment_printf(IHOMENT_WARNING, "unpack_timer null\n");
-        return;
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "ScreenSwitch")) != NULL )
+    {
+        innotech_config->lcd_switch = data_Object->valueint;
+        printf("lcd_switch=%d\r\n", innotech_config->lcd_switch);
     }
-    int i;
-    int is_group;
-    cJSON *enObject,*timeroffObject,*timerObject,*GroupObject=NULL;
-    mqtt_timer_array_t mqtt_timer_array;
-    memset(&mqtt_timer_array,0x0,sizeof(mqtt_timer_array_t));
-    //enable
-    enObject = cJSON_GetObjectItem(jsondata, "enable");
-    mqtt_timer_array.enable = enObject->valueint;
-
-        //enable
-    //timeroffset
-    timeroffObject = cJSON_GetObjectItem(jsondata, "timeOffset");
-    mqtt_timer_array.timeOffset = timeroffObject->valueint;
-
-    //timer array
-    timerObject = cJSON_GetObjectItem(jsondata, "time");
-    int size = cJSON_GetArraySize(timerObject);
-    if(size >MQTT_TIMER_MAX_COUNT){  //limit timer count
-        Ihoment_printf(IHOMENT_WARNING, "timer limit to %d\n",MQTT_TIMER_MAX_COUNT);
-        size=MQTT_TIMER_MAX_COUNT;
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "ScreenBrightValue")) != NULL )
+    {
+        innotech_config->lcd_brightness = data_Object->valueint;
+        printf("lcd_brightness=%d\r\n", innotech_config->lcd_brightness);
     }
-    for(i = 0; i < size; i++){
-        GroupObject = cJSON_GetObjectItem(jsondata, "group");
-        if(GroupObject )
-            mqtt_timer_array.extern_timer_array.extern_timer[i].group_index = GroupObject->valueint;
-        else{        
-            mqtt_timer_array.extern_timer_array.extern_timer[i].group_index = 0;
-            Ihoment_printf(IHOMENT_ERROR,"no had is_group member\n");
-        }
-        cJSON *item = cJSON_GetArrayItem(timerObject, i);
-        mqtt_timer_array.mqtt_timer[i].openHour = cJSON_GetObjectItem(item, "openHour")->valueint;
-        mqtt_timer_array.mqtt_timer[i].openMin = cJSON_GetObjectItem(item, "openMin")->valueint;
-        mqtt_timer_array.mqtt_timer[i].closeHour = cJSON_GetObjectItem(item, "closeHour")->valueint;
-        mqtt_timer_array.mqtt_timer[i].closeMin = cJSON_GetObjectItem(item, "closeMin")->valueint;
-        if(GroupObject){
-            mqtt_timer_array.extern_timer_array.extern_timer[i].repeat = cJSON_GetObjectItem(item, "repeat")->valueint;
-            mqtt_timer_array.extern_timer_array.extern_timer[i].enable = cJSON_GetObjectItem(item, "enable")->valueint;
-        }else{
-            mqtt_timer_array.extern_timer_array.extern_timer[i].repeat = 0;
-            mqtt_timer_array.extern_timer_array.extern_timer[i].enable = 0;
-        }
-        mqtt_timer_array.mqtt_timer_count++;
-        cJSON_Delete(item); 
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "AutoBrightnessSwitch")) != NULL )
+    {
+        innotech_config->brightness_switch = data_Object->valueint;
+        printf("brightness_switch=%d\r\n", innotech_config->brightness_switch);
     }
-    memcpy((void *)get_data, (void *)&mqtt_timer_array, sizeof(mqtt_timer_array_t)); //cmd
-    *get_data_len=sizeof(mqtt_timer_array_t);
-    Ihoment_printf(IHOMENT_DEBUG, "unpack timer sizeof %d\n",*get_data_len);
-    return;
-}
-
-//delayClose
-static void mqtt_json_unpack_delayclose( cJSON *jsondata, char *get_data,int *get_data_len){
-    if(jsondata == NULL || get_data == NULL || get_data_len == NULL){
-        Ihoment_printf(IHOMENT_WARNING, "unpack_delayclose null\n");
-        return;
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "LineDiameter")) != NULL )
+    {
+        innotech_config->line_diameter = data_Object->valueint;
+        printf("line_diameter=%d\r\n", innotech_config->line_diameter);
     }
-    cJSON *valObject;
-    mqtt_delay_close_t mqtt_delay_close;
-    mqtt_delay_close.enable= cJSON_GetObjectItem(jsondata, "enable")->valueint;
-    mqtt_delay_close.minutes= cJSON_GetObjectItem(jsondata, "minutes")->valueint;
-    mqtt_delay_close.leftminutes=mqtt_delay_close.minutes;
-    memcpy((void *)get_data, (void *)&mqtt_delay_close, sizeof(mqtt_delay_close_t)); //cmd
-    *get_data_len=sizeof(mqtt_delay_close_t);
-    Ihoment_printf(IHOMENT_DEBUG, "unpack delayclose ,sizeof %d\n",*get_data_len);
-    return;
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "Memory")) != NULL )
+    {
+        innotech_config->memory = data_Object->valueint;
+        printf("memory=%d\r\n", innotech_config->memory);
+    }
 }
 
 //return -1:fail,0 app read device's status,1 app set device
-data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *get_app_topic, char *get_tranid, char *get_data, int *get_data_len)
+data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char *version)
 {
-    if( (iot_json == NULL) || (get_cmd == NULL) || (get_tranid == NULL) || (get_data == NULL) || (get_data_len == NULL) )
+    if(iot_json == NULL || method == NULL || id == NULL || version == NULL)
     {
-        Ihoment_printf(IHOMENT_WARNING, "mqtt_json_unpack input error\n");
+        printf("mqtt_json_unpack input error\n");
     }
-    cJSON_Hooks memoryHook;
-    memoryHook.malloc_fn = pvPortMalloc;
-    memoryHook.free_fn = vPortFree;
-    cJSON_InitHooks(&memoryHook);
-    data_permission_e req_type=PERM_INVALID;
 
-    cJSON *IOTJSObject, *msgObject, *cmdObject, *typeObject, *tranidObject, *dataObject, *topicObject;
-    if((IOTJSObject = cJSON_Parse(iot_json)) != NULL) 
+    data_permission_e ret = PERM_INVALID;
+    cJSON *IOTJSObject, *idObject, *methodObject, *versionObject, *paramsObject;
+
+    if((IOTJSObject = cJSON_Parse(iot_json)) != NULL)
     {
-        msgObject = cJSON_GetObjectItem(IOTJSObject, "msg");
-        tranidObject= cJSON_GetObjectItem(msgObject, "transaction");
-        topicObject = cJSON_GetObjectItem(msgObject, "accountTopic");
-        cmdObject = cJSON_GetObjectItem(msgObject, "cmd");
-        typeObject = cJSON_GetObjectItem(msgObject, "type");
-        
-        if(cmdObject && typeObject && tranidObject && msgObject) 
+
+        if( (idObject = cJSON_GetObjectItem(IOTJSObject, "id")) != NULL )
         {
-            memcpy((void *)get_cmd, (void *)cmdObject->valuestring, strlen(cmdObject->valuestring)+1); //cmd
-            memcpy((void *)get_tranid, (void *)tranidObject->valuestring, strlen(tranidObject->valuestring)+1); //tranid
-            if(topicObject)
-                memcpy((void *)get_app_topic, (void *)topicObject->valuestring, strlen(topicObject->valuestring)+1); //topic
-            else
-                memset((void *)get_app_topic, 0, 2);
-            
-            if(typeObject->valueint == 0)//no get data
-            {      
-                req_type = PERM_READ;
-            }
-            else if(typeObject->valueint == 1)//get data
-            { 
-                dataObject= cJSON_GetObjectItem(msgObject, "data");
-                if(dataObject)
-                {
-                    req_type = PERM_WRITESTR;
-                    //get data
-                    if( (strncmp(get_cmd, "turn", strlen(get_cmd)) == 0) || \
-                        (strncmp(get_cmd, "brightness", strlen(get_cmd)) == 0))
-                    {
-                        mqtt_json_unpack_data(dataObject, get_data, get_data_len);
-                        req_type = PERM_WRITENUM;
-                    }
-                    else if( strncmp(get_cmd, "colorwc", strlen(get_cmd)) == 0 )
-                    {
-                        mqtt_json_unpack_colorwc(dataObject, get_data, get_data_len);
-                    }
-                    else if( strncmp(get_cmd, "ptReal", strlen(get_cmd)) == 0 )
-                    {
-                        mqtt_json_unpack_pt(dataObject, get_data,get_data_len);
-                    }
-					else if( strncmp(get_cmd, "dev_info", strlen(get_cmd)) == 0 )
-                    {
-                        mqtt_json_unpack_type(dataObject,get_data);
-                    }
-                }
-            }
-        }       
-        cJSON_Delete(IOTJSObject);        
+            memcpy((void *)id, (void *)idObject->valuestring, strlen(idObject->valuestring)+1);
+            printf("DATA=%d %s\r\n", strlen(idObject->valuestring)+1, id);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no id\r\n");
+        }
+
+        if( (methodObject = cJSON_GetObjectItem(IOTJSObject, "method")) != NULL )
+        {
+            memcpy((void *)method, (void *)methodObject->valuestring, strlen(methodObject->valuestring)+1);
+            printf("DATA=%d %s\r\n", strlen(methodObject->valuestring)+1, method);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no method\r\n");
+        }
+
+        if( (versionObject = cJSON_GetObjectItem(IOTJSObject, "version")) != NULL )
+        {
+            memcpy((void *)version, (void *)versionObject->valuestring, strlen(versionObject->valuestring)+1);
+            printf("DATA=%d %s\r\n", strlen(versionObject->valuestring)+1, version);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no version\r\n");
+        }
+
+        if( (paramsObject= cJSON_GetObjectItem(IOTJSObject, "params")) != NULL )
+        {
+            mqtt_json_unpack_params(paramsObject);
+            printf("mqtt_json_unpack params\r\n");
+            //cJSON_Delete(paramsObject);
+            ret = PERM_WRITE;
+        }
+        else
+        {
+            printf("mqtt_json_unpack no data\r\n");
+        }
+
+        cJSON_Delete(IOTJSObject);
     }
-    return req_type;
+    return ret;
 }
-#endif
+

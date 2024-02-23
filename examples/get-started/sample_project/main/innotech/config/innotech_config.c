@@ -81,6 +81,7 @@ void innotech_default_device_config(void)
     innotech_config.lcd_switch        = true;
     innotech_config.brightness_switch = true;
     innotech_config.lcd_brightness    = 100;
+    innotech_config.line_diameter     = 0;
 
     for(i = 0; i < 5; i++)
     {

@@ -50,6 +50,7 @@ typedef struct _innotech_config_t
     bool brightness_switch;
     uint8_t lcd_brightness;
     bool memory;
+    uint8_t line_diameter;
     innotech_timer_t timer[5];
     innotech_count_down_t sleep[3];
 } innotech_config_t;

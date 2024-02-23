@@ -82,6 +82,10 @@ void mqtt_send_device_status(esp_mqtt_client_handle_t client)
     char get_cmd[] = "status";
     mqtt_json_pack(PERM_READ, get_cmd, tranid, payload);
     esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+    if (wifi_connect_result != NULL)
+    {
+        wifi_connect_result(1);
+    }
 }
 
 /*
@@ -99,6 +103,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
+    char method[32] = {0};
+    char id[12] = {0};
+    char version[10] = {0};
+    int ret = PERM_INVALID;
  
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
@@ -123,6 +131,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
+        ret = mqtt_json_unpack(event->data, method, id, version);
+        if(ret == PERM_WRITE)
+        {
+            
+        }
 
         break;
     case MQTT_EVENT_ERROR:
@@ -240,10 +253,6 @@ void wifi_init_sta(wifi_param_t wifi)
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
         mqtt_app_start();
-        if (wifi_connect_result != NULL)
-        {
-            wifi_connect_result(1);
-        }
     } 
     else if (bits & WIFI_FAIL_BIT) 
     {
