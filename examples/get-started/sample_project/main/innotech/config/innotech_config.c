@@ -17,7 +17,7 @@
 #include "innotech_config.h"
 #include "api_bridge.h"
 
-#define INNOTECH_DATA_SIZE  16
+#define INNOTECH_DATA_SIZE  4096
 
 const uint8_t config_init_check[4] = {0x04, 0x01, 0x24, 0x20};
 static innotech_config_t innotech_config;
