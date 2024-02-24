@@ -44,6 +44,7 @@ static EventGroupHandle_t s_wifi_event_group;
 
 static const char *TAG = "INNOTECH_WIFI";
 
+static wifi_param_t wifi_config;
 static int s_retry_num = 0;
 
 #define ESP_MAXIMUM_RETRY  5
@@ -75,6 +76,11 @@ void innotech_wifi_state_report(callback function)
     wifi_connect_result = function;
 }
 
+uint8_t innotech_wifi_config_flag_get(void) 
+{
+    return wifi_config.flag;
+}
+
 void mqtt_send_device_status(esp_mqtt_client_handle_t client)
 {
     char payload[1024] = {0};
@@ -93,7 +99,7 @@ void mqtt_send_device_status(esp_mqtt_client_handle_t client)
 void mqtt_send_data_reply(esp_mqtt_client_handle_t client, char *set_topic, char *id, char *version)
 {
     char payload[1024] = {0};
-    char reply_topic[256] = {0};
+    char reply_topic[64] = {0};
 
     sprintf(reply_topic, "%s_reply", set_topic);
     //printf("reply_topic=%s\r\n", reply_topic);
@@ -120,7 +126,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     char method[32] = {0};
     char id[12] = {0};
     char version[10] = {0};
-    char topic[256] = {0};
+    char topic[64] = {0};
     char get_cmd[32] = {0};
     int ret = PERM_INVALID;
  
@@ -272,6 +278,12 @@ void wifi_init_sta(wifi_param_t wifi)
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
         mqtt_app_start();
+        if(wifi.flag == WIFI_CONFIG_FAIL)
+        {
+            wifi.flag = WIFI_CONFIG_SUC;
+            memcpy(&wifi_config, &wifi, sizeof(wifi_param_t));
+            innotech_flash_write("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
+        }
     } 
     else if (bits & WIFI_FAIL_BIT) 
     {
@@ -287,3 +299,13 @@ void wifi_init_sta(wifi_param_t wifi)
     }
 }
 
+void innotech_wifi_init(void)
+{
+    memset(&wifi_config, 0, sizeof(wifi_param_t));
+    innotech_flash_read("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
+
+    if(wifi_config.flag == WIFI_CONFIG_SUC)
+    {
+        wifi_init_sta(wifi_config);
+    }
+}

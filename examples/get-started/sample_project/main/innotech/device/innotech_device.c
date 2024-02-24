@@ -19,6 +19,7 @@
 #include "innotech_lcd.h"
 #include "innotech_config.h"
 #include "innotech_ble.h"
+#include "innotech_wifi.h"
 //#include "innotech_factory.h"
 #include "innotech_relay.h"
 #include "innotech_button.h"
@@ -78,6 +79,7 @@ void innotech_device_init(void)
     innotech_lcd_init();
     innotech_relay_init();
     innotech_button_init();
+    innotech_wifi_init();
     innotech_ble_init();
 	innotech_device_service_init();
     innotech_device_service_start();

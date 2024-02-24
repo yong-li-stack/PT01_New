@@ -508,6 +508,11 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 
 void innotech_ble_init(void)
 {
+    if(innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC)
+    {
+        return;
+    }
+    
     esp_err_t ret;
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
