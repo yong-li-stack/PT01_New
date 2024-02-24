@@ -150,7 +150,7 @@ int mqtt_json_last_will(char *result, char * timestamp, char *package_msg)
     return 0;
 }
 
-static int mqtt_json_state_pack(char *cmd, cJSON *stateJSObject)
+static int mqtt_json_params_pack(char *cmd, cJSON *stateJSObject)
 {
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
 
@@ -177,6 +177,11 @@ static int mqtt_json_state_pack(char *cmd, cJSON *stateJSObject)
     if( (strncmp(cmd, "Memory", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "Memory", cJSON_CreateNumber(innotech_config->memory));
+    }
+    
+    if( (strncmp(cmd, "LineDiameter", strlen(cmd)) == 0) )
+    {
+        cJSON_AddItemToObject(stateJSObject, "LineDiameter", cJSON_CreateNumber(innotech_config->line_diameter));
     }
     
     if( (strncmp(cmd, "RealTimeCurrent", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
@@ -206,14 +211,13 @@ static int mqtt_json_state_pack(char *cmd, cJSON *stateJSObject)
     return 0;
 }
 
-static int mqtt_json_sys_pack(char *cmd, cJSON *sysJSObject)
+static void mqtt_json_sys_pack(uint8_t ack, cJSON *sysJSObject)
 {
-    cJSON_AddItemToObject(sysJSObject, "ack", cJSON_CreateNumber(1));
-    return 0;
+    cJSON_AddItemToObject(sysJSObject, "ack", cJSON_CreateNumber(ack));
 }
 
 ///////////////msg body////////////////
-int mqtt_json_pack(char *cmd, char *package_msg)
+int mqtt_json_pack(char *cmd, char *id, char *version, char *package_msg)
 {
 	cJSON *IOTJSObject = NULL, *stateJSObject = NULL, *sysJSObject = NULL;
 	char *iot_json = NULL;
@@ -221,21 +225,27 @@ int mqtt_json_pack(char *cmd, char *package_msg)
 	//pack msg
 	if((IOTJSObject = cJSON_CreateObject()) != NULL)
 	{
-		cJSON_AddItemToObject(IOTJSObject, "id", cJSON_CreateNumber(26));   		 
-		cJSON_AddItemToObject(IOTJSObject, "version", cJSON_CreateString("1.0"));		  
+		cJSON_AddItemToObject(IOTJSObject, "id", cJSON_CreateString(id));   		 
+		cJSON_AddItemToObject(IOTJSObject, "version", cJSON_CreateString(version));		  
 
 		if( (strncmp(cmd, "PowerSwitch", strlen(cmd)) == 0) ||\
-			(strncmp(cmd, "ScreenBrightValue", strlen(cmd)) == 0))
+            (strncmp(cmd, "ScreenBrightValue", strlen(cmd)) == 0) ||\
+            (strncmp(cmd, "ScreenSwitch", strlen(cmd)) == 0) ||\
+            (strncmp(cmd, "AutoBrightnessSwitch", strlen(cmd)) == 0) ||\
+            (strncmp(cmd, "Memory", strlen(cmd)) == 0) ||\
+			(strncmp(cmd, "LineDiameter", strlen(cmd)) == 0))
 		{
 			cJSON_AddItemToObject(IOTJSObject, "params", stateJSObject = cJSON_CreateObject());
-			mqtt_json_state_pack(cmd, stateJSObject);
+            cJSON_AddItemToObject(IOTJSObject, "sys", sysJSObject = cJSON_CreateObject());
+			mqtt_json_params_pack(cmd, stateJSObject);
+            mqtt_json_sys_pack(0, sysJSObject);
 		}
 		else if(strncmp(cmd, "status", strlen(cmd)) == 0)
 		{
 			cJSON_AddItemToObject(IOTJSObject, "params", stateJSObject = cJSON_CreateObject());
             cJSON_AddItemToObject(IOTJSObject, "sys", sysJSObject = cJSON_CreateObject());
-			mqtt_json_state_pack(cmd, stateJSObject);
-            mqtt_json_sys_pack(cmd, sysJSObject);
+			mqtt_json_params_pack(cmd, stateJSObject);
+            mqtt_json_sys_pack(1, sysJSObject);
 		}
 		iot_json = cJSON_PrintUnformatted(IOTJSObject);  
 		sprintf(package_msg, "%s", iot_json);
@@ -270,7 +280,7 @@ void mqtt_json_pack_reply(char *id, char *version, char *package_msg)
 
 }
 
-static void mqtt_json_unpack_params(cJSON *paramsObject)
+static void mqtt_json_unpack_params(cJSON *paramsObject, char *get_cmd)
 {
     if(paramsObject == NULL)
     {
@@ -283,39 +293,39 @@ static void mqtt_json_unpack_params(cJSON *paramsObject)
     if( (data_Object = cJSON_GetObjectItem(paramsObject, "PowerSwitch")) != NULL )
     {
         innotech_config->power_switch = data_Object->valueint;
-        printf("power_switch=%d\r\n", innotech_config->power_switch);
+        memcpy(get_cmd, "PowerSwitch", strlen("PowerSwitch")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "ScreenSwitch")) != NULL )
     {
         innotech_config->lcd_switch = data_Object->valueint;
-        printf("lcd_switch=%d\r\n", innotech_config->lcd_switch);
+        memcpy(get_cmd, "ScreenSwitch", strlen("ScreenSwitch")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "ScreenBrightValue")) != NULL )
     {
         innotech_config->lcd_brightness = data_Object->valueint;
-        printf("lcd_brightness=%d\r\n", innotech_config->lcd_brightness);
+        memcpy(get_cmd, "ScreenBrightValue", strlen("ScreenBrightValue")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "AutoBrightnessSwitch")) != NULL )
     {
         innotech_config->brightness_switch = data_Object->valueint;
-        printf("brightness_switch=%d\r\n", innotech_config->brightness_switch);
+        memcpy(get_cmd, "AutoBrightnessSwitch", strlen("AutoBrightnessSwitch")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "LineDiameter")) != NULL )
     {
-        innotech_config->line_diameter = data_Object->valueint;
-        printf("line_diameter=%d\r\n", innotech_config->line_diameter);
+        innotech_config->line_diameter = data_Object->valuedouble;
+        memcpy(get_cmd, "LineDiameter", strlen("LineDiameter")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "Memory")) != NULL )
     {
         innotech_config->memory = data_Object->valueint;
-        printf("memory=%d\r\n", innotech_config->memory);
+        memcpy(get_cmd, "Memory", strlen("Memory")+1);
     }
 }
 
 //return -1:fail,0 app read device's status,1 app set device
-data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char *version)
+data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *method, char *id, char *version)
 {
-    if(iot_json == NULL || method == NULL || id == NULL || version == NULL)
+    if(iot_json == NULL || get_cmd == NULL || method == NULL || id == NULL || version == NULL)
     {
         printf("mqtt_json_unpack input error\n");
     }
@@ -329,7 +339,6 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char 
         if( (idObject = cJSON_GetObjectItem(IOTJSObject, "id")) != NULL )
         {
             memcpy((void *)id, (void *)idObject->valuestring, strlen(idObject->valuestring)+1);
-            printf("DATA=%d %s\r\n", strlen(idObject->valuestring)+1, id);
         }
         else
         {
@@ -339,7 +348,6 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char 
         if( (methodObject = cJSON_GetObjectItem(IOTJSObject, "method")) != NULL )
         {
             memcpy((void *)method, (void *)methodObject->valuestring, strlen(methodObject->valuestring)+1);
-            printf("DATA=%d %s\r\n", strlen(methodObject->valuestring)+1, method);
         }
         else
         {
@@ -349,7 +357,6 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char 
         if( (versionObject = cJSON_GetObjectItem(IOTJSObject, "version")) != NULL )
         {
             memcpy((void *)version, (void *)versionObject->valuestring, strlen(versionObject->valuestring)+1);
-            printf("DATA=%d %s\r\n", strlen(versionObject->valuestring)+1, version);
         }
         else
         {
@@ -358,9 +365,7 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *method, char *id, char 
 
         if( (paramsObject= cJSON_GetObjectItem(IOTJSObject, "params")) != NULL )
         {
-            mqtt_json_unpack_params(paramsObject);
-            printf("mqtt_json_unpack params\r\n");
-            //cJSON_Delete(paramsObject);
+            mqtt_json_unpack_params(paramsObject, get_cmd);
             ret = PERM_WRITE;
         }
         else

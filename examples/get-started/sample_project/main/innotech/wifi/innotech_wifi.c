@@ -79,7 +79,10 @@ void mqtt_send_device_status(esp_mqtt_client_handle_t client)
 {
     char payload[1024] = {0};
     char get_cmd[] = "status";
-    mqtt_json_pack(get_cmd, payload);
+    char id[] = "26";
+    char version[] = "1.0";
+
+    mqtt_json_pack(get_cmd, id, version, payload);
     esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
     if (wifi_connect_result != NULL)
     {
@@ -113,10 +116,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
+    char payload[1024] = {0};
     char method[32] = {0};
     char id[12] = {0};
     char version[10] = {0};
     char topic[256] = {0};
+    char get_cmd[32] = {0};
     int ret = PERM_INVALID;
  
     switch ((esp_mqtt_event_id_t)event_id) {
@@ -142,11 +147,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        ret = mqtt_json_unpack(event->data, method, id, version);
+        ret = mqtt_json_unpack(event->data, get_cmd, method, id, version);
         if(ret == PERM_WRITE)
         {
             memcpy(topic, event->topic, event->topic_len);
             mqtt_send_data_reply(client, topic, id, version);
+            printf("get_cmd: %s\r\n",get_cmd);
+            mqtt_json_pack(get_cmd, id, version, payload);
+            esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0); 
         }
         break;
     case MQTT_EVENT_ERROR:
