@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <driver/i2c.h>
 #include "esp_system.h"
+#include "esp_sntp.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
@@ -179,4 +180,33 @@ void innotech_gpio_mode_init(int pin, uint8_t mode, uint8_t down, uint8_t up)
 uint32_t innotech_get_heap_size(void)
 {
     return esp_get_free_heap_size();
+}
+
+static void time_sync_notification_cb(struct timeval *tv)
+{
+    ESP_LOGI(TAG, "Notification of a time synchronization event, sec=%llu", tv->tv_sec);
+    settimeofday(tv, NULL);
+}
+
+void innotech_initialize_sntp(void)
+{
+    ESP_LOGI(TAG, "Initializing SNTP");
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "ntp.aliyun.com");
+    esp_sntp_setservername(1, "time.asia.apple.com");
+    esp_sntp_setservername(2, "pool.ntp.org");
+    esp_sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+    esp_sntp_init();
+}
+
+uint8_t innotech_get_sync_status(void)
+{
+    if(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }

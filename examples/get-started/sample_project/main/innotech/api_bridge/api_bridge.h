@@ -34,6 +34,9 @@ void innotech_set_gpio_level(int pin, uint32_t level);
 void innotech_hold_gpio_level(int pin, uint8_t isEn);
 void innotech_gpio_mode_init(int pin, uint8_t mode, uint8_t down, uint8_t up);
 
+void innotech_initialize_sntp(void);
+uint8_t innotech_get_sync_status(void);
+
 uint32_t innotech_get_heap_size(void);
 
 #endif

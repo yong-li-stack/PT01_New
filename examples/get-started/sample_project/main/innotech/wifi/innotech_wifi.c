@@ -46,6 +46,7 @@ static const char *TAG = "INNOTECH_WIFI";
 
 static wifi_param_t wifi_config;
 static int s_retry_num = 0;
+static uint8_t wifi_connect_state = 0;
 
 #define ESP_MAXIMUM_RETRY  5
 #define H2E_IDENTIFIER ""
@@ -79,6 +80,11 @@ void innotech_wifi_state_report(callback function)
 uint8_t innotech_wifi_config_flag_get(void) 
 {
     return wifi_config.flag;
+}
+
+uint8_t innotech_wifi_state_get(void) 
+{
+    return wifi_connect_state;
 }
 
 void mqtt_send_device_status(esp_mqtt_client_handle_t client)
@@ -170,6 +176,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             ESP_LOGI(TAG, "Last tls stack error number: 0x%x", event->error_handle->esp_tls_stack_err);
             ESP_LOGI(TAG, "Last captured errno : %d (%s)",  event->error_handle->esp_transport_sock_errno,
                      strerror(event->error_handle->esp_transport_sock_errno));
+            static uint8_t count = 0;
+            if(count++ >= 8)
+            {
+                esp_restart();
+            }
         } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
             ESP_LOGI(TAG, "Connection refused error: 0x%x", event->error_handle->connect_return_code);
         } else {
@@ -278,6 +289,7 @@ void wifi_init_sta(wifi_param_t wifi)
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
         mqtt_app_start();
+        wifi_connect_state = 1;
         if(wifi.flag == WIFI_CONFIG_FAIL)
         {
             wifi.flag = WIFI_CONFIG_SUC;
