@@ -71,5 +71,5 @@ void innotech_button_process(void)
 
 void innotech_button_init(void)
 {
-    innotech_gpio_mode_init(BTN_GPIO_NUM, 1, 0, 0);
+    innotech_gpio_mode_init(BTN_GPIO_NUM, 1, 0, 0, 0);
 }
