@@ -17,6 +17,7 @@
 #include "api_bridge.h"
 #include "innotech_wifi.h"
 #include "innotech_mqtt_json.h"
+#include "innotech_config.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -63,6 +64,7 @@ static uint8_t wifi_connect_state = 0;
 
 #define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
 #define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
+#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
@@ -123,6 +125,7 @@ void mqtt_send_data_reply(esp_mqtt_client_handle_t client, char *set_topic, char
  * @param event_id The id for the received event.
  * @param event_data The data for the event, esp_mqtt_event_handle_t.
  */
+extern void esp_restart(void);
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
@@ -159,6 +162,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
+        if(memcmp(event->topic, AliyunSubscribeTopic_user_reset, event->topic_len) == 0)
+        {
+            innotech_default_device_config();
+            memset(&wifi_config, 0, sizeof(wifi_param_t));
+            innotech_flash_write("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
+            esp_restart();
+        }
         ret = mqtt_json_unpack(event->data, get_cmd, method, id, version);
         if(ret == PERM_WRITE)
         {

@@ -11,14 +11,19 @@
 *____________________________________________________________________________
 
 *****************************************************************************/
+#include <stdio.h>
+#include <string.h>
 #include "innotech_button.h"
 #include "innotech_relay.h"
 #include "innotech_config.h"
+#include "innotech_wifi.h"
 
 //#include "innotech_factory.h"
 #include "api_bridge.h"
 
 #define BTN_GPIO_NUM          45
+
+extern void esp_restart(void);
 
 void innotech_button_process(void)
 {
@@ -44,11 +49,14 @@ void innotech_button_process(void)
         printf("switch: %d\r\n", innotech_config->power_switch);
         innotech_set_relay_status(innotech_config->power_switch);
     }
-    else if(key_count >= 500)
+    else if(key_count >= 600)
     {
         key_count = 0;
-        //device_factory_reset();
-        //innotech_factroy_led_state_set(0);
+        innotech_default_device_config();
+        wifi_param_t wifi_config;
+        memset(&wifi_config, 0, sizeof(wifi_param_t));
+        innotech_flash_write("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
+        esp_restart();
     }
     else
     {
