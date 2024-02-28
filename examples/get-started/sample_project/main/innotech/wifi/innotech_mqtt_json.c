@@ -17,6 +17,7 @@
 #include "esp_vfs.h"
 #include "innotech_mqtt_json.h"
 #include "innotech_config.h"
+#include "innotech_relay.h"
 
 #if 0
 //timer
@@ -293,6 +294,7 @@ static void mqtt_json_unpack_params(cJSON *paramsObject, char *get_cmd)
     if( (data_Object = cJSON_GetObjectItem(paramsObject, "PowerSwitch")) != NULL )
     {
         innotech_config->power_switch = data_Object->valueint;
+        innotech_set_relay_status(innotech_config->power_switch);
         memcpy(get_cmd, "PowerSwitch", strlen("PowerSwitch")+1);
     }
     else if( (data_Object = cJSON_GetObjectItem(paramsObject, "ScreenSwitch")) != NULL )

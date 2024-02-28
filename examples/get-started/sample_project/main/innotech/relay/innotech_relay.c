@@ -15,6 +15,7 @@
 #include "freertos/task.h"
 #include "innotech_relay.h"
 #include "api_bridge.h"
+#include "innotech_config.h"
 
 #define     ON             1
 #define     OFF            0
@@ -22,17 +23,8 @@
 #define		GPIO_OUT_RELAY_ON_PIN  	    38
 #define		GPIO_OUT_RELAY_OFF_PIN  	39
 
-static uint8_t device_state = 0;
-static uint8_t device_state_last = 0;
-
-uint8_t innotech_relay_state_get(void)
-{
-    return device_state;
-}
-
 void innotech_set_relay_status(uint8_t state)
 {
-    device_state = state;
     int gpio_num = GPIO_OUT_RELAY_OFF_PIN;
 
     if(state == ON)
@@ -55,9 +47,8 @@ void innotech_set_relay_status(uint8_t state)
     innotech_hold_gpio_level(gpio_num, 1);   
 }
 
-void innotech_relay_state_toggle(void)
+/*8void innotech_relay_state_toggle(void)
 {
-    device_state = device_state ? false : true;
     int gpio_num = GPIO_OUT_RELAY_OFF_PIN;
 
     if(device_state == ON)
@@ -78,14 +69,14 @@ void innotech_relay_state_toggle(void)
     innotech_hold_gpio_level(gpio_num, 0);
     innotech_set_gpio_level(gpio_num, OFF);
     innotech_hold_gpio_level(gpio_num, 1);
-}
+}*/
 
 void innotech_relay_init(void)
 {
     innotech_gpio_mode_init(GPIO_OUT_RELAY_ON_PIN, 2, 0, 0);
     innotech_gpio_mode_init(GPIO_OUT_RELAY_OFF_PIN, 2, 0, 0);
 
-    innotech_set_gpio_level(GPIO_OUT_RELAY_ON_PIN, OFF);      
-    innotech_set_gpio_level(GPIO_OUT_RELAY_OFF_PIN, OFF);      
+    innotech_set_gpio_level(GPIO_OUT_RELAY_ON_PIN, OFF);
+    innotech_set_gpio_level(GPIO_OUT_RELAY_OFF_PIN, OFF);    
 }
 
