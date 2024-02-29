@@ -17,13 +17,9 @@
 #include "innotech_config.h"
 #include "api_bridge.h"
 
-#define INNOTECH_DATA_SIZE  4096
-
 const uint8_t config_init_check[4] = {0x04, 0x01, 0x24, 0x20};
 static innotech_config_t innotech_config;
 static innotech_config_t copy_config;
-
-static uint8_t innotech_buf[INNOTECH_DATA_SIZE] = {0};
 
 uint8_t innotech_config_check(void)
 {
@@ -105,15 +101,13 @@ void innotech_default_device_config(void)
     innotech_config.memory = false;
 
     memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
-	memcpy(innotech_buf, &innotech_config, sizeof(innotech_config_t));
-	innotech_flash_write("innotech", (char *)innotech_buf, INNOTECH_DATA_SIZE);
+	innotech_flash_write("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
 }
 
 void innotech_config_data_save(void)
 {
     memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
-    memcpy(innotech_buf, &innotech_config, sizeof(innotech_config_t));
-	innotech_flash_write("innotech", (char *)innotech_buf, INNOTECH_DATA_SIZE);
+    innotech_flash_write("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
 }
 
 void* innotech_config_get_handle(void)
@@ -129,12 +123,9 @@ void innotech_config_init(void)
 
     innotech_flash_init();
     
-    memset(innotech_buf, 0, INNOTECH_DATA_SIZE);
-    innotech_flash_read("innotech", (char *)innotech_buf, INNOTECH_DATA_SIZE);
-    
     memset(&innotech_config, 0, sizeof(innotech_config_t));
-    memcpy(&innotech_config, innotech_buf, sizeof(innotech_config_t));
-    
+    innotech_flash_read("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
+
     memset(&copy_config, 0, sizeof(innotech_config_t));
     memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
 

@@ -31,15 +31,15 @@ typedef struct _innotech_timer_t{
     bool enable;//0-disable,1-enable
     bool is_valid;//0-not executable,1-executable(Not executable indicates that the timer is not initialized)
     bool onoff;//0-off,1-on
-    uint8_t time[256];
-    uint8_t repeat[256];
+    uint8_t time[32];
+    uint8_t repeat[32];
 }innotech_timer_t;
 
 typedef struct _innotech_count_down_t{  //for sleep
     uint8_t schedule_id[50];
     int32_t time_left;//Value range: 1 to 86399(unit: minute)
     bool onoff;//0-off,1-on
-    uint8_t timestamp[64];//String UTC timestamp (milliseconds)
+    uint8_t timestamp[32];//String UTC timestamp (milliseconds)
     bool is_running;//0-not executable,1-executable
 }innotech_count_down_t;
 typedef struct _innotech_config_t
