@@ -3,23 +3,28 @@
 * DATE:				2024/02
 * AUTHOR:			qiang.zhang
 * IC:				ESP32C3
-* DESCRIPTION:	    Device Network Time Synchronization.
+* DESCRIPTION:	    Device Factory Handle.
 *____________________________________________________________________________
 * REVISION  Date		    User            Description
-* 1.0		2024/02/27	    qiang.zhang		First release
+* 1.0		2024/02/29	    qiang.zhang		First release
 *
 *____________________________________________________________________________
 
 *****************************************************************************/
-#pragma once
-#ifdef __cplusplus
-extern "C"
+#include "innotech_wifi.h"
+#include "innotech_config.h"
+#include "innotech_factory.h"
+
+extern void esp_restart(void);
+void innotech_factory_reset(void)
 {
-#endif
-
-void innotech_rtc_init(void);
-
-#ifdef __cplusplus
+    innotech_default_device_config();
+    innotech_wifi_config_reset();        
+    esp_restart();
 }
-#endif
+
+void innotech_factory_init(void)
+{
+
+}
 

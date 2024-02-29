@@ -13,7 +13,7 @@
 *****************************************************************************/
 
 #pragma once
-
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C"
 {
@@ -46,6 +46,7 @@ typedef void (*callback)(int);
 /* Exported functions ------------------------------------------------------- */
 void innotech_wifi_state_report(callback function);
 uint8_t innotech_wifi_config_flag_get(void);
+void innotech_wifi_config_reset(void);
 uint8_t innotech_wifi_state_get(void);
 void wifi_init_sta(wifi_param_t wifi);
 void innotech_wifi_init(void);

@@ -1,12 +1,12 @@
-/******************** (C) COPYRIGHT 2023 INNOTECH **************************
+/******************** (C) COPYRIGHT 2024 INNOTECH **************************
 * COMPANY:			INNOTECH
-* DATE:				2023/05
+* DATE:				2024/02
 * AUTHOR:			qiang.zhang
 * IC:				ESP32C3
-* DESCRIPTION:	    Device button Handle.
+* DESCRIPTION:	    Device Factory Handle.
 *____________________________________________________________________________
 * REVISION  Date		    User            Description
-* 1.0		2023/05/16	    qiang.zhang		First release
+* 1.0		2024/02/29	    qiang.zhang		First release
 *
 *____________________________________________________________________________
 
@@ -17,9 +17,10 @@ extern "C"
 {
 #endif
 
-void innotech_button_init(void);
-void innotech_button_process(void);
+void innotech_factory_reset(void);
+void innotech_factory_init(void);
 
 #ifdef __cplusplus
 }
 #endif
+
