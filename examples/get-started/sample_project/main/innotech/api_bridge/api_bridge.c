@@ -20,12 +20,18 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
+#include "esp_timer.h"
+#include "driver/gptimer.h"
+
 #include "api_bridge.h"
 
 static const char *TAG = "api_bridge";
 
 static nvs_handle_t handle;
 
+#define DEVICE_BSP_TIMER_PERIOD 10000 			//10ms
+
+static esp_timer_handle_t device_bsp_timer = NULL;
 
 #define I2C_MASTER_NUM 0            /*!< I2C port number for master dev */
 #define I2C_MASTER_TX_BUF_DISABLE 0 /*!< I2C master do not need buffer */
@@ -177,6 +183,14 @@ void innotech_gpio_mode_init(int pin, uint8_t mode, uint8_t down, uint8_t up, ui
     gpio_config(&cfg);
 }
 
+void innotech_gpio_isr_init(int flag, int pin, interrupt handler,void *args)
+{
+    //install gpio isr service
+    gpio_install_isr_service(flag);
+    //hook isr handler for specific gpio pin
+    gpio_isr_handler_add(pin, handler, args);
+}
+
 uint32_t innotech_get_heap_size(void)
 {
     return esp_get_free_heap_size();
@@ -209,4 +223,16 @@ uint8_t innotech_get_sync_status(void)
     {
         return 0;
     }
+}
+
+void innotech_timmer_init(interrupt function)
+{
+	const esp_timer_create_args_t device_bsp_timer_args = 
+	{
+		.callback = function,
+		.name = "device_bsp"
+	};
+	esp_timer_create(&device_bsp_timer_args, &device_bsp_timer);
+	esp_timer_start_periodic(device_bsp_timer, DEVICE_BSP_TIMER_PERIOD); 
+
 }

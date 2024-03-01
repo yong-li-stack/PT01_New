@@ -18,6 +18,7 @@
 #include "innotech_mqtt_json.h"
 #include "innotech_config.h"
 #include "innotech_relay.h"
+#include "innotech_meter.h"
 
 static void mqtt_json_pack_sleep(cJSON *sleepObject, uint8_t id)
 {
@@ -108,27 +109,27 @@ static int mqtt_json_params_pack(char *cmd, cJSON *stateJSObject)
     
     if( (strncmp(cmd, "RealTimeCurrent", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
-        cJSON_AddItemToObject(stateJSObject, "RealTimeCurrent", cJSON_CreateNumber(0.00));
+        cJSON_AddItemToObject(stateJSObject, "RealTimeCurrent", cJSON_CreateNumber(innotech_current_get()));
     }
     
     if( (strncmp(cmd, "RealTimeVoltage", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
-        cJSON_AddItemToObject(stateJSObject, "RealTimeVoltage", cJSON_CreateNumber(219.60));
+        cJSON_AddItemToObject(stateJSObject, "RealTimeVoltage", cJSON_CreateNumber(innotech_voltage_get()));
     }
 
     if( (strncmp(cmd, "RealTimePower", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
-        cJSON_AddItemToObject(stateJSObject, "RealTimePower", cJSON_CreateNumber(0.0));
+        cJSON_AddItemToObject(stateJSObject, "RealTimePower", cJSON_CreateNumber(innotech_power_get()));
     }
 
     if( (strncmp(cmd, "TotalConsumption", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
-        cJSON_AddItemToObject(stateJSObject, "TotalConsumption", cJSON_CreateNumber(0.0));
+        cJSON_AddItemToObject(stateJSObject, "TotalConsumption", cJSON_CreateNumber(innotech_consumption_get()));
     }
 
     if( (strncmp(cmd, "LineDiameter", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
-        cJSON_AddItemToObject(stateJSObject, "LineDiameter", cJSON_CreateNumber(0.0));
+        cJSON_AddItemToObject(stateJSObject, "LineDiameter", cJSON_CreateNumber(innotech_config->line_diameter));
     }
 
     if( (strncmp(cmd, "LocalTimer_1", strlen(cmd)) == 0))

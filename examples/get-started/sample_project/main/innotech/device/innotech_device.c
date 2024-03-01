@@ -24,6 +24,7 @@
 //#include "innotech_factory.h"
 #include "innotech_relay.h"
 #include "innotech_button.h"
+#include "innotech_meter.h"
 #include "api_bridge.h"
 
 static uint16_t time_tick = 0;
@@ -80,6 +81,7 @@ void innotech_device_init(void)
     //innotech_lcd_init();
     innotech_relay_init();
     innotech_button_init();
+    innotech_meter_init();
     innotech_wifi_init();
     innotech_ble_init();
     innotech_rtc_init();
