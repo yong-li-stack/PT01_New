@@ -66,6 +66,7 @@ static uint8_t wifi_connect_state = 0;
 #define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
 #define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
 #define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
+#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/GetLocationEvent/post"           
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
@@ -111,6 +112,15 @@ void mqtt_send_device_status(esp_mqtt_client_handle_t client)
     }
 }
 
+void mqtt_get_device_location(esp_mqtt_client_handle_t client)
+{
+    char payload[256] = {0};
+    char id[] = "1103";
+
+    mqtt_json_location_get(id, payload);
+    esp_mqtt_client_publish(client, AliyunPublishTopic_device_location, payload, strlen(payload), 0, 0);
+}
+
 void mqtt_send_data_reply(esp_mqtt_client_handle_t client, char *set_topic, char *id, char *version)
 {
     char payload[1024] = {0};
@@ -149,6 +159,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         mqtt_send_device_status(client);
+        mqtt_get_device_location(client);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");

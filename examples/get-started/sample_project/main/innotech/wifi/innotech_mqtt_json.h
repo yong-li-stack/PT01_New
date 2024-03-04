@@ -29,6 +29,7 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *method, 
 void mqtt_json_pack_reply(char *id, char *version, char *package_msg);
 int mqtt_json_pack(char *cmd, char *id, char *version, char *package_msg);
 int mqtt_json_last_will(char *result, char * timestamp, char *package_msg);
+int mqtt_json_location_get(char *id, char *package_msg);
 
 #ifdef __cplusplus
 }

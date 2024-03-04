@@ -181,6 +181,27 @@ static void mqtt_json_sys_pack(uint8_t ack, cJSON *sysJSObject)
     cJSON_AddItemToObject(sysJSObject, "ack", cJSON_CreateNumber(ack));
 }
 
+int mqtt_json_location_get(char *id, char *package_msg)
+{
+	cJSON *IOTJSObject = NULL, *stateJSObject = NULL;
+	char *iot_json = NULL;
+
+	//pack msg
+	if((IOTJSObject = cJSON_CreateObject()) != NULL)
+	{
+		cJSON_AddItemToObject(IOTJSObject, "id", cJSON_CreateString(id));   		 	  
+        cJSON_AddItemToObject(IOTJSObject, "params", stateJSObject = cJSON_CreateObject());
+
+		iot_json = cJSON_PrintUnformatted(IOTJSObject);  
+		sprintf(package_msg, "%s", iot_json);
+		printf("pack:%s\n", package_msg);
+		free((void *)iot_json);
+		cJSON_Delete(IOTJSObject);
+	}
+    
+    return 0;
+}
+
 ///////////////msg body////////////////
 int mqtt_json_pack(char *cmd, char *id, char *version, char *package_msg)
 {
@@ -220,6 +241,7 @@ int mqtt_json_pack(char *cmd, char *id, char *version, char *package_msg)
 			mqtt_json_params_pack(cmd, stateJSObject);
             mqtt_json_sys_pack(1, sysJSObject);
 		}
+
 		iot_json = cJSON_PrintUnformatted(IOTJSObject);  
 		sprintf(package_msg, "%s", iot_json);
 		printf("pack:%s\n", package_msg);
