@@ -25,8 +25,8 @@
 #define GPIO_INPUT_IO_BL0937B_CF      40//7     // POWER
 #define GPIO_INPUT_PIN_SEL  (GPIO_INPUT_IO_BL0937B_CF1 | GPIO_INPUT_IO_BL0937B_CF)
 
-static float cf_isr_cnt = 0;
-static float cf1_isr_cnt = 0;
+static int cf_isr_cnt = 0;
+static int cf1_isr_cnt = 0;
 
 typedef struct _energy_manage_t{
     double current;
@@ -57,18 +57,14 @@ double innotech_consumption_get(void)
     return energy.consumption;
 }
 
-static void IRAM_ATTR gpio_isr_handler(void* arg)
+static void IRAM_ATTR cf_isr_handler(void* arg)
 {
-    uint32_t gpio_num = (uint32_t) arg;    
+    cf_isr_cnt++;
+}
 
-    if(gpio_num == GPIO_INPUT_IO_BL0937B_CF)
-    {
-        cf_isr_cnt++;
-    }
-    else
-    {
-        cf1_isr_cnt++;
-    }
+static void IRAM_ATTR cf1_isr_handler(void* arg)
+{
+    cf1_isr_cnt++;
 }
 
 static void meter_gpio_isr_init(void)
@@ -77,8 +73,10 @@ static void meter_gpio_isr_init(void)
     innotech_set_gpio_level(GPIO_OUTPUT_PIN_SEL, 1);
 
     innotech_gpio_mode_init(GPIO_INPUT_PIN_SEL, 1, 0, 0, 1);
-    innotech_gpio_isr_init(0, GPIO_INPUT_IO_BL0937B_CF, gpio_isr_handler,(void *)GPIO_INPUT_IO_BL0937B_CF);
-    innotech_gpio_isr_init(0, GPIO_INPUT_IO_BL0937B_CF1, gpio_isr_handler,(void *)GPIO_INPUT_IO_BL0937B_CF1);
+    innotech_gpio_isr_service_init(0);
+    innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF, cf_isr_handler,NULL);
+    innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF1, cf1_isr_handler,NULL);
+
 }
 
 static void device_bsp_timer_cb(void* tmr)

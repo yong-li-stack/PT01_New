@@ -183,10 +183,14 @@ void innotech_gpio_mode_init(int pin, uint8_t mode, uint8_t down, uint8_t up, ui
     gpio_config(&cfg);
 }
 
-void innotech_gpio_isr_init(int flag, int pin, interrupt handler,void *args)
+void innotech_gpio_isr_service_init(int flag)
 {
     //install gpio isr service
     gpio_install_isr_service(flag);
+}
+
+void innotech_gpio_isr_handler_init(int pin, interrupt handler,void *args)
+{
     //hook isr handler for specific gpio pin
     gpio_isr_handler_add(pin, handler, args);
 }
