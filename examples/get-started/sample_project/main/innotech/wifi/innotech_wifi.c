@@ -188,9 +188,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         {
             memcpy(topic, event->topic, event->topic_len);
             mqtt_send_data_reply(client, topic, id, version);
-            printf("get_cmd: %s\r\n",get_cmd);
-            mqtt_json_pack(get_cmd, id, version, payload);
-            esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0); 
+            //printf("get_cmd: %s\r\n",get_cmd);
+            if(strncmp(get_cmd, "GeoLocatioin", strlen(get_cmd)) != 0)
+            {
+                mqtt_json_pack(get_cmd, id, version, payload);
+                esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0); 
+            }
         }
         break;
     case MQTT_EVENT_ERROR:

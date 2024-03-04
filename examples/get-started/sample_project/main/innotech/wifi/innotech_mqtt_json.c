@@ -19,6 +19,7 @@
 #include "innotech_config.h"
 #include "innotech_relay.h"
 #include "innotech_meter.h"
+#include "innotech_rtc.h"
 
 static void mqtt_json_pack_sleep(cJSON *sleepObject, uint8_t id)
 {
@@ -275,6 +276,31 @@ void mqtt_json_pack_reply(char *id, char *version, char *package_msg)
 
 }
 
+static void mqtt_json_unpack_location(cJSON *locationObject)
+{
+    if(locationObject == NULL)
+    {
+        printf("unpack_params null\n");
+        return;
+    }
+    cJSON *latitudeObject, *longitudeObject, *idObject;
+    location_t location;
+
+    if( (idObject = cJSON_GetObjectItem(locationObject, "CityId")) != NULL )
+    {
+        location.city_id = idObject->valueint;
+    }
+    if( (latitudeObject = cJSON_GetObjectItem(locationObject, "Latitude")) != NULL )
+    {
+        location.latitude = latitudeObject->valuedouble;
+    }
+    if( (longitudeObject = cJSON_GetObjectItem(locationObject, "Longitude")) != NULL )
+    {
+        location.longitude = longitudeObject->valuedouble;
+    }
+    innotech_location_set(location);
+}
+
 static void mqtt_json_unpack_sleep(cJSON *sleepObject, uint8_t id)
 {
     if(sleepObject == NULL)
@@ -423,6 +449,11 @@ static void mqtt_json_unpack_params(cJSON *paramsObject, char *get_cmd)
     {
         mqtt_json_unpack_sleep(data_Object, 2);
         memcpy(get_cmd, "CountDown_3", strlen("CountDown_3")+1);
+    }
+    else if( (data_Object = cJSON_GetObjectItem(paramsObject, "GeoLocatioin")) != NULL )
+    {
+        mqtt_json_unpack_location(data_Object);
+        memcpy(get_cmd, "GeoLocatioin", strlen("GeoLocatioin")+1);
     }
 }
 

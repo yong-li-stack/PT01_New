@@ -22,6 +22,15 @@
 
 #define RTC_TAG "INNOTECH_RTC"
 
+static location_t device;
+void innotech_location_set(location_t location)
+{
+    device.city_id = location.city_id;
+    device.latitude = location.latitude;
+    device.longitude = location.longitude;
+    printf("city_id: %d latitude: %f longitude:%f\r\n", device.city_id, device.latitude, device.longitude);
+}
+
 static void innotech_rtc_thread(void *arg)
 {
     while(!innotech_wifi_state_get())  //must be wifi connected
