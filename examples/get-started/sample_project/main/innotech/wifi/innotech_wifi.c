@@ -46,6 +46,7 @@ static EventGroupHandle_t s_wifi_event_group;
 
 static const char *TAG = "INNOTECH_WIFI";
 
+esp_mqtt_client_handle_t client;
 static wifi_param_t wifi_config;
 static int s_retry_num = 0;
 static uint8_t wifi_connect_state = 0;
@@ -97,7 +98,7 @@ uint8_t innotech_wifi_state_get(void)
     return wifi_connect_state;
 }
 
-void mqtt_send_device_status(esp_mqtt_client_handle_t client)
+void mqtt_send_device_status(void)
 {
     char payload[1024] = {0};
     char get_cmd[] = "status";
@@ -112,7 +113,17 @@ void mqtt_send_device_status(esp_mqtt_client_handle_t client)
     }
 }
 
-void mqtt_get_device_location(esp_mqtt_client_handle_t client)
+void mqtt_send_device_info(char *cmd)
+{
+    char payload[1024] = {0};
+    char id[] = "26";
+    char version[] = "1.0";
+
+    mqtt_json_pack(cmd, id, version, payload);
+    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+}
+
+void mqtt_get_device_location(void)
 {
     char payload[256] = {0};
     char id[] = "1103";
@@ -121,7 +132,7 @@ void mqtt_get_device_location(esp_mqtt_client_handle_t client)
     esp_mqtt_client_publish(client, AliyunPublishTopic_device_location, payload, strlen(payload), 0, 0);
 }
 
-void mqtt_send_data_reply(esp_mqtt_client_handle_t client, char *set_topic, char *id, char *version)
+void mqtt_send_data_reply(char *set_topic, char *id, char *version)
 {
     char payload[1024] = {0};
     char reply_topic[64] = {0};
@@ -146,7 +157,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
     esp_mqtt_event_handle_t event = event_data;
-    esp_mqtt_client_handle_t client = event->client;
+    client = event->client;
     char payload[1024] = {0};
     char method[32] = {0};
     char id[12] = {0};
@@ -158,8 +169,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        mqtt_send_device_status(client);
-        mqtt_get_device_location(client);
+        mqtt_send_device_status();
+        mqtt_get_device_location();
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -187,7 +198,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         if(ret == PERM_WRITE)
         {
             memcpy(topic, event->topic, event->topic_len);
-            mqtt_send_data_reply(client, topic, id, version);
+            mqtt_send_data_reply(topic, id, version);
             //printf("get_cmd: %s\r\n",get_cmd);
             if(strncmp(get_cmd, "GeoLocatioin", strlen(get_cmd)) != 0)
             {

@@ -49,6 +49,7 @@ uint8_t innotech_wifi_config_flag_get(void);
 void innotech_wifi_config_reset(void);
 uint8_t innotech_wifi_state_get(void);
 void wifi_init_sta(wifi_param_t wifi);
+void mqtt_send_device_info(char *cmd);
 void innotech_wifi_init(void);
 
 #ifdef __cplusplus

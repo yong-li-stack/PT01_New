@@ -14,11 +14,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "api_bridge.h"
 #include "innotech_wifi.h"
 #include "innotech_rtc.h"
+#include "innotech_config.h"
+#include "innotech_relay.h"
 
 #define RTC_TAG "INNOTECH_RTC"
 
@@ -31,6 +34,21 @@ void innotech_location_set(location_t location)
     printf("city_id: %d latitude: %f longitude:%f\r\n", device.city_id, device.latitude, device.longitude);
 }
 
+static uint16_t timer_repeat_get(uint8_t *arr, int size) 
+{
+    uint16_t repeat = 0x80;
+
+    for (int i = 0; i < size; i++) 
+    {
+        if (isdigit(arr[i])) 
+        {
+            repeat |= (1 << (i / 2));
+        }
+    }
+
+    return repeat;
+}
+
 static void innotech_rtc_thread(void *arg)
 {
     while(!innotech_wifi_state_get())  //must be wifi connected
@@ -39,6 +57,8 @@ static void innotech_rtc_thread(void *arg)
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
+    innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
+    char cmd[16] = {0};
     time_t now;
     struct tm timeinfo;
     time(&now);
@@ -66,6 +86,95 @@ static void innotech_rtc_thread(void *arg)
         localtime_r(&now, &timeinfo);
         //printf("[sync time]%d-%d-%d %d:%d:%d week:%d\n", timeinfo.tm_year+1900, timeinfo.tm_mon+1, 
         //    timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_wday);
+        for(uint8_t i = 0; i < 5; i++)
+		{
+			if(innotech_config->timer[i].enable == 1)
+			{
+				uint8_t onoff = innotech_config->timer[i].onoff;
+				uint8_t hour = atoi((char *)&(innotech_config->timer[i].time[3]));
+				uint8_t min = atoi((char *)&(innotech_config->timer[i].time[0]));
+				uint8_t repeat = timer_repeat_get(innotech_config->timer[i].repeat, strlen((char *)innotech_config->timer[i].repeat)+1);
+                
+                printf("timer[%d]:onoff:%d, time %d:%d, repeat: %d \r\n", i, onoff, hour, min, repeat);
+				if(((repeat == 0x80) || (((repeat&0x7f) & (1 << (timeinfo.tm_wday - 1))) !=0))
+					&&((hour == timeinfo.tm_hour) && (min == timeinfo.tm_min)&& (timeinfo.tm_sec == 0)))
+				{
+					printf("detect timer %d \r\n",i);
+                    if(repeat ==0x80)
+					{
+						innotech_config->timer[i].enable = 0;
+					}
+					if(onoff == 1)//open
+					{
+                        if(innotech_config->power_switch == 0)
+                        {
+                            innotech_config->power_switch = 1;
+                            innotech_set_relay_status(innotech_config->power_switch);
+                            memcpy(cmd, "PowerSwitch", strlen("PowerSwitch")+1);
+                            mqtt_send_device_info(cmd);
+                            switch(i)
+                            {
+                                case 0:
+                                    memcpy(cmd, "LocalTimer_1", strlen("LocalTimer_1")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 1:
+                                    memcpy(cmd, "LocalTimer_2", strlen("LocalTimer_2")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 2:
+                                    memcpy(cmd, "LocalTimer_3", strlen("LocalTimer_3")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 3:
+                                    memcpy(cmd, "LocalTimer_4", strlen("LocalTimer_4")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 4:
+                                    memcpy(cmd, "LocalTimer_5", strlen("LocalTimer_5")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                            }
+                        }
+					}
+					else//close
+					{
+						if(innotech_config->power_switch == 1)
+                        {
+                            innotech_config->power_switch = 0;
+                            innotech_set_relay_status(innotech_config->power_switch);
+                            memcpy(cmd, "PowerSwitch", strlen("PowerSwitch")+1);
+                            mqtt_send_device_info(cmd);
+                            switch(i)
+                            {
+                                case 0:
+                                    memcpy(cmd, "LocalTimer_1", strlen("LocalTimer_1")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 1:
+                                    memcpy(cmd, "LocalTimer_2", strlen("LocalTimer_2")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 2:
+                                    memcpy(cmd, "LocalTimer_3", strlen("LocalTimer_3")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 3:
+                                    memcpy(cmd, "LocalTimer_4", strlen("LocalTimer_4")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 4:
+                                    memcpy(cmd, "LocalTimer_5", strlen("LocalTimer_5")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                            }
+                        }					
+					}                    
+				}
+
+				
+			}
+		}
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
@@ -73,7 +182,7 @@ static void innotech_rtc_thread(void *arg)
 
 void innotech_rtc_init(void)
 {
-    if(xTaskCreate(innotech_rtc_thread, (char const *)"innotech_rtc_thread", 2560, NULL, 23, NULL) != pdPASS)
+    if(xTaskCreate(innotech_rtc_thread, (char const *)"innotech_rtc_thread", 4096, NULL, 23, NULL) != pdPASS)
     {
         printf("\n\r[%s] Create RTC update task failed", __FUNCTION__);
     }   
