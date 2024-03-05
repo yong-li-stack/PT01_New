@@ -171,8 +171,70 @@ static void innotech_rtc_thread(void *arg)
                         }					
 					}                    
 				}
-
-				
+			}
+		}
+        for(uint8_t i = 0; i < 3; i++)
+		{
+			if(innotech_config->sleep[i].is_running == 1)
+			{
+				uint8_t onoff = innotech_config->sleep[i].onoff;
+				int32_t time_left = innotech_config->sleep[i].time_left;
+                time_t timestamp = atoll((char *)innotech_config->sleep[i].timestamp) / 1000;
+                printf("sleep[%d]:onoff:%d, time_left %ld, nowstamp: %lld timestamp: %lld\r\n", i, onoff, time_left, now, timestamp);
+				if(now - timestamp >= time_left)
+				{
+                    innotech_config->sleep[i].is_running = 0;
+					if(onoff == 1)//open
+					{
+                        if(innotech_config->power_switch == 0)
+                        {
+                            innotech_config->power_switch = 1;
+                            innotech_set_relay_status(innotech_config->power_switch);
+                            memcpy(cmd, "PowerSwitch", strlen("PowerSwitch")+1);
+                            mqtt_send_device_info(cmd);
+                            switch(i)
+                            {
+                                case 0:
+                                    memcpy(cmd, "CountDown_1", strlen("CountDown_1")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 1:
+                                    memcpy(cmd, "CountDown_2", strlen("CountDown_2")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 2:
+                                    memcpy(cmd, "CountDown_3", strlen("CountDown_3")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                            }
+                        }
+					}
+					else//close
+					{
+						if(innotech_config->power_switch == 1)
+                        {
+                            innotech_config->power_switch = 0;
+                            innotech_set_relay_status(innotech_config->power_switch);
+                            memcpy(cmd, "PowerSwitch", strlen("PowerSwitch")+1);
+                            mqtt_send_device_info(cmd);
+                            switch(i)
+                            {
+                                case 0:
+                                    memcpy(cmd, "CountDown_1", strlen("CountDown_1")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 1:
+                                    memcpy(cmd, "CountDown_2", strlen("CountDown_2")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                                case 2:
+                                    memcpy(cmd, "CountDown_3", strlen("CountDown_3")+1);
+                                    mqtt_send_device_info(cmd);
+                                    break;
+                            }
+                        }					
+					}                    
+				}
 			}
 		}
         vTaskDelay(1000 / portTICK_PERIOD_MS);
