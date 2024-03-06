@@ -78,7 +78,7 @@ void innotech_device_init(void)
 {
     //innotech_factory_init();
     innotech_config_init();
-    //innotech_lcd_init();
+    innotech_lcd_init();
     innotech_relay_init();
     innotech_button_init();
     innotech_meter_init();
