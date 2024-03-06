@@ -197,7 +197,8 @@ void innotech_gpio_isr_handler_init(int pin, interrupt handler,void *args)
 
 uint32_t innotech_get_heap_size(void)
 {
-    return esp_get_free_heap_size();
+    //return esp_get_free_heap_size();
+    return esp_get_free_internal_heap_size();
 }
 
 static void time_sync_notification_cb(struct timeval *tv)
