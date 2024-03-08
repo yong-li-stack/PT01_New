@@ -26,6 +26,8 @@
 #include "esp_http_client.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "esp_crt_bundle.h"
+#include "cJSON.h"
 
 #define TAG "INNOTECH_WEATHER"
 
@@ -44,8 +46,10 @@
 
 #define MAX_HTTP_RECV_BUFFER            (1024)
 
+static weather_t weather_info;
 static uint8_t location_flag = 0;
 static location_t device;
+
 void innotech_location_set(location_t location)
 {
     device.city_id = location.city_id;
@@ -53,6 +57,11 @@ void innotech_location_set(location_t location)
     device.longitude = location.longitude;
     location_flag = 1;
     printf("city_id: %d latitude: %f longitude:%f\r\n", device.city_id, device.latitude, device.longitude);
+}
+
+weather_t innotech_weather_info_get(void)
+{
+    return weather_info;
 }
 
 static int network_gzip_decompress(void *in_buf, size_t in_size, void *out_buf, size_t *out_size, size_t out_buf_size)
@@ -89,7 +98,7 @@ static int network_gzip_decompress(void *in_buf, size_t in_size, void *out_buf, 
     return Z_OK;
 }
 
-/*static esp_err_t app_weather_parse_now(char *buffer, location_t location)
+static esp_err_t app_weather_parse_now(char *buffer)
 {
     cJSON *json = cJSON_Parse(buffer);
     cJSON *json_now = NULL;
@@ -97,20 +106,18 @@ static int network_gzip_decompress(void *in_buf, size_t in_size, void *out_buf, 
     if (NULL != json) {
         json_now = cJSON_GetObjectItem(json, "now");
         if (NULL != json_now) {
-            cJSON *json_item_temp = cJSON_GetObjectItem(json_now, "temp");
-            cJSON *json_item_icon = cJSON_GetObjectItem(json_now, "icon");
-            cJSON *json_item_text = cJSON_GetObjectItem(json_now, "text");
-            cJSON *json_item_humidity = cJSON_GetObjectItem(json_now, "humidity");
+            cJSON *item_temp_max = cJSON_GetObjectItem(json_now, "tempMax");
+            cJSON *item_temp_min = cJSON_GetObjectItem(json_now, "tempMin");
+            cJSON *item_icon = cJSON_GetObjectItem(json_now, "iconDay");
+            cJSON *item_humidity = cJSON_GetObjectItem(json_now, "humidity");
 
-            ESP_LOGI(TAG, "Temp : [%s]", json_item_temp->valuestring);
-            ESP_LOGI(TAG, "Icon : [%s]", json_item_icon->valuestring);
-            ESP_LOGI(TAG, "Text : [%s]", json_item_text->valuestring);
-            ESP_LOGI(TAG, "Humid: [%s]", json_item_humidity->valuestring);
-
-            weather_info[location]->temp = atoi(json_item_temp->valuestring);
-            weather_info[location]->icon_code = atoi(json_item_icon->valuestring);
-            weather_info[location]->humid = atoi(json_item_humidity->valuestring);
-            strcpy(weather_info[location]->describe, json_item_text->valuestring);
+            weather_info.temp_max = item_temp_max->valueint;
+            weather_info.temp_min = item_temp_min->valueint;
+            weather_info.icon_code = item_icon->valueint;
+            weather_info.humid = item_humidity->valueint;
+            ESP_LOGI(TAG, "Temp : %d/%d", weather_info.temp_max, weather_info.temp_min);
+            ESP_LOGI(TAG, "Icon : [%d]", weather_info.icon_code);
+            ESP_LOGI(TAG, "Humid: [%d]", weather_info.humid);
         } else {
             ESP_LOGE(TAG, "Error parsing object - [%s] - [%d]", __FILE__, __LINE__);
             return ESP_FAIL;
@@ -122,12 +129,12 @@ static int network_gzip_decompress(void *in_buf, size_t in_size, void *out_buf, 
     }
 
     return ESP_OK;
-}*/
+}
 
 esp_err_t response_handler(esp_http_client_event_t *evt)
 {
-    char *data[1024] = {0};
-    int data_len = 0;
+    static char *data[512] = {0};
+    static int data_len = 0;
 
     switch (evt->event_id) {
     case HTTP_EVENT_ERROR:
@@ -163,8 +170,8 @@ esp_err_t response_handler(esp_http_client_event_t *evt)
         size_t decode_maxlen = data_len*2;
         char decode_out[1024] = {0};
         network_gzip_decompress(data, data_len, decode_out, &out_size, decode_maxlen);
-        printf("HTTP_EVENT_ON_FINISH, location:%d, out_size:%d, %s\n",device.city_id, out_size, decode_out);
-        //app_weather_parse_now(decode_out,device.city_id);
+        printf("HTTP_EVENT_ON_FINISH, out_size:%d, %s\n", out_size, decode_out);
+        app_weather_parse_now(decode_out);
 
         break;
 
@@ -183,7 +190,8 @@ esp_err_t app_weather_request(void)
 {
     char url_request[128] = {0};
 
-    sprintf(url_request, "https://devapi.qweather.com/v7/weather/now?location=%.2f,%.2f&lang=en&82cb41e828d14f4399a12ba5b485ce52", device.latitude, device.longitude);
+    //sprintf(url_request, "https://devapi.qweather.com/v7/weather/now?location=%.2f,%.2f&lang=en&key=82cb41e828d14f4399a12ba5b485ce52", device.longitude, device.latitude);
+    sprintf(url_request, "https://api.qweather.com/v7/weather/3d?location=%.2f,%.2f&lang=en&key=82cb41e828d14f4399a12ba5b485ce52", device.longitude, device.latitude);
     ESP_LOGI(TAG, "url_request:%s %d\r\n", url_request, strlen(url_request)+1);
 
     esp_http_client_config_t config = {
@@ -193,6 +201,7 @@ esp_err_t app_weather_request(void)
         .buffer_size = MAX_HTTP_RECV_BUFFER,
         .timeout_ms = 5000,
         .user_data = (void *)device.city_id,
+        .crt_bundle_attach = esp_crt_bundle_attach,
     };
     // Set the headers
     esp_http_client_handle_t client = esp_http_client_init(&config);
