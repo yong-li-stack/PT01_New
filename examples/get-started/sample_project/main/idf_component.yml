@@ -11,3 +11,4 @@ dependencies:
     public: true
   esp_lcd_st7701:
     version: "*"
+  espressif/zlib: ^1
