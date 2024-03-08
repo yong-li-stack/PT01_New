@@ -107,10 +107,6 @@ void mqtt_send_device_status(void)
 
     mqtt_json_pack(get_cmd, id, version, payload);
     esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
-    if (wifi_connect_result != NULL)
-    {
-        wifi_connect_result(1);
-    }
 }
 
 void mqtt_send_device_info(char *cmd)
@@ -333,6 +329,10 @@ void wifi_init_sta(wifi_param_t wifi)
             wifi.flag = WIFI_CONFIG_SUC;
             memcpy(&wifi_config, &wifi, sizeof(wifi_param_t));
             innotech_flash_write("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
+            if (wifi_connect_result != NULL)
+            {
+                wifi_connect_result(1);
+            }
         }
     } 
     else if (bits & WIFI_FAIL_BIT) 

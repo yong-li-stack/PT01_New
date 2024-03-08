@@ -254,6 +254,17 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 ESP_LOGE(GATTS_TABLE_TAG, "advertising start failed");
             }else{
                 ESP_LOGI(GATTS_TABLE_TAG, "advertising start successfully");
+                if(innotech_wifi_state_get()) 
+                {
+                    /*esp_ble_gap_stop_advertising();
+                    esp_ble_gatts_app_unregister(ESP_APP_ID);
+                    esp_bluedroid_disable();
+                    esp_bluedroid_deinit();
+                    esp_bt_controller_disable();
+                    esp_bt_controller_deinit();
+                    esp_bt_mem_release(ESP_BT_MODE_CLASSIC_BT);*/
+                    esp_restart();
+                }
             }
             break;
         case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
