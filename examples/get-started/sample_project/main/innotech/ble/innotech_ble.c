@@ -47,6 +47,7 @@
 #define SCAN_RSP_CONFIG_FLAG        (1 << 1)
 
 static uint8_t adv_config_done       = 0;
+uint8_t pre_wifi = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
 
@@ -206,6 +207,11 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
     {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_client_config_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
       sizeof(uint16_t), sizeof(heart_measurement_ccc), (uint8_t *)heart_measurement_ccc}},
 };
+
+uint8_t innotech_pre_wifi(void)
+{
+    return pre_wifi;
+}
 
 static void innotech_ble_report_wifi_state(int state)
 {
@@ -422,6 +428,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
                     ESP_LOGE(GATTS_TABLE_TAG, "device indicate:");
                     esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+                    pre_wifi = 1;
                     wifi_init_sta(wifi);
                 }
 

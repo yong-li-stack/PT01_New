@@ -338,6 +338,7 @@ void wifi_init_sta(wifi_param_t wifi)
     else if (bits & WIFI_FAIL_BIT) 
     {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi.ssid, wifi.password);
+        wifi_connect_state = 2;
         if (wifi_connect_result != NULL)
         {
             wifi_connect_result(0);

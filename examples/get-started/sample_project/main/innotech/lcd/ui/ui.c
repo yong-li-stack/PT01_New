@@ -2,12 +2,14 @@
 // SquareLine Studio version: SquareLine Studio 1.3.4
 // LVGL version: 8.3.6
 // Project name: SquareLine_Project
-
+#include <stdio.h>
 #include "ui.h"
 #include "ui_helpers.h"
 #include "innotech_wifi.h"
+#include "innotech_lcd.h"
 #include "api_bridge.h"
 #include "innotech_config.h"
+#include "innotech_ble.h"
 
 ///////////////////// VARIABLES ////////////////////
 extern uint8_t wifi_connect_state;
@@ -182,6 +184,12 @@ lv_obj_t * ui_Label96;
 lv_obj_t * ui_Label97;
 
 
+lv_obj_t * ui_Label98;
+lv_obj_t * ui_Label99;
+lv_obj_t * ui_Labe200;
+lv_obj_t * ui_Labe201;
+
+
 // SCREEN: ui_Screen9
 void ui_Screen9_screen_init(void);
 lv_obj_t * ui_Screen9;
@@ -240,41 +248,45 @@ const lv_img_dsc_t * ui_imgset_[45] = {&ui_img_10_png, &ui_img_11_png, &ui_img_1
 #endif
 
 ///////////////////// ANIMATIONS ////////////////////
-
+static uint32_t last_blink_time = 1;
 ///////////////////// FUNCTIONS ////////////////////
 void lvgl_blink_callback()
 {
-    static int flag_tianqi = 0;
-    static int flag_start = 0;
-    innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
-    // static uint32_t last_blink_time = 0;
-    // if(last_blink_time%2){
-    //     lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
-    // } else {
-    //     lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
-    // }
-    // last_blink_time++;
-    // if(innotech_config->power_switch)
-    // {
-    //     lv_disp_load_scr(ui_Screen4);
-    //     flag_start = 1;
-    // }else if(innotech_wifi_state_get() == 1)
-    // {
-    //     lv_disp_load_scr(ui_Screen6);
-    //     flag_tianqi = 1;
-    // }else if(innotech_wifi_state_get() == 0)
-    // {
-    //     lv_disp_load_scr(ui_Screen5);
-    // }else if(innotech_pre_wifi() == 1)
-    // {
-    //     lv_disp_load_scr(ui_Screen2);
-    // }else if(flag_tianqi == 1)
-    // {
-    //     lv_disp_load_scr(ui_Screen3);
-    // }else if(flag_start == 1)
-    // {
-    //     lv_disp_load_scr(ui_Screen1);
-    // }
+    
+    {
+        if(last_blink_time == 2)
+        {
+            lv_disp_load_scr(ui_Screen1);
+            last_blink_time++;
+        }
+        if((innotech_pre_wifi() == 1) && (last_blink_time == 3))
+        {
+            lv_disp_load_scr(ui_Screen2);
+            last_blink_time++;
+            printf("3333333------------------------------\n");
+        }
+
+        if((innotech_wifi_state_get() == 1) && (last_blink_time == 4))
+        {
+            lv_disp_load_scr(ui_Screen6);
+            last_blink_time++;
+            printf("444444444------------------------------\n");
+        }
+
+        if((innotech_wifi_state_get() == 2) && (last_blink_time == 4))
+        {
+            lv_disp_load_scr(ui_Screen5);
+            last_blink_time = 2;
+            printf("-4-4-4-4-4-4-4-4-4-4----------------------\n");
+        }
+
+        if(last_blink_time == 5)
+        {
+            lv_disp_load_scr(ui_Screen3);
+        }
+    }
+    
+
 }
 
 ///////////////////// SCREENS ////////////////////
@@ -298,6 +310,19 @@ void ui_init(void)
     ui_Screen11_screen_init();
     ui_Screen12_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
-    
-    lv_timer_create(lvgl_blink_callback, 500, NULL);
+
+    if((innotech_reset_reason_get() == 1) && (last_blink_time == 1))
+    {
+        lv_disp_load_scr(ui_Screen4);
+        last_blink_time++;
+    }
+    else if(innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC)
+    {
+        lv_disp_load_scr(ui_Screen3);
+    }
+    else 
+    {
+        lv_disp_load_scr(ui_Screen1);
+    }
+    lv_timer_create(lvgl_blink_callback, 1000, NULL);
 }

@@ -46,6 +46,7 @@ enum
 };
 /* Exported functions ------------------------------------------------------- */
 void innotech_ble_init(void);
+uint8_t innotech_pre_wifi(void);
 
 #ifdef __cplusplus
 }
