@@ -5,6 +5,17 @@
 
 #include "../ui.h"
 
+void wifi_blink_callback()
+{
+    static uint32_t last_blink_time = 0;
+    if(last_blink_time%2){
+        lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+    }
+    last_blink_time++;
+}
+
 void ui_Screen1_screen_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);
@@ -49,5 +60,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_align(ui_Image2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    lv_timer_create(wifi_blink_callback, 500, NULL);
 
 }

@@ -5,6 +5,36 @@
 
 #include "../ui.h"
 
+void wifi_2_blink_callback()
+{
+    static uint32_t last_blink_time = 0;
+    if(last_blink_time%2){
+        lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+    }
+    last_blink_time++;
+}
+int sit_y[] = {-8,-30,-54};
+void dot_blink_callback()
+{
+  static uint32_t blink_time = 0;
+  if((blink_time%3) == 1){
+    lv_obj_set_x(ui_Image8, sit_y[1]);
+    lv_obj_set_x(ui_Image6, sit_y[2]);
+    lv_obj_set_x(ui_Image7, sit_y[0]);
+  } else if((blink_time%3) == 2){
+    lv_obj_set_x(ui_Image8, sit_y[2]);
+    lv_obj_set_x(ui_Image6, sit_y[0]);
+    lv_obj_set_x(ui_Image7, sit_y[1]);
+  }else{
+    lv_obj_set_x(ui_Image8, sit_y[0]);
+    lv_obj_set_x(ui_Image6, sit_y[1]);
+    lv_obj_set_x(ui_Image7, sit_y[2]);
+  }
+  blink_time++;
+}
+
 void ui_Screen2_screen_init(void)
 {
     ui_Screen2 = lv_obj_create(NULL);
@@ -81,4 +111,6 @@ void ui_Screen2_screen_init(void)
     lv_obj_add_flag(ui_Image9, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image9, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
+    lv_timer_create(dot_blink_callback, 500, NULL);
+    lv_timer_create(wifi_2_blink_callback, 500, NULL);
 }
