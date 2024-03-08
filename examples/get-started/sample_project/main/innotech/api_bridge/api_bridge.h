@@ -44,5 +44,7 @@ uint32_t innotech_get_heap_size(void);
 
 void innotech_timmer_init(interrupt function);
 
+uint8_t innotech_reset_reason_get(void);
+
 #endif
 

@@ -19,7 +19,7 @@
 #include "esp_sntp.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-
+#include "esp_rom_sys.h"
 #include "esp_timer.h"
 #include "driver/gptimer.h"
 
@@ -240,4 +240,10 @@ void innotech_timmer_init(interrupt function)
 	esp_timer_create(&device_bsp_timer_args, &device_bsp_timer);
 	esp_timer_start_periodic(device_bsp_timer, DEVICE_BSP_TIMER_PERIOD); 
 
+}
+
+uint8_t innotech_reset_reason_get(void)
+{
+    //printf("reset reason: %d\r\n",esp_rom_get_reset_reason(0));
+    return esp_rom_get_reset_reason(0);
 }
