@@ -14,6 +14,7 @@ SRC_DIRS
         "innotech/utils"
         "innotech/api_bridge"
         "innotech/factory"
+        "innotech/weather"
         "innotech/lcd/ui"
         "innotech/lcd/ui/screens"
         "innotech/lcd/ui/images"
@@ -31,6 +32,7 @@ SRC_DIRS
                     "./innotech/rtc"
                     "./innotech/meter"
                     "./innotech/factory"
+                    "./innotech/weather"
                     "./innotech/utils"                    
                     "./innotech/api_bridge"
                     "./innotech/lcd/ui")

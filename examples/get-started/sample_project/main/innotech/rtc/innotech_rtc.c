@@ -25,15 +25,6 @@
 
 #define RTC_TAG "INNOTECH_RTC"
 
-static location_t device;
-void innotech_location_set(location_t location)
-{
-    device.city_id = location.city_id;
-    device.latitude = location.latitude;
-    device.longitude = location.longitude;
-    printf("city_id: %d latitude: %f longitude:%f\r\n", device.city_id, device.latitude, device.longitude);
-}
-
 static uint16_t timer_repeat_get(uint8_t *arr, int size) 
 {
     uint16_t repeat = 0x80;

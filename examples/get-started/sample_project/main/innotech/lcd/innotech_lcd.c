@@ -555,6 +555,6 @@ void innotech_lcd_init(void)
 
     example_lvgl_unlock();
 
-    sys_monitor_start();
+    //sys_monitor_start();
 }
 

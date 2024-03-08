@@ -19,7 +19,7 @@
 #include "innotech_config.h"
 #include "innotech_relay.h"
 #include "innotech_meter.h"
-#include "innotech_rtc.h"
+#include "innotech_weather.h"
 
 static void mqtt_json_pack_sleep(cJSON *sleepObject, uint8_t id)
 {
