@@ -26,10 +26,12 @@
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_io_additions.h"
 #include "esp_io_expander_tca9554.h"
+#include "innotech_config.h"
 
 #include "esp_lcd_st7701.h"
 #include "lvgl.h"
 #include "ui/ui.h"
+#include "api_bridge.h"
 
 
 #define TEST_LCD_H_RES              (480)
@@ -77,6 +79,7 @@
 static char *TAG = "st7701_test";
 
 static SemaphoreHandle_t    lvgl_mux    = NULL;
+static int brightness = 0;
 static TaskHandle_t lvgl_task_handle = NULL;
 
 IRAM_ATTR static bool rgb_lcd_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
@@ -366,7 +369,9 @@ void spi_init(void)
         .pull_up_en = GPIO_PULLUP_ENABLE,
     };
     gpio_config(&back_light_cfg);
-    gpio_set_level(TEST_LCD_IO_BL, 1);
+    innotech_led_pwm_init();
+    
+    // gpio_set_level(TEST_LCD_IO_BL, 1);
 
     static lv_disp_draw_buf_t   disp_buf;   /* Contains internal graphic buffer(s) called draw buffer(s) */
     static lv_disp_drv_t        disp_drv;   /* Contains callback functions */
@@ -497,7 +502,7 @@ void spi_init(void)
 
 void lvgl_init(void)
 {
-    //
+    
 }
 
 static void monitor_task(void *arg)
@@ -531,7 +536,17 @@ static void sys_monitor_start(void)
 }
 void innotech_lcd_process(void)
 { 
-
+    innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
+    
+    if((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch))
+    {
+        brightness = innotech_config->lcd_brightness;
+        innotech_led_pwm_write(innotech_config->lcd_brightness);
+    }else if(innotech_config->brightness_switch)
+    {
+        innotech_led_pwm_write(100);
+    }
+    
 }
 
 void innotech_lcd_init(void)
@@ -555,6 +570,6 @@ void innotech_lcd_init(void)
 
     example_lvgl_unlock();
 
-    //sys_monitor_start();
+    sys_monitor_start();
 }
 

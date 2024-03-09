@@ -85,7 +85,7 @@ void innotech_device_init(void)
     innotech_wifi_init();
     innotech_ble_init();
     innotech_rtc_init();
-    innotech_weather_init();
+    //innotech_weather_init();
     innotech_lcd_init();
 	innotech_device_service_init();
     innotech_device_service_start();
