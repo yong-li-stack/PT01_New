@@ -24,6 +24,12 @@
 #include "innotech_relay.h"
 
 #define RTC_TAG "INNOTECH_RTC"
+struct tm timeinfo;
+
+struct tm innotech_time_get(void)
+{
+    return timeinfo;
+}
 
 static uint16_t timer_repeat_get(uint8_t *arr, int size) 
 {
@@ -51,7 +57,6 @@ static void innotech_rtc_thread(void *arg)
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
     char cmd[16] = {0};
     time_t now;
-    struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
     // Set timezone to China Standard Time
@@ -65,11 +70,11 @@ static void innotech_rtc_thread(void *arg)
         time(&now);
     }
     // wait for time to be set
-    while (innotech_get_sync_status()) 
-    {
-        ESP_LOGI(RTC_TAG, "Waiting for system time to be set...");
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
+    // while (innotech_get_sync_status()) 
+    // {
+    //     ESP_LOGI(RTC_TAG, "Waiting for system time to be set...");
+    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // }
 
     while(1)
     {

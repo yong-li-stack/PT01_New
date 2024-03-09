@@ -76,6 +76,8 @@ lv_obj_t * ui_Label76;
 lv_obj_t * ui_Label108;
 lv_obj_t * ui_Image49;
 
+lv_obj_t * ui_Label200;
+
 
 // SCREEN: ui_Screen4
 void ui_Screen4_screen_init(void);
@@ -184,10 +186,11 @@ lv_obj_t * ui_Label96;
 lv_obj_t * ui_Label97;
 
 
-lv_obj_t * ui_Label98;
-lv_obj_t * ui_Label99;
-lv_obj_t * ui_Labe200;
-lv_obj_t * ui_Labe201;
+lv_obj_t * ui_Label201;
+lv_obj_t * ui_Label202;
+lv_obj_t * ui_Label203;
+lv_obj_t * ui_Label204;
+lv_obj_t * ui_Label205;
 
 
 // SCREEN: ui_Screen9

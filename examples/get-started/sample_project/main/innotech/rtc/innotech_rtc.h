@@ -22,7 +22,7 @@ extern "C"
 
 /* Exported functions ------------------------------------------------------- */
 void innotech_rtc_init(void);
-
+struct tm innotech_time_get(void);
 #ifdef __cplusplus
 }
 #endif

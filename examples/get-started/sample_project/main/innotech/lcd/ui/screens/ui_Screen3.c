@@ -4,16 +4,141 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
+#include "rtc.h"
+#include "innotech_rtc.h"
+#include "innotech_meter.h"
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+char num[10] = "0123456789";
+char week[30] = "一二三四五六日";
+static int temp_power = 0;
 
-void maohao_blink_callback()
+
+void animation_blink_callback()
 {
-    //static uint32_t last_blink_time = 0;
-    //if(last_blink_time%2){
-        lv_img_set_src(ui_Image49, &ui_img_28_png);
+    char hour;
+    // //冒号的显示
+    // static uint32_t maohao_blink_time = 0;
+    // if(maohao_blink_time%2){
+    //     lv_obj_clear_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
     // } else {
-    //     lv_img_set_src(ui_Image49, &ui_img_36_png);
+    //     lv_obj_add_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
     // }
-    //last_blink_time++;
+
+    //show time
+    struct tm time_info = innotech_time_get();
+    //冒号的显示
+    static uint32_t maohao_blink_time = 0;
+    if(maohao_blink_time%2){
+        lv_obj_clear_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    //show time hour
+    if(time_info.tm_hour/10)
+    {
+        itoa(time_info.tm_hour/10, &hour, 10);
+        lv_label_set_text(ui_Label20, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label20, "0");
+    }
+
+    itoa(time_info.tm_hour%10, &hour, 10);
+    printf("hour:%d last-hour:%d\n",time_info.tm_hour,time_info.tm_hour%10);
+    lv_label_set_text(ui_Label21, &hour);
+
+    //show time minu
+    if(time_info.tm_min/10)
+    {
+        itoa(time_info.tm_min/10, &hour, 10);
+        lv_label_set_text(ui_Label22, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label22, "0");
+    }
+
+    itoa(time_info.tm_min%10, &hour, 10);
+    lv_label_set_text(ui_Label23, &hour);
+
+
+    //show week
+    if(time_info.tm_wday == 1)
+    {
+        lv_label_set_text(ui_Label10, "一");
+    }else if(time_info.tm_wday == 2)
+    {
+        lv_label_set_text(ui_Label10, "二");
+    }else if(time_info.tm_wday == 3)
+    {
+        lv_label_set_text(ui_Label10, "三");
+    }else if(time_info.tm_wday == 4)
+    {
+        lv_label_set_text(ui_Label10, "四");
+    }else if(time_info.tm_wday == 5)
+    {
+        lv_label_set_text(ui_Label10, "五");
+    }else if(time_info.tm_wday == 6)
+    {
+        lv_label_set_text(ui_Label10, "六");
+    }else if(time_info.tm_wday == 7)
+    {
+        lv_label_set_text(ui_Label10, "日");
+    }
+    
+
+    //show mother
+    if((time_info.tm_mon+1)/10)
+    {
+        itoa((time_info.tm_mon+1)/10, &hour, 10);
+        lv_label_set_text(ui_Label2, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label2, "0");
+    }
+    itoa((time_info.tm_mon+1)%10, &hour, 10);
+    lv_label_set_text(ui_Label200, &hour);
+    //show day
+    if(time_info.tm_mday/10)
+    {
+        itoa(time_info.tm_mday/10, &hour, 10);
+        lv_label_set_text(ui_Label4, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label4, "0");
+    }
+
+    itoa(time_info.tm_mday%10, &hour, 10);
+    lv_label_set_text(ui_Label8, &hour);
+
+    //show power
+    int power = (int)innotech_power_get();
+    if(power >= 1000)
+    {
+        itoa(power/1000, &hour, 10);
+        lv_label_set_text(ui_Label203, &hour);
+
+    }else if(power >= 100)
+    {
+        itoa(power%1000/100, &hour, 10);
+        lv_label_set_text(ui_Label202, &hour);
+    }else if(power >= 10)
+    {
+        itoa(power%100/10, &hour, 10);
+        lv_label_set_text(ui_Label204, &hour);
+    }else
+    {
+        itoa(power%10, &hour, 10);
+        lv_label_set_text(ui_Label25, &hour);
+    }
+
+    // //show kw.h
+
+
+
+    maohao_blink_time++;
 }
 
 
@@ -34,16 +159,26 @@ void ui_Screen3_screen_init(void)
     ui_Label2 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label2, -223);
+    lv_obj_set_x(ui_Label2, -227);
     lv_obj_set_y(ui_Label2, -215);
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label2, "2");
     lv_obj_set_style_text_font(ui_Label2, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Label200 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label200, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label200, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label200, -209);
+    lv_obj_set_y(ui_Label200, -215);
+    lv_obj_set_align(ui_Label200, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label200, "2");
+    lv_obj_set_style_text_font(ui_Label200, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
     ui_Label3 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label3, -202);
+    lv_obj_set_x(ui_Label3, -192);
     lv_obj_set_y(ui_Label3, -216);
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label3, "/");
@@ -52,8 +187,8 @@ void ui_Screen3_screen_init(void)
     ui_Label4 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label4, -180);
-    lv_obj_set_y(ui_Label4, -214);
+    lv_obj_set_x(ui_Label4, -174);
+    lv_obj_set_y(ui_Label4, -215);
     lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label4, "2");
     lv_obj_set_style_text_font(ui_Label4, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -61,8 +196,8 @@ void ui_Screen3_screen_init(void)
     ui_Label8 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label8, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label8, -160);
-    lv_obj_set_y(ui_Label8, -214);
+    lv_obj_set_x(ui_Label8, -155);
+    lv_obj_set_y(ui_Label8, -215);
     lv_obj_set_align(ui_Label8, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label8, "8");
     lv_obj_set_style_text_font(ui_Label8, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -241,11 +376,38 @@ void ui_Screen3_screen_init(void)
     ui_Label25 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label25, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label25, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label25, -7);
-    lv_obj_set_y(ui_Label25, 153);
+    lv_obj_set_x(ui_Label25, -8);
+    lv_obj_set_y(ui_Label25, 155);
     lv_obj_set_align(ui_Label25, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label25, "0");
     lv_obj_set_style_text_font(ui_Label25, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label203 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label203, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label203, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label203, -132);
+    lv_obj_set_y(ui_Label203, 155);
+    lv_obj_set_align(ui_Label203, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label203, "0");
+    lv_obj_set_style_text_font(ui_Label203, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label202 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label202, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label202, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label202, -90);
+    lv_obj_set_y(ui_Label202, 155);
+    lv_obj_set_align(ui_Label202, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label202, "0");
+    lv_obj_set_style_text_font(ui_Label202, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label204 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label204, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label204, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label204, -50);
+    lv_obj_set_y(ui_Label204, 155);
+    lv_obj_set_align(ui_Label204, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label204, "0");
+    lv_obj_set_style_text_font(ui_Label204, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label26 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label26, LV_SIZE_CONTENT);   /// 1
@@ -355,5 +517,5 @@ void ui_Screen3_screen_init(void)
     lv_obj_add_flag(ui_Image49, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image49, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    lv_timer_create(maohao_blink_callback, 1500, NULL);
+    lv_timer_create(animation_blink_callback, 500, NULL);
 }

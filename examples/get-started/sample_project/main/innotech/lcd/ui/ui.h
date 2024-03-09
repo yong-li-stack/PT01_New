@@ -198,6 +198,13 @@ extern lv_obj_t * ui_Image38;
 extern lv_obj_t * ui_Image39;
 extern lv_obj_t * ui_Image40;
 extern lv_obj_t * ui_Image41;
+
+extern lv_obj_t * ui_Label200;
+extern lv_obj_t * ui_Label201;
+extern lv_obj_t * ui_Label202;
+extern lv_obj_t * ui_Label203;
+extern lv_obj_t * ui_Label204;
+extern lv_obj_t * ui_Label205;
 // SCREEN: ui_Screen12
 void ui_Screen12_screen_init(void);
 extern lv_obj_t * ui_Screen12;
