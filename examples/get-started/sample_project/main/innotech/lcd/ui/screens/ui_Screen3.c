@@ -7,12 +7,14 @@
 #include "rtc.h"
 #include "innotech_rtc.h"
 #include "innotech_meter.h"
+#include "innotech_weather.h"
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 char num[10] = "0123456789";
 char week[30] = "一二三四五六日";
 static int temp_power = 0;
+
 
 
 void animation_blink_callback()
@@ -28,6 +30,7 @@ void animation_blink_callback()
 
     //show time
     struct tm time_info = innotech_time_get();
+    weather_t weather_info = innotech_weather_info_get();
     //冒号的显示
     static uint32_t maohao_blink_time = 0;
     if(maohao_blink_time%2){
@@ -47,7 +50,7 @@ void animation_blink_callback()
     }
 
     itoa(time_info.tm_hour%10, &hour, 10);
-    printf("hour:%d last-hour:%d\n",time_info.tm_hour,time_info.tm_hour%10);
+    // printf("hour:%d last-hour:%d\n",time_info.tm_hour,time_info.tm_hour%10);
     lv_label_set_text(ui_Label21, &hour);
 
     //show time minu
@@ -136,7 +139,43 @@ void animation_blink_callback()
 
     // //show kw.h
 
+    //show temp
+    if(weather_info.temp_max / 10)
+    {
+        itoa(weather_info.temp_max/10, &hour, 10);
+        lv_label_set_text(ui_Label14, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label14, "0");
+    }
 
+    itoa(weather_info.temp_max%10, &hour, 10);
+    lv_label_set_text(ui_Label15, &hour);
+
+    if(weather_info.temp_min / 10)
+    {
+        itoa(weather_info.temp_min/10, &hour, 10);
+        lv_label_set_text(ui_Label11, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label11, "0");
+    }
+
+    itoa(weather_info.temp_min%10, &hour, 10);
+    lv_label_set_text(ui_Label12, &hour);
+
+    //show homi
+    if(weather_info.humid / 10)
+    {
+        itoa(weather_info.humid/10, &hour, 10);
+        lv_label_set_text(ui_Label17, &hour);
+    }else 
+    {
+        lv_label_set_text(ui_Label17, "0");
+    }
+
+    itoa(weather_info.humid%10, &hour, 10);
+    lv_label_set_text(ui_Label18, &hour);
 
     maohao_blink_time++;
 }

@@ -97,24 +97,82 @@ static int network_gzip_decompress(void *in_buf, size_t in_size, void *out_buf, 
 
     return Z_OK;
 }
+/*
+//return -1:fail,0 app read device's status,1 app set device
+esp_err_t http_json_unpack(char *iot_json)
+{
+    if(iot_json == NULL)
+    {
+        printf("http_json_unpack input error\n");
+    }
+
+    cJSON *IOTJSObject, *idObject, *methodObject, *versionObject, *paramsObject;
+
+    if((IOTJSObject = cJSON_Parse(iot_json)) != NULL)
+    {
+
+        if( (idObject = cJSON_GetObjectItem(IOTJSObject, "id")) != NULL )
+        {
+            memcpy((void *)id, (void *)idObject->valuestring, strlen(idObject->valuestring)+1);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no id\r\n");
+        }
+
+        if( (methodObject = cJSON_GetObjectItem(IOTJSObject, "method")) != NULL )
+        {
+            memcpy((void *)method, (void *)methodObject->valuestring, strlen(methodObject->valuestring)+1);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no method\r\n");
+        }
+
+        if( (versionObject = cJSON_GetObjectItem(IOTJSObject, "version")) != NULL )
+        {
+            memcpy((void *)version, (void *)versionObject->valuestring, strlen(versionObject->valuestring)+1);
+        }
+        else
+        {
+            printf("mqtt_json_unpack no version\r\n");
+        }
+
+        if( (paramsObject= cJSON_GetObjectItem(IOTJSObject, "params")) != NULL )
+        {
+            mqtt_json_unpack_params(paramsObject, get_cmd);
+            ret = PERM_WRITE;
+        }
+        else
+        {
+            printf("mqtt_json_unpack no data\r\n");
+        }
+
+        cJSON_Delete(IOTJSObject);
+    }
+    return ret;
+}*/
 
 static esp_err_t app_weather_parse_now(char *buffer)
 {
     cJSON *json = cJSON_Parse(buffer);
     cJSON *json_now = NULL;
 
-    if (NULL != json) {
-        json_now = cJSON_GetObjectItem(json, "now");
-        if (NULL != json_now) {
-            cJSON *item_temp_max = cJSON_GetObjectItem(json_now, "tempMax");
-            cJSON *item_temp_min = cJSON_GetObjectItem(json_now, "tempMin");
-            cJSON *item_icon = cJSON_GetObjectItem(json_now, "iconDay");
-            cJSON *item_humidity = cJSON_GetObjectItem(json_now, "humidity");
+    if (NULL != json) 
+    {
+        json_now = cJSON_GetObjectItem(json, "daily");
+        if (NULL != json_now && cJSON_IsArray(json_now)) 
+        {
+            //printf("daily: %s\r\n",json_now->valuestring);
+            int array_size = cJSON_GetArraySize(json_now);
+            cJSON *daily_item = cJSON_GetArrayItem(json_now, 0);
 
-            weather_info.temp_max = item_temp_max->valueint;
-            weather_info.temp_min = item_temp_min->valueint;
-            weather_info.icon_code = item_icon->valueint;
-            weather_info.humid = item_humidity->valueint;
+            // 提取并处理每项数据
+            //const char *fx_date_str = cJSON_GetObjectItem(daily_item, "fxDate")->valuestring;
+            weather_info.temp_max = atoi(cJSON_GetObjectItem(daily_item, "tempMax")->valuestring);
+            weather_info.temp_min = atoi(cJSON_GetObjectItem(daily_item, "tempMin")->valuestring);
+            weather_info.humid = atoi(cJSON_GetObjectItem(daily_item, "humidity")->valuestring);
+            weather_info.icon_code = atoi(cJSON_GetObjectItem(daily_item, "iconDay")->valuestring);
             ESP_LOGI(TAG, "Temp : %d/%d", weather_info.temp_max, weather_info.temp_min);
             ESP_LOGI(TAG, "Icon : [%d]", weather_info.icon_code);
             ESP_LOGI(TAG, "Humid: [%d]", weather_info.humid);
@@ -133,7 +191,7 @@ static esp_err_t app_weather_parse_now(char *buffer)
 
 esp_err_t response_handler(esp_http_client_event_t *evt)
 {
-    static char *data[512] = {0};
+    static char *data[1024] = {0};
     static int data_len = 0;
 
     switch (evt->event_id) {
@@ -167,12 +225,20 @@ esp_err_t response_handler(esp_http_client_event_t *evt)
     case HTTP_EVENT_ON_FINISH:
         size_t out_size = 0;
         device.city_id = (int)evt->user_data;
-        size_t decode_maxlen = data_len*2;
-        char decode_out[1024] = {0};
+        size_t decode_maxlen = data_len*4;
+        char *decode_out = heap_caps_malloc(decode_maxlen, MALLOC_CAP_SPIRAM);
+        if (NULL == decode_out) {
+            printf("Failed allocate mem\n");
+            break;
+        }
         network_gzip_decompress(data, data_len, decode_out, &out_size, decode_maxlen);
         printf("HTTP_EVENT_ON_FINISH, out_size:%d, %s\n", out_size, decode_out);
         app_weather_parse_now(decode_out);
 
+        if (decode_out) {
+            free(decode_out);
+            decode_out = NULL;
+        }
         break;
 
     case HTTP_EVENT_DISCONNECTED:
@@ -191,7 +257,7 @@ esp_err_t app_weather_request(void)
     char url_request[128] = {0};
 
     //sprintf(url_request, "https://devapi.qweather.com/v7/weather/now?location=%.2f,%.2f&lang=en&key=82cb41e828d14f4399a12ba5b485ce52", device.longitude, device.latitude);
-    sprintf(url_request, "https://api.qweather.com/v7/weather/3d?location=%.2f,%.2f&lang=en&key=82cb41e828d14f4399a12ba5b485ce52", device.longitude, device.latitude);
+    sprintf(url_request, "https://devapi.qweather.com/v7/weather/3d?location=%.2f,%.2f&lang=en&key=82cb41e828d14f4399a12ba5b485ce52", device.longitude, device.latitude);
     ESP_LOGI(TAG, "url_request:%s %d\r\n", url_request, strlen(url_request)+1);
 
     esp_http_client_config_t config = {
