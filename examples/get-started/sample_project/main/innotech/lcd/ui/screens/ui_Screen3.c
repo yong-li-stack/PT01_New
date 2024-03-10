@@ -86,7 +86,7 @@ void animation_blink_callback()
     }else if(time_info.tm_wday == 6)
     {
         lv_label_set_text(ui_Label10, "六");
-    }else if(time_info.tm_wday == 7)
+    }else if(time_info.tm_wday == 0)
     {
         lv_label_set_text(ui_Label10, "日");
     }
