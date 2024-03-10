@@ -257,9 +257,15 @@ void lvgl_blink_callback()
 {
     
     {
-        if(last_blink_time == 2)
+        if(innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC)
+        {
+            lv_disp_load_scr(ui_Screen3);
+            //printf("123456---------------\n");
+        }
+        if(last_blink_time == 2 && (innotech_wifi_config_flag_get() != WIFI_CONFIG_SUC))
         {
             lv_disp_load_scr(ui_Screen1);
+           // printf("6666666------------------------------\n");
             last_blink_time++;
         }
         if((innotech_pre_wifi() == 1) && (last_blink_time == 3))
@@ -314,18 +320,10 @@ void ui_init(void)
     ui_Screen12_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
 
-    if((innotech_reset_reason_get() == 1) && (last_blink_time == 1))
+    if((innotech_reset_reason_get() == 1) || (last_blink_time == 1))
     {
         lv_disp_load_scr(ui_Screen4);
         last_blink_time++;
-    }
-    else if(innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC)
-    {
-        lv_disp_load_scr(ui_Screen3);
-    }
-    else 
-    {
-        lv_disp_load_scr(ui_Screen1);
     }
     lv_timer_create(lvgl_blink_callback, 1000, NULL);
 }
