@@ -17,20 +17,93 @@
 #include "innotech_config.h"
 #include "api_bridge.h"
 
+typedef struct _base_config_t
+{
+    uint8_t flash_init[4];
+    bool power_switch;
+    bool lcd_switch;
+    bool brightness_switch;
+    uint8_t lcd_brightness;
+    bool memory;
+    double line_diameter;
+} base_config_t;
+
 const uint8_t config_init_check[4] = {0x04, 0x01, 0x24, 0x20};
 static innotech_config_t innotech_config;
-static innotech_config_t copy_config;
+static base_config_t base_config;
+static innotech_timer_t timer[5];
+static innotech_count_down_t sleep[3];
 
-uint8_t innotech_config_check(void)
+void innotech_config_copy(void)
 {
-    uint8_t config_modify = 1;
+    innotech_config.power_switch      = base_config.power_switch;
+    innotech_config.lcd_switch        = base_config.lcd_switch;
+    innotech_config.brightness_switch = base_config.brightness_switch;
+    innotech_config.lcd_brightness    = base_config.lcd_brightness;
+    innotech_config.line_diameter     = base_config.line_diameter;
+    innotech_config.memory            = base_config.memory;
 
-    if(memcmp(&copy_config, &innotech_config, sizeof(innotech_config_t)) == 0)
+    memcpy(innotech_config.timer, timer, sizeof(innotech_timer_t)*5);
+
+    memcpy(innotech_config.sleep, sleep, sizeof(innotech_count_down_t)*3);
+}
+
+void innotech_base_copy(void)
+{
+    base_config.power_switch      = innotech_config.power_switch;
+    base_config.lcd_switch        = innotech_config.lcd_switch;
+    base_config.brightness_switch = innotech_config.brightness_switch;
+    base_config.lcd_brightness    = innotech_config.lcd_brightness;
+    base_config.line_diameter     = innotech_config.line_diameter;
+    base_config.memory            = innotech_config.memory;
+}
+
+void innotech_config_check(void)
+{
+    uint8_t copy_flag = 0;
+    
+    if (base_config.power_switch      != innotech_config.power_switch ||
+        base_config.lcd_switch        != innotech_config.lcd_switch ||
+        base_config.brightness_switch != innotech_config.brightness_switch ||
+        base_config.lcd_brightness    != innotech_config.lcd_brightness ||
+        base_config.line_diameter     != innotech_config.line_diameter ||
+        base_config.memory            != innotech_config.memory )
     {
-        config_modify = 0;
+        innotech_base_copy();
+        innotech_flash_write("innotech", (char *)&base_config, sizeof(base_config_t));
+
     }
 
-    return config_modify;
+    for(int i = 0; i < 5; i++)
+    {
+        if(memcmp(&(timer[i]), &(innotech_config.timer[i]), sizeof(innotech_timer_t)) == 0)
+        {
+            // printf("------------------------------------\n");
+            memcpy(&(timer[i]), &(innotech_config.timer[i]), sizeof(innotech_timer_t));
+            copy_flag = 1;
+        }
+    }
+    
+    if(copy_flag == 1)
+    {
+        innotech_flash_write("timer", (char *)timer, sizeof(innotech_timer_t)*5);
+    }
+
+    for(int i = 0; i < 3; i++)
+    {
+        if(memcmp(sleep, innotech_config.sleep, sizeof(innotech_count_down_t)*3) == 0)
+        {
+            // printf("66666666666666666666666666666666666666666\n");
+            memcpy(&(sleep[i]), &(innotech_config.sleep[i]), sizeof(innotech_count_down_t));
+            copy_flag = 2;
+        }
+    }
+
+    if(copy_flag == 2)
+    {
+        innotech_flash_write("sleep", (char *)sleep, sizeof(innotech_count_down_t));
+    }
+
 }
 
 void innotech_config_printf(void)
@@ -67,47 +140,19 @@ void innotech_config_printf(void)
     printf("*****************************************************************************/\r\n");
 }
 
+
 void innotech_default_device_config(void)
 {   
-    uint8_t i = 0;
+    memset(&base_config, 0, sizeof(base_config_t));
+    memcpy(base_config.flash_init, config_init_check, 4);
+    base_config.power_switch      = true;
+    base_config.lcd_switch        = true;
+    base_config.brightness_switch = true;
+    base_config.lcd_brightness    = 100;
+    base_config.line_diameter     = 0;
+    base_config.memory            = false;
 
-    memset(&innotech_config, 0, sizeof(innotech_config_t));
-    memcpy(innotech_config.flash_init, config_init_check, 4);
-    innotech_config.power_switch      = true;
-    innotech_config.lcd_switch        = true;
-    innotech_config.brightness_switch = true;
-    innotech_config.lcd_brightness    = 100;
-    innotech_config.line_diameter     = 0;
-
-    for(i = 0; i < 5; i++)
-    {
-        memset(innotech_config.timer[i].schedule_id, 0, 50);
-        innotech_config.timer[i].enable = 0;
-        innotech_config.timer[i].is_valid = 0;
-        innotech_config.timer[i].onoff = 0;
-        memset(innotech_config.timer[i].time, 0, 256);
-        memset(innotech_config.timer[i].repeat, 0, 256);
-    }
-
-    for(i = 0; i < 3; i++)
-    {
-        memset(innotech_config.sleep[i].schedule_id, 0, 50);
-        innotech_config.sleep[i].time_left = 0;  
-        innotech_config.sleep[i].onoff = 0;
-        memset(innotech_config.sleep[i].timestamp, 0, 64);
-        innotech_config.sleep[i].is_running = 0;
-    }
-
-    innotech_config.memory = false;
-
-    memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
-	innotech_flash_write("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
-}
-
-void innotech_config_data_save(void)
-{
-    memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
-    innotech_flash_write("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
+	innotech_flash_write("innotech", (char *)&base_config, sizeof(base_config_t));
 }
 
 void* innotech_config_get_handle(void)
@@ -123,11 +168,29 @@ void innotech_config_init(void)
 
     innotech_flash_init();
     
-    memset(&innotech_config, 0, sizeof(innotech_config_t));
-    innotech_flash_read("innotech", (char *)&innotech_config, sizeof(innotech_config_t));
+    memset(&base_config, 0, sizeof(base_config_t));
+    innotech_flash_read("innotech", (char *)&base_config, sizeof(base_config_t));
 
-    memset(&copy_config, 0, sizeof(innotech_config_t));
-    memcpy(&copy_config, &innotech_config, sizeof(innotech_config_t));
+    for(i = 0; i < 5; i++)
+    {
+        memset(timer[i].schedule_id, 0, 50);
+        timer[i].enable = 0;
+        timer[i].is_valid = 0;
+        timer[i].onoff = 0;
+        memset(timer[i].time, 0, 256);
+        memset(timer[i].repeat, 0, 256);
+    }
+    innotech_flash_read("timer", (char *)timer, sizeof(innotech_timer_t)*5);
+
+    for(i = 0; i < 3; i++)
+    {
+        memset(sleep[i].schedule_id, 0, 50);
+        sleep[i].time_left = 0;  
+        sleep[i].onoff = 0;
+        memset(sleep[i].timestamp, 0, 64);
+        sleep[i].is_running = 0;
+    }
+    innotech_flash_read("sleep", (char *)sleep, sizeof(innotech_count_down_t)*3);
 
     for(i = 0; i < 4; i++)
     {
@@ -137,7 +200,8 @@ void innotech_config_init(void)
             break;
         }
     }
-    innotech_config_printf();
+    innotech_config_copy();
+    // innotech_config_printf();
 }
 
 

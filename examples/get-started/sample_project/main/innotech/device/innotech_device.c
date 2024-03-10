@@ -51,11 +51,7 @@ void innotech_device_service_handle(void *args)
         if(++time_tick >= 500)
         {
             time_tick = 0;
-            if(innotech_config_check())
-            {
-                innotech_config_data_save();
-                printf("save innotech config data ok !!!\r\n");
-            }
+            innotech_config_check();
         }
         vTaskDelay(20 / portTICK_PERIOD_MS);
        /*static int tick = 0;
@@ -85,7 +81,7 @@ void innotech_device_init(void)
     innotech_wifi_init();
     innotech_ble_init();
     innotech_rtc_init();
-    //innotech_weather_init();
+    innotech_weather_init();
     innotech_lcd_init();
 	innotech_device_service_init();
     innotech_device_service_start();

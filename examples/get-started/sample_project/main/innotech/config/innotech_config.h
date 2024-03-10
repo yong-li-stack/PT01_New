@@ -56,8 +56,7 @@ typedef struct _innotech_config_t
 } innotech_config_t;
 
 /* Exported functions ------------------------------------------------------- */
-uint8_t innotech_config_check(void);
-void innotech_config_data_save(void);
+void innotech_config_check(void);
 void* innotech_config_get_handle(void);
 void innotech_config_init(void);
 void innotech_default_device_config(void);
