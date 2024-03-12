@@ -109,6 +109,17 @@ void mqtt_send_device_status(void)
     esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
 }
 
+void mqtt_send_device_energy(void)
+{
+    char payload[1024] = {0};
+    char get_cmd[] = "energy";
+    char id[] = "27";
+    char version[] = "1.0";
+
+    mqtt_json_pack(get_cmd, id, version, payload);
+    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+}
+
 void mqtt_send_device_info(char *cmd)
 {
     char payload[1024] = {0};
