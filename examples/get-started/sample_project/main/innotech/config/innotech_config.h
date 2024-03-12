@@ -44,7 +44,6 @@ typedef struct _innotech_count_down_t{  //for sleep
 }innotech_count_down_t;
 typedef struct _innotech_config_t
 {
-    uint8_t flash_init[4];
     bool power_switch;
     bool lcd_switch;
     bool brightness_switch;
