@@ -4,12 +4,11 @@ screens/ui_Screen3.c
 screens/ui_Screen4.c
 screens/ui_Screen5.c
 screens/ui_Screen6.c
-screens/ui_Screen7.c
-screens/ui_Screen8.c
 screens/ui_Screen9.c
 screens/ui_Screen10.c
 screens/ui_Screen11.c
 screens/ui_Screen12.c
+screens/ui_Screen13.c
 ui.c
 components/ui_comp_hook.c
 ui_helpers.c
@@ -25,8 +24,10 @@ images/ui_img_11_png.c
 images/ui_img_12_png.c
 images/ui_img_10_png.c
 images/ui_img_35_png.c
+images/ui_img_319_png.c
 images/ui_img_14_png.c
 images/ui_img_16_png.c
+images/ui_img_318_png.c
 images/ui_img_i_png.c
 images/ui_img_45_png.c
 images/ui_img_44_png.c
@@ -54,6 +55,7 @@ images/ui_img_40_png.c
 images/ui_img_41_png.c
 images/ui_img_42_png.c
 images/ui_img_43_png.c
+images/ui_img_313_png.c
 images/ui_img_17_png.c
 images/ui_img_21_png.c
 images/ui_img_46_png.c

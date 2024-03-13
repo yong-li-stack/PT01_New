@@ -19,6 +19,7 @@ extern "C"
 
 void innotech_button_init(void);
 void innotech_button_process(void);
+uint8_t innotech_factory_flag_get(void);
 
 #ifdef __cplusplus
 }

@@ -262,31 +262,34 @@ uint8_t innotech_reset_reason_get(void)
 
 void innotech_led_pwm_init(void)
 {
-    ledc_timer_config_t ledc_timer = {
-        .duty_resolution = LEDC_TIMER_10_BIT, // resolution of PWM duty
-        .freq_hz = 5000,                      // frequency of PWM signal
-        .speed_mode = LEDC_LS_MODE,           // timer mode
-        .timer_num = LEDC_LS_TIMER,            // timer index
-        .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+     // Setup LEDC peripheral for PWM backlight control
+    const ledc_channel_config_t ledc_channel = {
+        .gpio_num = LEDC_R_GPIO,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_R_CHANNEL,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = LEDC_LS_TIMER,
+        .duty = 0,
+        .hpoint = 0
     };
-    // Set configuration of timer0 for high speed channels
+    const ledc_timer_config_t ledc_timer = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = LEDC_LS_TIMER,
+        .freq_hz = 5000,
+        .clk_cfg = LEDC_AUTO_CLK
+    };
     ledc_timer_config(&ledc_timer);
-    ledc_channel_config_t ledc_channel = {
-            .channel    = LEDC_R_CHANNEL,
-            .duty       = 0,
-            .gpio_num   = LEDC_R_GPIO,
-            .speed_mode = LEDC_LS_MODE,
-            .hpoint     = 0,
-            .timer_sel  = LEDC_LS_TIMER
-    };
-
-    // Set LED Controller with previously prepared configuration
     ledc_channel_config(&ledc_channel);
 }
 
 void innotech_led_pwm_write(uint16_t r)
 {
-     ledc_set_duty(LEDC_LS_MODE, LEDC_R_CHANNEL, r);
-     ledc_update_duty(LEDC_LS_MODE, LEDC_R_CHANNEL);
+    //  ledc_set_duty(LEDC_LS_MODE, LEDC_R_CHANNEL, r);
+    //  ledc_update_duty(LEDC_LS_MODE, LEDC_R_CHANNEL);
+    //uint32_t duty_cycle = (1023 * r) / 100; // LEDC resolution set to 10bits, thus: 100% = 1023
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL, r);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL);
 
+    // return ESP_OK;
 }

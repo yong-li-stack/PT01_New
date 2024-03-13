@@ -21,6 +21,13 @@
 
 #define BTN_GPIO_NUM          45
 
+static uint8_t factory_reset_flag = 0;
+
+uint8_t innotech_factory_flag_get(void)
+{
+    return factory_reset_flag;
+}
+
 void innotech_button_process(void)
 {
     static uint32_t key_count = 0;
@@ -47,6 +54,7 @@ void innotech_button_process(void)
     else if(key_count >= 600)
     {
         key_count = 0;
+        innotech_factory_reset();
     }
     else
     {
@@ -55,7 +63,7 @@ void innotech_button_process(void)
 
     if(key_count >= 600)
     {
-        innotech_factory_reset();
+        factory_reset_flag = 1;
     }
 }
 

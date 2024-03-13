@@ -5,41 +5,12 @@
 
 #include "../ui.h"
 
-void wifi_blink_callback()
-{
-    static uint32_t last_blink_time = 0;
-    if(last_blink_time%2){
-        lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
-    }
-    last_blink_time++;
-}
-
 void ui_Screen1_screen_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_Screen1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Screen1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label5 = lv_label_create(ui_Screen1);
-    lv_obj_set_width(ui_Label5, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label5, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label5, 2);
-    lv_obj_set_y(ui_Label5, -220);
-    lv_obj_set_align(ui_Label5, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label5, "开始配网");
-    lv_obj_set_style_text_font(ui_Label5, &ui_font_Font1, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label6 = lv_label_create(ui_Screen1);
-    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label6, 0);
-    lv_obj_set_y(ui_Label6, 140);
-    lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label6, "下载手机公牛智家APP\n根据APP指引添加设备");
-    lv_obj_set_style_text_font(ui_Label6, &ui_font_Font1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Image3 = lv_img_create(ui_Screen1);
     lv_img_set_src(ui_Image3, &ui_img_9_png);
@@ -56,11 +27,27 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_width(ui_Image2, LV_SIZE_CONTENT);   /// 215
     lv_obj_set_height(ui_Image2, LV_SIZE_CONTENT);    /// 214
     lv_obj_set_x(ui_Image2, 0);
-    lv_obj_set_y(ui_Image2, -40);
+    lv_obj_set_y(ui_Image2, -33);
     lv_obj_set_align(ui_Image2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    lv_timer_create(wifi_blink_callback, 500, NULL);
+    ui_Label3 = lv_label_create(ui_Screen1);
+    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label3, -3);
+    lv_obj_set_y(ui_Label3, -216);
+    lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label3, "开始配网");
+    lv_obj_set_style_text_font(ui_Label3, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label6 = lv_label_create(ui_Screen1);
+    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label6, 0);
+    lv_obj_set_y(ui_Label6, 141);
+    lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label6, "下载手机公牛智家APP\n根据APP指引添加设备");
+    lv_obj_set_style_text_font(ui_Label6, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 }

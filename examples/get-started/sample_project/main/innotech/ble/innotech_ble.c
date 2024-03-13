@@ -71,7 +71,7 @@ static uint8_t raw_adv_data[] = {
 };
 #endif//C411E10077EF
 static uint8_t raw_adv_data[] = {
-        0x0F, 0xFF, 0x12, 0x07, 0xB1, 0x03, 0xB4, 0x00, 0x00, 0x00, 0xEF, 0x77, 0x00, 0xE1, 0x11, 0xC4,
+        0x0F, 0xFF, 0x12, 0x07, 0xB1, 0x03, 0xB4, 0x00, 0x00, 0x00, 0xF6, 0x77, 0x00, 0xE1, 0x11, 0xC4,
         /* service uuid */
         0x03, 0x03, 0xB3, 0xFE,
 };
@@ -344,7 +344,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     uint8_t cipher[16] = {0};
 
                     hex_array_to_string(param->write.value+4, frame_len, noncestr);
-                    sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "000000b4", "c411e10077ef", "5c21d4ce60faad62e9488aa62768fe81");
+                    sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "000000b4", "c411e10077f6", "72cf26b989c5566168fcf29f3c957a22");
                     sha256_encrypt(combined, strlen((char *)combined), output);
                     memcpy((char *)ble_key, (char *)output, 16);
                     memcpy((char *)iv, (char *)param->write.value+4, 16);
@@ -535,7 +535,7 @@ void innotech_ble_init(void)
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
     //uint8_t base_mac_addr[6] = {0xEF, 0x77, 0x00, 0xE1, 0x11, 0xC4};
-    uint8_t base_mac_addr[6] = {0xC4, 0x11, 0xE1, 0x00, 0x77, 0xED};
+    uint8_t base_mac_addr[6] = {0xC4, 0x11, 0xE1, 0x00, 0x77, 0xF4};
     esp_iface_mac_addr_set(base_mac_addr, ESP_MAC_BASE);
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();

@@ -4,182 +4,6 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
-#include "rtc.h"
-#include "innotech_rtc.h"
-#include "innotech_meter.h"
-#include "innotech_weather.h"
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-char num[10] = "0123456789";
-char week[30] = "一二三四五六日";
-static int temp_power = 0;
-
-
-
-void animation_blink_callback()
-{
-    char hour;
-    // //冒号的显示
-    // static uint32_t maohao_blink_time = 0;
-    // if(maohao_blink_time%2){
-    //     lv_obj_clear_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
-    // } else {
-    //     lv_obj_add_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
-    // }
-
-    //show time
-    struct tm time_info = innotech_time_get();
-    weather_t weather_info = innotech_weather_info_get();
-    //冒号的显示
-    static uint32_t maohao_blink_time = 0;
-    if(maohao_blink_time%2){
-        lv_obj_clear_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        lv_obj_add_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
-    }
-
-    //show time hour
-    if(time_info.tm_hour/10)
-    {
-        itoa(time_info.tm_hour/10, &hour, 10);
-        lv_label_set_text(ui_Label20, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label20, "0");
-    }
-
-    itoa(time_info.tm_hour%10, &hour, 10);
-    // printf("hour:%d last-hour:%d\n",time_info.tm_hour,time_info.tm_hour%10);
-    lv_label_set_text(ui_Label21, &hour);
-
-    //show time minu
-    if(time_info.tm_min/10)
-    {
-        itoa(time_info.tm_min/10, &hour, 10);
-        lv_label_set_text(ui_Label22, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label22, "0");
-    }
-
-    itoa(time_info.tm_min%10, &hour, 10);
-    lv_label_set_text(ui_Label23, &hour);
-
-
-    //show week
-    if(time_info.tm_wday == 1)
-    {
-        lv_label_set_text(ui_Label10, "一");
-    }else if(time_info.tm_wday == 2)
-    {
-        lv_label_set_text(ui_Label10, "二");
-    }else if(time_info.tm_wday == 3)
-    {
-        lv_label_set_text(ui_Label10, "三");
-    }else if(time_info.tm_wday == 4)
-    {
-        lv_label_set_text(ui_Label10, "四");
-    }else if(time_info.tm_wday == 5)
-    {
-        lv_label_set_text(ui_Label10, "五");
-    }else if(time_info.tm_wday == 6)
-    {
-        lv_label_set_text(ui_Label10, "六");
-    }else if(time_info.tm_wday == 0)
-    {
-        lv_label_set_text(ui_Label10, "日");
-    }
-    
-
-    //show mother
-    if((time_info.tm_mon+1)/10)
-    {
-        itoa((time_info.tm_mon+1)/10, &hour, 10);
-        lv_label_set_text(ui_Label2, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label2, "0");
-    }
-    itoa((time_info.tm_mon+1)%10, &hour, 10);
-    lv_label_set_text(ui_Label200, &hour);
-    //show day
-    if(time_info.tm_mday/10)
-    {
-        itoa(time_info.tm_mday/10, &hour, 10);
-        lv_label_set_text(ui_Label4, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label4, "0");
-    }
-
-    itoa(time_info.tm_mday%10, &hour, 10);
-    lv_label_set_text(ui_Label8, &hour);
-
-    //show power
-    int power = (int)innotech_power_get();
-    if(power >= 1000)
-    {
-        itoa(power/1000, &hour, 10);
-        lv_label_set_text(ui_Label203, &hour);
-
-    }else if(power >= 100)
-    {
-        itoa(power%1000/100, &hour, 10);
-        lv_label_set_text(ui_Label202, &hour);
-    }else if(power >= 10)
-    {
-        itoa(power%100/10, &hour, 10);
-        lv_label_set_text(ui_Label204, &hour);
-    }else
-    {
-        itoa(power%10, &hour, 10);
-        lv_label_set_text(ui_Label25, &hour);
-    }
-
-    // //show kw.h
-
-    //show temp
-    if(weather_info.temp_max / 10)
-    {
-        itoa(weather_info.temp_max/10, &hour, 10);
-        lv_label_set_text(ui_Label14, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label14, "0");
-    }
-
-    itoa(weather_info.temp_max%10, &hour, 10);
-    lv_label_set_text(ui_Label15, &hour);
-
-    if(weather_info.temp_min / 10)
-    {
-        itoa(weather_info.temp_min/10, &hour, 10);
-        lv_label_set_text(ui_Label11, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label11, "0");
-    }
-
-    itoa(weather_info.temp_min%10, &hour, 10);
-    lv_label_set_text(ui_Label12, &hour);
-
-    //show homi
-    if(weather_info.humid / 10)
-    {
-        itoa(weather_info.humid/10, &hour, 10);
-        lv_label_set_text(ui_Label17, &hour);
-    }else 
-    {
-        lv_label_set_text(ui_Label17, "0");
-    }
-
-    itoa(weather_info.humid%10, &hour, 10);
-    lv_label_set_text(ui_Label18, &hour);
-
-    maohao_blink_time++;
-}
-
 
 void ui_Screen3_screen_init(void)
 {
@@ -198,36 +22,17 @@ void ui_Screen3_screen_init(void)
     ui_Label2 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label2, -227);
-    lv_obj_set_y(ui_Label2, -215);
+    lv_obj_set_x(ui_Label2, -225);
+    lv_obj_set_y(ui_Label2, -214);
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label2, "2");
     lv_obj_set_style_text_font(ui_Label2, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label200 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label200, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label200, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label200, -209);
-    lv_obj_set_y(ui_Label200, -215);
-    lv_obj_set_align(ui_Label200, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label200, "2");
-    lv_obj_set_style_text_font(ui_Label200, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-
-    ui_Label3 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label3, -192);
-    lv_obj_set_y(ui_Label3, -216);
-    lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label3, "/");
-    lv_obj_set_style_text_font(ui_Label3, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_Label4 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label4, -174);
-    lv_obj_set_y(ui_Label4, -215);
+    lv_obj_set_x(ui_Label4, -172);
+    lv_obj_set_y(ui_Label4, -214);
     lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label4, "2");
     lv_obj_set_style_text_font(ui_Label4, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -235,8 +40,8 @@ void ui_Screen3_screen_init(void)
     ui_Label8 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label8, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label8, -155);
-    lv_obj_set_y(ui_Label8, -215);
+    lv_obj_set_x(ui_Label8, -149);
+    lv_obj_set_y(ui_Label8, -214);
     lv_obj_set_align(ui_Label8, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label8, "8");
     lv_obj_set_style_text_font(ui_Label8, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -244,7 +49,7 @@ void ui_Screen3_screen_init(void)
     ui_Label9 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label9, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label9, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label9, -117);
+    lv_obj_set_x(ui_Label9, -104);
     lv_obj_set_y(ui_Label9, -214);
     lv_obj_set_align(ui_Label9, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label9, "周");
@@ -253,7 +58,7 @@ void ui_Screen3_screen_init(void)
     ui_Label10 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label10, -85);
+    lv_obj_set_x(ui_Label10, -66);
     lv_obj_set_y(ui_Label10, -214);
     lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label10, "三");
@@ -263,8 +68,8 @@ void ui_Screen3_screen_init(void)
     lv_img_set_src(ui_Image11, &ui_img_11_png);
     lv_obj_set_width(ui_Image11, LV_SIZE_CONTENT);   /// 17
     lv_obj_set_height(ui_Image11, LV_SIZE_CONTENT);    /// 27
-    lv_obj_set_x(ui_Image11, -222);
-    lv_obj_set_y(ui_Image11, -172);
+    lv_obj_set_x(ui_Image11, -226);
+    lv_obj_set_y(ui_Image11, -171);
     lv_obj_set_align(ui_Image11, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image11, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image11, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -273,8 +78,8 @@ void ui_Screen3_screen_init(void)
     lv_img_set_src(ui_Image12, &ui_img_12_png);
     lv_obj_set_width(ui_Image12, LV_SIZE_CONTENT);   /// 20
     lv_obj_set_height(ui_Image12, LV_SIZE_CONTENT);    /// 24
-    lv_obj_set_x(ui_Image12, -221);
-    lv_obj_set_y(ui_Image12, -129);
+    lv_obj_set_x(ui_Image12, -226);
+    lv_obj_set_y(ui_Image12, -134);
     lv_obj_set_align(ui_Image12, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image12, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image12, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -282,47 +87,20 @@ void ui_Screen3_screen_init(void)
     ui_Label11 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label11, -194);
-    lv_obj_set_y(ui_Label11, -172);
+    lv_obj_set_x(ui_Label11, -183);
+    lv_obj_set_y(ui_Label11, -171);
     lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label11, "1");
+    lv_label_set_text(ui_Label11, "12");
     lv_obj_set_style_text_font(ui_Label11, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label12 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label12, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label12, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label12, -178);
-    lv_obj_set_y(ui_Label12, -172);
-    lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label12, "2");
-    lv_obj_set_style_text_font(ui_Label12, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label13 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label13, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label13, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label13, -161);
-    lv_obj_set_y(ui_Label13, -172);
-    lv_obj_set_align(ui_Label13, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label13, "/");
-    lv_obj_set_style_text_font(ui_Label13, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label14 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label14, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label14, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label14, -147);
-    lv_obj_set_y(ui_Label14, -172);
+    lv_obj_set_x(ui_Label14, -124);
+    lv_obj_set_y(ui_Label14, -171);
     lv_obj_set_align(ui_Label14, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label14, "2");
+    lv_label_set_text(ui_Label14, "20");
     lv_obj_set_style_text_font(ui_Label14, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label15 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label15, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label15, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label15, -130);
-    lv_obj_set_y(ui_Label15, -172);
-    lv_obj_set_align(ui_Label15, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label15, "0");
-    lv_obj_set_style_text_font(ui_Label15, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label16 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label16, LV_SIZE_CONTENT);   /// 1
@@ -333,26 +111,17 @@ void ui_Screen3_screen_init(void)
     ui_Label17 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label17, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label17, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label17, -191);
-    lv_obj_set_y(ui_Label17, -127);
+    lv_obj_set_x(ui_Label17, -179);
+    lv_obj_set_y(ui_Label17, -132);
     lv_obj_set_align(ui_Label17, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label17, "6");
+    lv_label_set_text(ui_Label17, "65");
     lv_obj_set_style_text_font(ui_Label17, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label18 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label18, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label18, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label18, -176);
-    lv_obj_set_y(ui_Label18, -127);
-    lv_obj_set_align(ui_Label18, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label18, "5");
-    lv_obj_set_style_text_font(ui_Label18, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label19 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label19, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label19, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label19, -158);
-    lv_obj_set_y(ui_Label19, -127);
+    lv_obj_set_x(ui_Label19, -149);
+    lv_obj_set_y(ui_Label19, -133);
     lv_obj_set_align(ui_Label19, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label19, "%");
     lv_obj_set_style_text_font(ui_Label19, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -360,16 +129,16 @@ void ui_Screen3_screen_init(void)
     ui_Label20 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label20, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label20, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label20, -160);
+    lv_obj_set_x(ui_Label20, -142);
     lv_obj_set_y(ui_Label20, 6);
     lv_obj_set_align(ui_Label20, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label20, "1");
+    lv_label_set_text(ui_Label20, "0");
     lv_obj_set_style_text_font(ui_Label20, &ui_font_B432, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label21 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label21, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label21, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label21, -75);
+    lv_obj_set_x(ui_Label21, -63);
     lv_obj_set_y(ui_Label21, 6);
     lv_obj_set_align(ui_Label21, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label21, "5");
@@ -378,7 +147,7 @@ void ui_Screen3_screen_init(void)
     ui_Label22 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label22, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label22, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label22, 65);
+    lv_obj_set_x(ui_Label22, 57);
     lv_obj_set_y(ui_Label22, 6);
     lv_obj_set_align(ui_Label22, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label22, "1");
@@ -387,7 +156,7 @@ void ui_Screen3_screen_init(void)
     ui_Label23 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label23, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label23, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label23, 150);
+    lv_obj_set_x(ui_Label23, 121);
     lv_obj_set_y(ui_Label23, 10);
     lv_obj_set_align(ui_Label23, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label23, "3");
@@ -415,44 +184,17 @@ void ui_Screen3_screen_init(void)
     ui_Label25 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label25, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label25, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label25, -8);
-    lv_obj_set_y(ui_Label25, 155);
+    lv_obj_set_x(ui_Label25, -122);
+    lv_obj_set_y(ui_Label25, 154);
     lv_obj_set_align(ui_Label25, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label25, "0");
+    lv_label_set_text(ui_Label25, " ");
     lv_obj_set_style_text_font(ui_Label25, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label203 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label203, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label203, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label203, -132);
-    lv_obj_set_y(ui_Label203, 155);
-    lv_obj_set_align(ui_Label203, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label203, "0");
-    lv_obj_set_style_text_font(ui_Label203, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label202 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label202, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label202, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label202, -90);
-    lv_obj_set_y(ui_Label202, 155);
-    lv_obj_set_align(ui_Label202, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label202, "0");
-    lv_obj_set_style_text_font(ui_Label202, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label204 = lv_label_create(ui_Screen3);
-    lv_obj_set_width(ui_Label204, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label204, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label204, -50);
-    lv_obj_set_y(ui_Label204, 155);
-    lv_obj_set_align(ui_Label204, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label204, "0");
-    lv_obj_set_style_text_font(ui_Label204, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label26 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label26, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label26, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label26, 37);
-    lv_obj_set_y(ui_Label26, 164);
+    lv_obj_set_x(ui_Label26, 23);
+    lv_obj_set_y(ui_Label26, 167);
     lv_obj_set_align(ui_Label26, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label26, "W");
     lv_obj_set_style_text_font(ui_Label26, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -460,8 +202,8 @@ void ui_Screen3_screen_init(void)
     ui_Label27 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label27, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label27, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label27, -53);
-    lv_obj_set_y(ui_Label27, 215);
+    lv_obj_set_x(ui_Label27, -55);
+    lv_obj_set_y(ui_Label27, 219);
     lv_obj_set_align(ui_Label27, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label27, "用电量");
     lv_obj_set_style_text_font(ui_Label27, &ui_font_R81, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -469,17 +211,17 @@ void ui_Screen3_screen_init(void)
     ui_Label28 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label28, 3);
+    lv_obj_set_x(ui_Label28, 0);
     lv_obj_set_y(ui_Label28, 214);
     lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label28, "0");
+    lv_label_set_text(ui_Label28, "1");
     lv_obj_set_style_text_font(ui_Label28, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label29 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label29, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label29, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label29, 52);
-    lv_obj_set_y(ui_Label29, 214);
+    lv_obj_set_y(ui_Label29, 217);
     lv_obj_set_align(ui_Label29, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label29, "k");
     lv_obj_set_style_text_font(ui_Label29, &ui_font_R81, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -488,7 +230,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_width(ui_Label30, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label30, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label30, 72);
-    lv_obj_set_y(ui_Label30, 214);
+    lv_obj_set_y(ui_Label30, 218);
     lv_obj_set_align(ui_Label30, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label30, "W");
     lv_obj_set_style_text_font(ui_Label30, &ui_font_R81, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -497,7 +239,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_width(ui_Label31, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label31, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label31, 90);
-    lv_obj_set_y(ui_Label31, 204);
+    lv_obj_set_y(ui_Label31, 207);
     lv_obj_set_align(ui_Label31, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label31, ".");
     lv_obj_set_style_text_font(ui_Label31, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -506,7 +248,7 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_width(ui_Label32, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label32, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label32, 106);
-    lv_obj_set_y(ui_Label32, 214);
+    lv_obj_set_y(ui_Label32, 218);
     lv_obj_set_align(ui_Label32, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label32, "h");
     lv_obj_set_style_text_font(ui_Label32, &ui_font_R81, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -514,7 +256,7 @@ void ui_Screen3_screen_init(void)
     ui_Label34 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label34, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label34, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label34, 15);
+    lv_obj_set_x(ui_Label34, 12);
     lv_obj_set_y(ui_Label34, 214);
     lv_obj_set_align(ui_Label34, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label34, ".");
@@ -523,8 +265,8 @@ void ui_Screen3_screen_init(void)
     ui_Label35 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label35, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label35, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label35, 31);
-    lv_obj_set_y(ui_Label35, 214);
+    lv_obj_set_x(ui_Label35, 28);
+    lv_obj_set_y(ui_Label35, 215);
     lv_obj_set_align(ui_Label35, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label35, "0");
     lv_obj_set_style_text_font(ui_Label35, &ui_font_B108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -540,8 +282,8 @@ void ui_Screen3_screen_init(void)
     ui_Label108 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label108, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label108, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label108, -112);
-    lv_obj_set_y(ui_Label108, -170);
+    lv_obj_set_x(ui_Label108, -97);
+    lv_obj_set_y(ui_Label108, -171);
     lv_obj_set_align(ui_Label108, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label108, "°");
     lv_obj_set_style_text_font(ui_Label108, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -556,5 +298,51 @@ void ui_Screen3_screen_init(void)
     lv_obj_add_flag(ui_Image49, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image49, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    lv_timer_create(animation_blink_callback, 500, NULL);
+    ui_Label111 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label111, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label111, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label111, -16);
+    lv_obj_set_y(ui_Label111, 156);
+    lv_obj_set_align(ui_Label111, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label111, "0");
+    lv_obj_set_style_text_font(ui_Label111, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label112 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label112, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label112, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label112, -50);
+    lv_obj_set_y(ui_Label112, 154);
+    lv_obj_set_align(ui_Label112, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label112, " ");
+    lv_obj_set_style_text_font(ui_Label112, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label113 = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_Label113, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label113, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label113, -90);
+    lv_obj_set_y(ui_Label113, 155);
+    lv_obj_set_align(ui_Label113, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label113, " ");
+    lv_obj_set_style_text_font(ui_Label113, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Image57 = lv_img_create(ui_Screen3);
+    lv_img_set_src(ui_Image57, &ui_img_319_png);
+    lv_obj_set_width(ui_Image57, LV_SIZE_CONTENT);   /// 28
+    lv_obj_set_height(ui_Image57, LV_SIZE_CONTENT);    /// 32
+    lv_obj_set_x(ui_Image57, -199);
+    lv_obj_set_y(ui_Image57, -213);
+    lv_obj_set_align(ui_Image57, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image57, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Image57, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Image58 = lv_img_create(ui_Screen3);
+    lv_img_set_src(ui_Image58, &ui_img_319_png);
+    lv_obj_set_width(ui_Image58, LV_SIZE_CONTENT);   /// 28
+    lv_obj_set_height(ui_Image58, LV_SIZE_CONTENT);    /// 32
+    lv_obj_set_x(ui_Image58, -156);
+    lv_obj_set_y(ui_Image58, -170);
+    lv_obj_set_align(ui_Image58, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image58, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Image58, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
 }

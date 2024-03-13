@@ -58,16 +58,16 @@ static uint8_t wifi_connect_state = 0;
 #define   Aliyun_host       "g8uj3GQEAGp.iot-as-mqtt.cn-shanghai.aliyuncs.com"
 #define   Aliyun_port       1883
 /*Client ID：     ${ClientID}|securemode=${Mode},signmethod=${SignMethod}|*/
-#define   Aliyun_client_id  "112244|securemode=2,signmethod=hmacsha1,timestamp=1708511023184|"
+#define   Aliyun_client_id  "1123|securemode=2,signmethod=hmacsha1,timestamp=1710207722097|"
 /*User Name：     ${DeviceName}&${ProductKey}*/
-#define   Aliyun_username   "C411E10077EF&g8uj3GQEAGp"
+#define   Aliyun_username   "C411E10077F6&g8uj3GQEAGp"
 /*使用官网 MQTT_Password 工具生成*/
-#define   Aliyun_password   "716DE2339BE90E4FF9BCDF905C7A7D667DC3C893"
+#define   Aliyun_password   "E9A70F5B586079AEACA8A436EC2A5F60DC714EB8"
 
-#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
-#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
-#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
-#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/GetLocationEvent/post"           
+#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077F6/thing/service/property/set"
+#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077F6/thing/event/property/post"
+#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077F6/thing/service/Reset"
+#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077F6/thing/event/GetLocationEvent/post"           
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";

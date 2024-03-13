@@ -2,6 +2,7 @@
 // SquareLine Studio version: SquareLine Studio 1.3.4
 // LVGL version: 8.3.6
 // Project name: SquareLine_Project
+
 #include <stdio.h>
 #include "ui.h"
 #include "ui_helpers.h"
@@ -9,30 +10,31 @@
 #include "innotech_lcd.h"
 #include "api_bridge.h"
 #include "innotech_config.h"
+#include "innotech_button.h"
 #include "innotech_ble.h"
 
 ///////////////////// VARIABLES ////////////////////
-extern uint8_t wifi_connect_state;
+
 
 // SCREEN: ui_Screen1
 void ui_Screen1_screen_init(void);
 lv_obj_t * ui_Screen1;
-lv_obj_t * ui_Label5;
-lv_obj_t * ui_Label6;
 lv_obj_t * ui_Image3;
 lv_obj_t * ui_Image2;
+lv_obj_t * ui_Label3;
+lv_obj_t * ui_Label6;
 
 
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);
 lv_obj_t * ui_Screen2;
-lv_obj_t * ui_Label1;
 lv_obj_t * ui_Image4;
 lv_obj_t * ui_Image5;
 lv_obj_t * ui_Image6;
 lv_obj_t * ui_Image7;
 lv_obj_t * ui_Image8;
 lv_obj_t * ui_Image9;
+lv_obj_t * ui_Label5;
 
 
 // SCREEN: ui_Screen3
@@ -40,7 +42,6 @@ void ui_Screen3_screen_init(void);
 lv_obj_t * ui_Screen3;
 lv_obj_t * ui_Label7;
 lv_obj_t * ui_Label2;
-lv_obj_t * ui_Label3;
 lv_obj_t * ui_Label4;
 lv_obj_t * ui_Label8;
 lv_obj_t * ui_Label9;
@@ -48,13 +49,9 @@ lv_obj_t * ui_Label10;
 lv_obj_t * ui_Image11;
 lv_obj_t * ui_Image12;
 lv_obj_t * ui_Label11;
-lv_obj_t * ui_Label12;
-lv_obj_t * ui_Label13;
 lv_obj_t * ui_Label14;
-lv_obj_t * ui_Label15;
 lv_obj_t * ui_Label16;
 lv_obj_t * ui_Label17;
-lv_obj_t * ui_Label18;
 lv_obj_t * ui_Label19;
 lv_obj_t * ui_Label20;
 lv_obj_t * ui_Label21;
@@ -75,8 +72,11 @@ lv_obj_t * ui_Label35;
 lv_obj_t * ui_Label76;
 lv_obj_t * ui_Label108;
 lv_obj_t * ui_Image49;
-
-lv_obj_t * ui_Label200;
+lv_obj_t * ui_Label111;
+lv_obj_t * ui_Label112;
+lv_obj_t * ui_Label113;
+lv_obj_t * ui_Image57;
+lv_obj_t * ui_Image58;
 
 
 // SCREEN: ui_Screen4
@@ -92,8 +92,7 @@ lv_obj_t * ui_Image14;
 lv_obj_t * ui_Image15;
 lv_obj_t * ui_Image16;
 lv_obj_t * ui_Image17;
-lv_obj_t * ui_Label33;
-lv_obj_t * ui_Label109;
+lv_obj_t * ui_Image52;
 
 
 // SCREEN: ui_Screen6
@@ -102,95 +101,8 @@ lv_obj_t * ui_Screen6;
 lv_obj_t * ui_Image18;
 lv_obj_t * ui_Image19;
 lv_obj_t * ui_Image20;
-lv_obj_t * ui_Label36;
 lv_obj_t * ui_Image50;
-
-
-// SCREEN: ui_Screen7
-void ui_Screen7_screen_init(void);
-lv_obj_t * ui_Screen7;
-lv_obj_t * ui_Label37;
-lv_obj_t * ui_Label38;
-lv_obj_t * ui_Label39;
-lv_obj_t * ui_Label40;
-lv_obj_t * ui_Label41;
-lv_obj_t * ui_Label42;
-lv_obj_t * ui_Label43;
-lv_obj_t * ui_Label44;
-lv_obj_t * ui_Label45;
-lv_obj_t * ui_Label46;
-lv_obj_t * ui_Label98;
-lv_obj_t * ui_Label99;
-lv_obj_t * ui_Label100;
-lv_obj_t * ui_Label101;
-lv_obj_t * ui_Label102;
-lv_obj_t * ui_Label103;
-lv_obj_t * ui_Label104;
-lv_obj_t * ui_Label105;
-lv_obj_t * ui_Label106;
-lv_obj_t * ui_Label107;
-
-
-// SCREEN: ui_Screen8
-void ui_Screen8_screen_init(void);
-lv_obj_t * ui_Screen8;
-lv_obj_t * ui_Label47;
-lv_obj_t * ui_Label48;
-lv_obj_t * ui_Label49;
-lv_obj_t * ui_Label50;
-lv_obj_t * ui_Label51;
-lv_obj_t * ui_Label52;
-lv_obj_t * ui_Label53;
-lv_obj_t * ui_Label54;
-lv_obj_t * ui_Label55;
-lv_obj_t * ui_Label56;
-lv_obj_t * ui_Label57;
-lv_obj_t * ui_Label58;
-lv_obj_t * ui_Label59;
-lv_obj_t * ui_Label60;
-lv_obj_t * ui_Label61;
-lv_obj_t * ui_Label62;
-lv_obj_t * ui_Label63;
-lv_obj_t * ui_Label65;
-lv_obj_t * ui_Label64;
-lv_obj_t * ui_Label66;
-lv_obj_t * ui_Label67;
-lv_obj_t * ui_Label69;
-lv_obj_t * ui_Label70;
-lv_obj_t * ui_Label71;
-lv_obj_t * ui_Label72;
-lv_obj_t * ui_Label73;
-lv_obj_t * ui_Label74;
-lv_obj_t * ui_Label75;
-lv_obj_t * ui_Label68;
-lv_obj_t * ui_Label77;
-lv_obj_t * ui_Label78;
-lv_obj_t * ui_Label79;
-lv_obj_t * ui_Label80;
-lv_obj_t * ui_Label81;
-lv_obj_t * ui_Label82;
-lv_obj_t * ui_Label83;
-lv_obj_t * ui_Label84;
-lv_obj_t * ui_Label85;
-lv_obj_t * ui_Label86;
-lv_obj_t * ui_Label87;
-lv_obj_t * ui_Label88;
-lv_obj_t * ui_Label89;
-lv_obj_t * ui_Label90;
-lv_obj_t * ui_Label91;
-lv_obj_t * ui_Label92;
-lv_obj_t * ui_Label93;
-lv_obj_t * ui_Label94;
-lv_obj_t * ui_Label95;
-lv_obj_t * ui_Label96;
-lv_obj_t * ui_Label97;
-
-
-lv_obj_t * ui_Label201;
-lv_obj_t * ui_Label202;
-lv_obj_t * ui_Label203;
-lv_obj_t * ui_Label204;
-lv_obj_t * ui_Label205;
+lv_obj_t * ui_Label12;
 
 
 // SCREEN: ui_Screen9
@@ -239,8 +151,15 @@ lv_obj_t * ui_Image45;
 lv_obj_t * ui_Image46;
 lv_obj_t * ui_Image47;
 lv_obj_t * ui_Image48;
+
+
+// SCREEN: ui_Screen13
+void ui_Screen13_screen_init(void);
+lv_obj_t * ui_Screen13;
+lv_obj_t * ui_Image10;
+lv_obj_t * ui_Image51;
 lv_obj_t * ui____initial_actions0;
-const lv_img_dsc_t * ui_imgset_[45] = {&ui_img_10_png, &ui_img_11_png, &ui_img_1_png, &ui_img_12_png, &ui_img_2_png, &ui_img_13_png, &ui_img_3_png, &ui_img_14_png, &ui_img_4_png, &ui_img_15_png, &ui_img_16_png, &ui_img_17_png, &ui_img_7_png, &ui_img_18_png, &ui_img_8_png, &ui_img_19_png, &ui_img_20_png, &ui_img_21_png, &ui_img_46_png, &ui_img_47_png, &ui_img_9_png, &ui_img_22_png, &ui_img_23_png, &ui_img_24_png, &ui_img_25_png, &ui_img_26_png, &ui_img_27_png, &ui_img_28_png, &ui_img_29_png, &ui_img_30_png, &ui_img_31_png, &ui_img_32_png, &ui_img_33_png, &ui_img_34_png, &ui_img_35_png, &ui_img_36_png, &ui_img_37_png, &ui_img_38_png, &ui_img_39_png, &ui_img_40_png, &ui_img_41_png, &ui_img_42_png, &ui_img_43_png, &ui_img_44_png, &ui_img_45_png};
+const lv_img_dsc_t * ui_imgset_[48] = {&ui_img_1_png, &ui_img_10_png, &ui_img_11_png, &ui_img_12_png, &ui_img_2_png, &ui_img_13_png, &ui_img_3_png, &ui_img_14_png, &ui_img_4_png, &ui_img_15_png, &ui_img_16_png, &ui_img_17_png, &ui_img_7_png, &ui_img_18_png, &ui_img_8_png, &ui_img_19_png, &ui_img_20_png, &ui_img_21_png, &ui_img_22_png, &ui_img_23_png, &ui_img_24_png, &ui_img_25_png, &ui_img_26_png, &ui_img_27_png, &ui_img_28_png, &ui_img_29_png, &ui_img_30_png, &ui_img_31_png, &ui_img_32_png, &ui_img_33_png, &ui_img_34_png, &ui_img_35_png, &ui_img_36_png, &ui_img_37_png, &ui_img_38_png, &ui_img_39_png, &ui_img_40_png, &ui_img_41_png, &ui_img_42_png, &ui_img_43_png, &ui_img_44_png, &ui_img_45_png, &ui_img_46_png, &ui_img_47_png, &ui_img_9_png, &ui_img_313_png, &ui_img_319_png, &ui_img_318_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -253,51 +172,43 @@ const lv_img_dsc_t * ui_imgset_[45] = {&ui_img_10_png, &ui_img_11_png, &ui_img_1
 ///////////////////// ANIMATIONS ////////////////////
 static uint32_t last_blink_time = 1;
 ///////////////////// FUNCTIONS ////////////////////
-void lvgl_blink_callback()
+void lvgl_blink_callback(void)
 {
-    
+    if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
     {
-        if(innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC)
-        {
-            lv_disp_load_scr(ui_Screen3);
-            //printf("123456---------------\n");
-        }
-        if(last_blink_time == 2 && (innotech_wifi_config_flag_get() != WIFI_CONFIG_SUC))
+        lv_disp_load_scr(ui_Screen3);//展示时间的界面
+    }else//正常配网
+    {
+        if(last_blink_time == 1)
         {
             lv_disp_load_scr(ui_Screen1);
-           // printf("6666666------------------------------\n");
-            last_blink_time++;
+            // last_blink_time ++;
         }
-        if((innotech_pre_wifi() == 1) && (last_blink_time == 3))
+        if(innotech_pre_wifi() == 1)
         {
             lv_disp_load_scr(ui_Screen2);
-            last_blink_time++;
-            printf("3333333------------------------------\n");
         }
-
-        if((innotech_wifi_state_get() == 1) && (last_blink_time == 4))
+        if(innotech_wifi_state_get() == 1)
         {
             lv_disp_load_scr(ui_Screen6);
-            last_blink_time++;
-            printf("444444444------------------------------\n");
+            last_blink_time = 3;
         }
-
-        if((innotech_wifi_state_get() == 2) && (last_blink_time == 4))
+        if(innotech_wifi_state_get() == 2)
         {
             lv_disp_load_scr(ui_Screen5);
-            last_blink_time = 2;
-            printf("-4-4-4-4-4-4-4-4-4-4----------------------\n");
-        }
-
-        if(last_blink_time == 5)
-        {
-            lv_disp_load_scr(ui_Screen3);
+            last_blink_time = 1;
         }
     }
-    
-
+    if(innotech_factory_flag_get() == 1)
+    {
+        lv_disp_load_scr(ui_Screen13);
+    }
+    // if(last_blink_time == 4)
+    // {
+    //     lv_disp_load_scr(ui_Screen4);
+    //     last_blink_time = 1;
+    // }
 }
-
 ///////////////////// SCREENS ////////////////////
 
 void ui_init(void)
@@ -312,18 +223,14 @@ void ui_init(void)
     ui_Screen4_screen_init();
     ui_Screen5_screen_init();
     ui_Screen6_screen_init();
-    ui_Screen7_screen_init();
-    ui_Screen8_screen_init();
     ui_Screen9_screen_init();
     ui_Screen10_screen_init();
     ui_Screen11_screen_init();
     ui_Screen12_screen_init();
+    ui_Screen13_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
+    /*无论怎么样都会展示公牛的标志*/
 
-    if((innotech_reset_reason_get() == 1) || (last_blink_time == 1))
-    {
-        lv_disp_load_scr(ui_Screen4);
-        last_blink_time++;
-    }
+    lv_disp_load_scr(ui_Screen4);
     lv_timer_create(lvgl_blink_callback, 1000, NULL);
 }
