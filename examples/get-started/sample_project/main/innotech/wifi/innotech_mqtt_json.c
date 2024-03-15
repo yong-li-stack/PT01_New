@@ -103,34 +103,29 @@ static int mqtt_json_params_pack(char *cmd, cJSON *stateJSObject)
         cJSON_AddItemToObject(stateJSObject, "Memory", cJSON_CreateNumber(innotech_config->memory));
     }
     
-    if( (strncmp(cmd, "LineDiameter", strlen(cmd)) == 0) )
+    if( (strncmp(cmd, "LineDiameter", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "LineDiameter", cJSON_CreateNumber(innotech_config->line_diameter));
     }
     
-    if( (strncmp(cmd, "RealTimeCurrent", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
+    if( (strncmp(cmd, "RealTimeCurrent", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) || (strncmp(cmd, "energy", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "RealTimeCurrent", cJSON_CreateNumber(innotech_current_get()));
     }
     
-    if( (strncmp(cmd, "RealTimeVoltage", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
+    if( (strncmp(cmd, "RealTimeVoltage", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) || (strncmp(cmd, "energy", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "RealTimeVoltage", cJSON_CreateNumber(innotech_voltage_get()));
     }
 
-    if( (strncmp(cmd, "RealTimePower", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
+    if( (strncmp(cmd, "RealTimePower", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) || (strncmp(cmd, "energy", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "RealTimePower", cJSON_CreateNumber(innotech_power_get()));
     }
 
-    if( (strncmp(cmd, "TotalConsumption", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
+    if( (strncmp(cmd, "TotalConsumption", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) || (strncmp(cmd, "energy", strlen(cmd)) == 0) )
     {
         cJSON_AddItemToObject(stateJSObject, "TotalConsumption", cJSON_CreateNumber(innotech_consumption_get()));
-    }
-
-    if( (strncmp(cmd, "LineDiameter", strlen(cmd)) == 0) || (strncmp(cmd, "status", strlen(cmd)) == 0) )
-    {
-        cJSON_AddItemToObject(stateJSObject, "LineDiameter", cJSON_CreateNumber(innotech_config->line_diameter));
     }
 
     if( (strncmp(cmd, "LocalTimer_1", strlen(cmd)) == 0))
@@ -228,7 +223,8 @@ int mqtt_json_pack(char *cmd, char *id, char *version, char *package_msg)
             (strncmp(cmd, "LocalTimer_5", strlen(cmd)) == 0) ||\
             (strncmp(cmd, "CountDown_1", strlen(cmd)) == 0) ||\
             (strncmp(cmd, "CountDown_2", strlen(cmd)) == 0) ||\
-			(strncmp(cmd, "CountDown_3", strlen(cmd)) == 0))
+			(strncmp(cmd, "CountDown_3", strlen(cmd)) == 0) ||\
+            (strncmp(cmd, "energy", strlen(cmd)) == 0))
 		{
 			cJSON_AddItemToObject(IOTJSObject, "params", stateJSObject = cJSON_CreateObject());
             cJSON_AddItemToObject(IOTJSObject, "sys", sysJSObject = cJSON_CreateObject());

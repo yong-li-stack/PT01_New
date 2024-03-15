@@ -27,6 +27,7 @@ void hex_array_to_string(unsigned char *hexArray, int length, unsigned char *out
 void sha256_encrypt(unsigned char *input, size_t len, unsigned char *output);
 void aes128_cbc_encrypt(unsigned char *key, unsigned char *iv, unsigned char *input, size_t len, unsigned char *output);
 void aes128_cbc_decrypt(unsigned char *key, unsigned char *iv, unsigned char *input, size_t len, unsigned char *output);
+void md5_compute(unsigned char *input, size_t len, unsigned char *output);
 
 #ifdef __cplusplus
 }

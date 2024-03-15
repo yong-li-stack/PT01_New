@@ -29,7 +29,7 @@
 #include "api_bridge.h"
 
 static uint16_t time_tick = 0;
-
+static uint16_t energy_tick = 0;
 
 void innotech_update_save_tick(void)
 {
@@ -53,6 +53,11 @@ void innotech_device_service_handle(void *args)
             time_tick = 0;
             innotech_config_check();
         }
+        if(++energy_tick >= 1500)
+        {
+            energy_tick = 0;
+            mqtt_send_device_energy();
+        }
         vTaskDelay(20 / portTICK_PERIOD_MS);
        /*static int tick = 0;
         if(++tick >= 50)
@@ -65,7 +70,7 @@ void innotech_device_service_handle(void *args)
 
 void innotech_device_service_init(void)
 {    
-    if(xTaskCreate(&innotech_device_service_handle, "device_service_handle", 2560, NULL, 23, NULL) != pdTRUE)
+    if(xTaskCreate(&innotech_device_service_handle, "device_service_handle", 4096, NULL, 23, NULL) != pdTRUE)
     {
         //ESP_LOGI(TAG, "create device process task failed!!!");
     }
