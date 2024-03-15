@@ -4,6 +4,40 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
+int sit_y[] = {30,-2,-29};
+void dot_blink_callback()
+{
+  static uint8_t dot_blink_time = 0;
+  static uint8_t calu_num = 0;
+  static uint8_t wifi_flag = 0;
+  calu_num ++;
+  if(calu_num % 3 == 0)
+  {
+        if((dot_blink_time%3) == 1){
+        lv_obj_set_x(ui_Image8, sit_y[1]);
+        lv_obj_set_x(ui_Image6, sit_y[2]);
+        lv_obj_set_x(ui_Image7, sit_y[0]);
+        } else if((dot_blink_time%3) == 2){
+            lv_obj_set_x(ui_Image8, sit_y[2]);
+            lv_obj_set_x(ui_Image6, sit_y[0]);
+            lv_obj_set_x(ui_Image7, sit_y[1]);
+        }else{
+            lv_obj_set_x(ui_Image8, sit_y[0]);
+            lv_obj_set_x(ui_Image6, sit_y[1]);
+            lv_obj_set_x(ui_Image7, sit_y[2]);
+        }
+        dot_blink_time++;
+  }else if(calu_num % 4 == 0)
+  {
+        wifi_flag ++;
+        if(wifi_flag%2){
+        lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_HIDDEN);
+        }
+  }
+  
+}
 
 void ui_Screen2_screen_init(void)
 {
@@ -57,7 +91,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_width(ui_Image8, LV_SIZE_CONTENT);   /// 24
     lv_obj_set_height(ui_Image8, LV_SIZE_CONTENT);    /// 55
     lv_obj_set_x(ui_Image8, 30);
-    lv_obj_set_y(ui_Image8, 1);
+    lv_obj_set_y(ui_Image8, 0);
     lv_obj_set_align(ui_Image8, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image8, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image8, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -80,5 +114,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_align(ui_Label5, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label5, "正在配网");
     lv_obj_set_style_text_font(ui_Label5, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_timer_create(dot_blink_callback, 100, NULL);
 
 }
