@@ -27,6 +27,7 @@
 
 static int cf_isr_cnt = 0;
 static int cf1_isr_cnt = 0;
+static double consumption = 0;
 
 typedef struct _energy_manage_t{
     double current;
@@ -70,16 +71,33 @@ static void IRAM_ATTR cf1_isr_handler(void* arg)
 static void meter_gpio_isr_init(void)
 {
     innotech_gpio_mode_init(GPIO_OUTPUT_PIN_SEL, 2, 0, 0, 0);
-    innotech_set_gpio_level(GPIO_OUTPUT_PIN_SEL, 0);
+    innotech_set_gpio_level(GPIO_OUTPUT_PIN_SEL, 1);
 
     innotech_gpio_mode_init(GPIO_INPUT_IO_BL0937B_CF, 1, 0, 0, 1);
     innotech_gpio_mode_init(GPIO_INPUT_IO_BL0937B_CF1, 1, 0, 0, 1);
     innotech_gpio_isr_service_init(0);
     innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF, cf_isr_handler,NULL);
-    // innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF1, cf1_isr_handler,NULL);
+    innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF1, cf1_isr_handler,NULL);
 
 }
-float vp = 0;
+
+#define avg_num 20
+int get_avg(int num)
+{
+    static int avg_array[avg_num] = {0};
+    static int avg_cnt = 0;
+    int avg_array_sum = 0;
+
+    for(int i = 0; i < avg_num; i++)
+    {
+       avg_array_sum += avg_array[i];
+    }
+    avg_array[avg_cnt] = num;
+    avg_cnt++;
+    avg_cnt = avg_cnt % avg_num;
+    avg_array_sum = avg_array_sum / avg_num;
+    return avg_array_sum+1;
+}
 static void device_bsp_timer_cb(void* tmr)
 {
     static uint32_t bsp_timer_cnt = 0;        
@@ -88,21 +106,27 @@ static void device_bsp_timer_cb(void* tmr)
     if(bsp_timer_cnt >= 100) //1S
     {
         bsp_timer_cnt = 0; 
-        // printf("cf_isr_cnt: %d\n", cf_isr_cnt);
-        // printf("cf1_isr_cnt: %d\n", cf1_isr_cnt);
         // voltage
         // energy.voltage = (double)(cf1_isr_cnt-1) * 1.1 / 15397 * 1200510 / 510;           
         // current
         // energy.current = (double)(cf1_isr_cnt-1) * 1.1 / 94638 / 0.5 * 1000;  
         // power
-        vp = 94.5 / cf_isr_cnt;
-        energy.power = 5.5 * cf_isr_cnt;
-        energy.consumption = energy.power / (cf_isr_cnt * 3600000);
+        energy.voltage = (double)cf1_isr_cnt / 4;
+        cf_isr_cnt = get_avg(cf_isr_cnt);
+        energy.power = (double)6.5 * cf_isr_cnt;
+        energy.current = energy.power / energy.voltage;
+        consumption += energy.power / 1000 / 3600;
+        if(consumption >= 0.5)
+        {
+            energy.consumption += consumption;
+            consumption = 0;
+        }
+        // printf("consumption :%f energy.consumption  %f\n",consumption,energy.consumption);
 
-        // printf("vol: %f\n", energy.voltage);
-        // printf("power: %f\n", energy.power);
-        // printf("vp: %f\n", vp);
-        // printf("i: %f\n", energy.current);
+        // printf("vol: %f cf1_isr_cnt %d\n", energy.voltage,cf1_isr_cnt);
+        // printf("power: %f cf_isr_cnt  %d\n", energy.power,cf_isr_cnt);
+        // printf("energy.voltage: %f\n", energy.voltage);
+        // printf("energy.consumption %f\n", energy.consumption);
         cf_isr_cnt = 0;
         cf1_isr_cnt = 0;
     }
