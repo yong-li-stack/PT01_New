@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 31 px
  * Bpp: 8
- * Opts: --bpp 8 --size 31 --font D:\Users\Desktop\assets\OPPOSans-B.ttf -o D:\Users\Desktop\assets\ui_font_B108.c --format lvgl --symbols 周一二三四五六日1234567890°/ --no-compress --no-prefilter
+ * Opts: --bpp 8 --size 31 --font D:\Users\Desktop\assets\OPPOSans-B.ttf -o D:\Users\Desktop\assets\ui_font_B108.c --format lvgl -r 0x20 --symbols 周一二三四五六日1234567890°/ --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "../ui.h"
@@ -18,6 +18,8 @@
 
 /*Store the image of the glyphs*/
 static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
+    /* U+0020 " " */
+
     /* U+002F "/" */
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4f,
     0x80, 0x80, 0x80, 0x10, 0x0, 0x0, 0x0, 0x0,
@@ -1355,6 +1357,7 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
 
 static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 0, .adv_w = 0, .box_w = 0, .box_h = 0, .ofs_x = 0, .ofs_y = 0} /* id = 0 reserved */,
+    {.bitmap_index = 0, .adv_w = 146, .box_w = 0, .box_h = 0, .ofs_x = 0, .ofs_y = 0},
     {.bitmap_index = 0, .adv_w = 186, .box_w = 12, .box_h = 32, .ofs_x = 0, .ofs_y = -6},
     {.bitmap_index = 384, .adv_w = 326, .box_w = 19, .box_h = 25, .ofs_x = 1, .ofs_y = -2},
     {.bitmap_index = 859, .adv_w = 238, .box_w = 10, .box_h = 25, .ofs_x = 1, .ofs_y = -2},
@@ -1381,21 +1384,18 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
  *  CHARACTER MAPPING
  *--------------------*/
 
-static const uint16_t unicode_list_1[] = {
-    0x0, 0x4d50, 0x4d59, 0x4ddc, 0x4de4, 0x50bd, 0x53b8, 0x562b,
-    0x6535
+static const uint16_t unicode_list_0[] = {
+    0x0, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+    0x16, 0x17, 0x18, 0x19, 0x90, 0x4de0, 0x4de9, 0x4e6c,
+    0x4e74, 0x514d, 0x5448, 0x56bb, 0x65c5
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
 static const lv_font_fmt_txt_cmap_t cmaps[] =
 {
     {
-        .range_start = 47, .range_length = 11, .glyph_id_start = 1,
-        .unicode_list = NULL, .glyph_id_ofs_list = NULL, .list_length = 0, .type = LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY
-    },
-    {
-        .range_start = 176, .range_length = 25910, .glyph_id_start = 12,
-        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 9, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .range_start = 32, .range_length = 26054, .glyph_id_start = 1,
+        .unicode_list = unicode_list_0, .glyph_id_ofs_list = NULL, .list_length = 21, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -1417,7 +1417,7 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
     .cmaps = cmaps,
     .kern_dsc = NULL,
     .kern_scale = 0,
-    .cmap_num = 2,
+    .cmap_num = 1,
     .bpp = 8,
     .kern_classes = 0,
     .bitmap_format = 0,
