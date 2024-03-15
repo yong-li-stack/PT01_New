@@ -48,7 +48,7 @@ void innotech_device_service_handle(void *args)
         innotech_lcd_process();
         innotech_button_process();
 
-        if(++time_tick >= 500)
+        if(++time_tick >= 150)
         {
             time_tick = 0;
             innotech_config_check();
