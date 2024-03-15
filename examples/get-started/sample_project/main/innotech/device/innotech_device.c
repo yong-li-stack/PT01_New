@@ -70,7 +70,7 @@ void innotech_device_service_handle(void *args)
 
 void innotech_device_service_init(void)
 {    
-    if(xTaskCreate(&innotech_device_service_handle, "device_service_handle", 4096, NULL, 23, NULL) != pdTRUE)
+    if(xTaskCreate(&innotech_device_service_handle, "device_service_handle", 5120, NULL, 23, NULL) != pdTRUE)
     {
         //ESP_LOGI(TAG, "create device process task failed!!!");
     }
@@ -83,11 +83,11 @@ void innotech_device_init(void)
     innotech_relay_init();
     innotech_button_init();
     innotech_meter_init();
+    innotech_lcd_init();
     innotech_wifi_init();
     innotech_ble_init();
     innotech_rtc_init();
-    // innotech_weather_init();
-    innotech_lcd_init();
+    innotech_weather_init();
 	innotech_device_service_init();
     innotech_device_service_start();
 }
