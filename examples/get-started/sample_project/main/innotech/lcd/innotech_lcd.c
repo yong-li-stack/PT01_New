@@ -543,13 +543,18 @@ void innotech_lcd_process(void)
 { 
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
     
-    if((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch))
+    if(((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch)) || (innotech_config->lcd_switch || innotech_config->power_switch))
     {
         //brightness = innotech_config->lcd_brightness * (100 - MIN_LED_LUMI) / 100 + MIN_LED_LUMI;
         innotech_led_pwm_write(innotech_config->lcd_brightness);
     }else if(innotech_config->brightness_switch)
     {
         innotech_led_pwm_write(100);
+    }
+
+    if(!innotech_config->lcd_switch || !innotech_config->power_switch)
+    {
+        innotech_led_pwm_write(0);
     }
     
 }
