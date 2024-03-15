@@ -69,6 +69,7 @@ lv_obj_t * ui_Label31;
 lv_obj_t * ui_Label32;
 lv_obj_t * ui_Label34;
 lv_obj_t * ui_Label35;
+lv_obj_t * ui_Label36;
 lv_obj_t * ui_Label76;
 lv_obj_t * ui_Label108;
 lv_obj_t * ui_Image49;
@@ -182,7 +183,6 @@ void lvgl_blink_callback(void)
         if(last_blink_time == 1)
         {
             lv_disp_load_scr(ui_Screen1);
-            // last_blink_time ++;
         }
         if(innotech_pre_wifi() == 1)
         {
@@ -203,11 +203,6 @@ void lvgl_blink_callback(void)
     {
         lv_disp_load_scr(ui_Screen13);
     }
-    // if(last_blink_time == 4)
-    // {
-    //     lv_disp_load_scr(ui_Screen4);
-    //     last_blink_time = 1;
-    // }
 }
 ///////////////////// SCREENS ////////////////////
 
@@ -232,5 +227,5 @@ void ui_init(void)
     /*无论怎么样都会展示公牛的标志*/
 
     lv_disp_load_scr(ui_Screen4);
-    lv_timer_create(lvgl_blink_callback, 1000, NULL);
+    lv_timer_create(lvgl_blink_callback, 500, NULL);
 }
