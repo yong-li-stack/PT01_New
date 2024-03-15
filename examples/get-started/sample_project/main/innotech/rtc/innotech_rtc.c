@@ -24,11 +24,17 @@
 #include "innotech_relay.h"
 
 #define RTC_TAG "INNOTECH_RTC"
+time_t now;
 struct tm timeinfo;
 
 struct tm innotech_time_get(void)
 {
     return timeinfo;
+}
+
+time_t innotech_timestamp_get(void)
+{
+    return now;
 }
 
 static uint16_t timer_repeat_get(uint8_t *arr, int size) 
@@ -56,7 +62,7 @@ static void innotech_rtc_thread(void *arg)
 
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
     char cmd[16] = {0};
-    time_t now;
+    
     time(&now);
     localtime_r(&now, &timeinfo);
     // Set timezone to China Standard Time

@@ -15,6 +15,7 @@
 #include <string.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/aes.h>
+#include "esp_rom_md5.h"
 #include "innotech_utils.h"
 
 void hex_array_to_string(unsigned char* hexArray, int length, unsigned char* output) 
@@ -64,4 +65,19 @@ void aes128_cbc_decrypt(unsigned char *key, unsigned char *iv, unsigned char *in
     mbedtls_aes_setkey_dec(&aes_Key, key, 128);
     mbedtls_aes_crypt_cbc(&aes_Key, MBEDTLS_AES_DECRYPT, len, iv_copy, input, output);
     mbedtls_aes_free(&aes_Key);
+}
+
+void md5_compute(unsigned char *input, size_t len, unsigned char *output)
+{   
+    md5_context_t md5_ctx;
+    unsigned char digest[33];
+
+    esp_rom_md5_init(&md5_ctx);
+    esp_rom_md5_update(&md5_ctx, input, len);
+    esp_rom_md5_final(digest, &md5_ctx);
+
+    for (int i = 0; i < 16; ++i) 
+    {
+        sprintf((char *)&output[i * 2], "%02x", (unsigned int)digest[i]);
+    }
 }
