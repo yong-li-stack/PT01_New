@@ -183,42 +183,48 @@ void show_time(void)
         itoa((time_info.tm_mon+1)%10, &time, 10);
         lv_label_set_text(ui_Label36, &time);
         lv_obj_set_x(ui_Label36, -204);
-        lv_obj_set_x(ui_Image57, -184);
+        lv_obj_set_x(ui_Image57, -182);
+        lv_obj_set_x(ui_Label4, -160);
         if(time_info.tm_mday/10)
         {
             itoa(time_info.tm_mday/10, &time, 10);
             lv_label_set_text(ui_Label4, &time);
             itoa(time_info.tm_mday%10, &time, 10);
             lv_label_set_text(ui_Label8, &time);
-            lv_obj_set_x(ui_Label9, -90);
-            lv_obj_set_x(ui_Label10, -60);
-            lv_obj_set_x(ui_Label4, -161);
-            lv_obj_set_x(ui_Label8, -140);
+            lv_obj_set_x(ui_Label9, -91);
+            lv_obj_set_x(ui_Label10, -56);
+            lv_obj_set_x(ui_Label8, -141);
         }else
         {
             itoa(time_info.tm_mday, &time, 10);
             lv_label_set_text(ui_Label4, &time);
             lv_label_set_text(ui_Label8, " ");
-            lv_obj_set_x(ui_Label4, -132);
-            lv_obj_set_x(ui_Label8, -97);
+            lv_obj_set_x(ui_Label9, -110);
+            lv_obj_set_x(ui_Label10, -75);
         }
     }else
     {
         itoa(time_info.tm_mon+1, &time, 10);
         lv_label_set_text(ui_Label2, &time);
+        lv_obj_set_x(ui_Image57, -204);
         if(time_info.tm_mday/10)
         {
             itoa(time_info.tm_mday/10, &time, 10);
             lv_label_set_text(ui_Label4, &time);
             itoa(time_info.tm_mday%10, &time, 10);
             lv_label_set_text(ui_Label8, &time);
+            lv_obj_set_x(ui_Label9, -110);
+            lv_obj_set_x(ui_Label10, -75);
+            lv_obj_set_x(ui_Label4, -182);
+            lv_obj_set_x(ui_Label8, -161);
         }else
         {
             itoa(time_info.tm_mday, &time, 10);
             lv_label_set_text(ui_Label4, &time);
             lv_label_set_text(ui_Label8, " ");
-            lv_obj_set_x(ui_Label9, -132);
-            lv_obj_set_x(ui_Label10, -100);
+            lv_obj_set_x(ui_Label4, -182);
+            lv_obj_set_x(ui_Label9, -131);
+            lv_obj_set_x(ui_Label10, -96);
         }
     }
     
@@ -287,41 +293,48 @@ void show_temp_humi()
 {
     char temp_humi;
     weather_t weather_info = innotech_weather_info_get();
+    // printf("weather_info.temp_min = %d\n",weather_info.temp_min);
     //show temp
     show_weather(weather_info.icon_code);
+    if(weather_info.temp_min / 10)
+    {
+        lv_obj_set_x(ui_Image58, -143);
+        lv_obj_set_x(ui_Label11, -175);
+        lv_obj_set_x(ui_Label14, -112);
+        lv_obj_set_x(ui_Label108, -88);
+    }else
+    {
+        lv_obj_set_x(ui_Label11, -187);
+        lv_obj_set_x(ui_Image58, -165);
+        if(weather_info.temp_max / 10)
+        {
+            lv_obj_set_x(ui_Label14, -135);
+            lv_obj_set_x(ui_Label108,-111);
+        }else
+        {
+            lv_obj_set_x(ui_Label14, -143);
+            lv_obj_set_x(ui_Label108,-125);
+        }
+    }
     itoa(weather_info.temp_max, &temp_humi, 10);
     lv_label_set_text(ui_Label14, &temp_humi);
     itoa(weather_info.temp_min, &temp_humi, 10);
     lv_label_set_text(ui_Label11, &temp_humi);
-    // if(weather_info.temp_min / 10)
-    // {
-    //     lv_obj_set_x(ui_Label11, humi_num_site[0]+44+28);
-    //     lv_obj_set_x(ui_Image58, humi_num_site[0]+44);
-    //     if(weather_info.temp_max / 10)
-    //     {
-    //         lv_obj_set_x(ui_Label14, humi_num_site[0]+44+28);
-    //         lv_obj_set_x(ui_Label108, humi_num_site[0]+44);
-    //     }else
-    //     {
-    //         lv_obj_set_x(ui_Label14, humi_num_site[0]+44+28);
-    //     }
-    // }else
-    // {
-    //     if((weather_info.temp_max / 10) == 0)
-    //     {
-    //         lv_obj_set_x(ui_Label14, humi_num_site[0]+44+28);
-    //         lv_obj_set_x(ui_Label108, humi_num_site[0]+44);
-    //     }
-    // }
+    
 
     //show homi
-    itoa(weather_info.humid, &temp_humi, 10);
-    lv_label_set_text(ui_Label17, &temp_humi);
     if((weather_info.humid / 10) == 0)
     {
         lv_obj_set_x(ui_Label17, -187);
         lv_obj_set_x(ui_Label19, -166);
+    }else
+    {
+        lv_obj_set_x(ui_Label17, -177);
+        lv_obj_set_x(ui_Label19, -146);
     }
+    itoa(weather_info.humid, &temp_humi, 10);
+    lv_label_set_text(ui_Label17, &temp_humi);
+    
 }
 
 void animation_blink_callback()

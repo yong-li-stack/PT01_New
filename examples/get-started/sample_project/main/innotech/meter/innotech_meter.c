@@ -96,7 +96,11 @@ int get_avg(int num)
     avg_cnt++;
     avg_cnt = avg_cnt % avg_num;
     avg_array_sum = avg_array_sum / avg_num;
-    return avg_array_sum+1;
+    if(avg_array_sum != 0)
+    {
+        avg_array_sum += 1;
+    }
+    return avg_array_sum;
 }
 static void device_bsp_timer_cb(void* tmr)
 {
