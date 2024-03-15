@@ -173,6 +173,10 @@ void innotech_config_init(void)
     }
     innotech_config_copy();
     //innotech_config_printf();
+    if(innotech_config.memory == 0)
+    {
+        innotech_config.power_switch = 0;
+    }
 }
 
 
