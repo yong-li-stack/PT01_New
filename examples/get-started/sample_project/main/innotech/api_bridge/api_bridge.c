@@ -287,8 +287,15 @@ void innotech_led_pwm_write(uint16_t r)
 {
     //  ledc_set_duty(LEDC_LS_MODE, LEDC_R_CHANNEL, r);
     //  ledc_update_duty(LEDC_LS_MODE, LEDC_R_CHANNEL);
-    //uint32_t duty_cycle = (1023 * r) / 100; // LEDC resolution set to 10bits, thus: 100% = 1023
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL, r);
+    uint32_t duty_cycle = (1023 * r) / 100; // LEDC resolution set to 10bits, thus: 100% = 1023
+    if(r <= 20)
+    {
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL, duty_cycle);
+    }else
+    {
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL, duty_cycle);
+        
+    }
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL);
 
     // return ESP_OK;
