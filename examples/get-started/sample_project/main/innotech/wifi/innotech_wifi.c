@@ -19,6 +19,7 @@
 #include "innotech_mqtt_json.h"
 #include "innotech_config.h"
 #include "innotech_factory.h"
+#include "aiot_mqtt_sign.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -37,6 +38,21 @@
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
+struct mqtt_type {
+	uint32_t port;
+    char address[150];
+    char client_id[150];
+    char username[65];
+    char password[65];
+    char pubtopic[64];
+    char subtpoic[64];
+};
+
+struct aliyun_mqtt_type {
+    char productkey[64];
+    char devicename[64];
+    char devicesecret[64];
+};
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -54,27 +70,16 @@ static uint8_t wifi_connect_state = 0;
 #define ESP_MAXIMUM_RETRY  5
 #define H2E_IDENTIFIER ""
 
-/*Broker Address：${YourProductKey}.iot-as-mqtt.${YourRegionId}.aliyuncs.com*/
-#define   Aliyun_host       "g8uj3GQEAGp.iot-as-mqtt.cn-shanghai.aliyuncs.com"
-#define   Aliyun_port       1883
-/*Client ID：     ${ClientID}|securemode=${Mode},signmethod=${SignMethod}|*/
-#define   Aliyun_client_id  "1123|securemode=2,signmethod=hmacsha1,timestamp=1710207722097|"
-/*User Name：     ${DeviceName}&${ProductKey}*/
-#define   Aliyun_username   "C411E10077F6&g8uj3GQEAGp"
-/*使用官网 MQTT_Password 工具生成*/
-#define   Aliyun_password   "E9A70F5B586079AEACA8A436EC2A5F60DC714EB8"
+#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
+#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
+#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
+#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/GetLocationEvent/post"         
 
-#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077F6/thing/service/property/set"
-#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077F6/thing/event/property/post"
-#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077F6/thing/service/Reset"
-#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077F6/thing/event/GetLocationEvent/post"           
 
-#if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
-static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
-#else
-extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_eclipseprojects_io_pem_start");
-#endif
-extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
+#define ALIYUN_MQTT_HOST "%s.iot-as-mqtt.cn-shanghai.aliyuncs.com"
+
+#define ALIYUN_MQTT_PUBLISH_TOPIC "/sys/%s/%s/thing/event/property/post"
+//#define ALIYUN_MQTT_SUBSCRIBE_TOPIC "clientId%sdeviceName%sproductKey%s"
 
 callback wifi_connect_result = NULL;
 void innotech_wifi_state_report(callback function) 
@@ -238,16 +243,40 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
+void mqtt_generate_aliyun_password(struct aliyun_mqtt_type *in, struct mqtt_type *out)
+{
+    int rc = 0;
+    
+    sprintf(out->address, ALIYUN_MQTT_HOST, in->productkey);
+ 
+    if ((rc = aiotMqttSign(in->productkey, in->devicename, in->devicesecret, out->client_id,  out->username, out->password) < 0)) {
+		printf("aiotMqttSign -%0x4x\n", -rc);
+		return;
+	}
+
+    printf("broker: %s\n", out->address);
+    printf("client_id: %s\n", out->client_id);
+    printf("username: %s\n", out->username);
+    printf("password: %s\n", out->password);
+}
+
+struct aliyun_mqtt_type mqtt_in;
+struct mqtt_type mqtt_out;
 static void mqtt_app_start(void)
 {
+    memcpy(mqtt_in.devicename, "C411E10077EF", strlen("C411E10077EF")+1);
+    memcpy(mqtt_in.devicesecret, "5c21d4ce60faad62e9488aa62768fe81", strlen("5c21d4ce60faad62e9488aa62768fe81")+1);
+    memcpy(mqtt_in.productkey, "g8uj3GQEAGp", strlen("g8uj3GQEAGp")+1);
+    mqtt_generate_aliyun_password(&mqtt_in, &mqtt_out);
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.verification.certificate = (const char *)ali_ca_cert,
-		.broker.address.hostname = Aliyun_host,
-		.broker.address.port = Aliyun_port,
+		.broker.address.hostname = mqtt_out.address,
+		.broker.address.port = mqtt_out.port,
         .broker.address.transport = MQTT_TRANSPORT_OVER_SSL,
-		.credentials.client_id = Aliyun_client_id,
-		.credentials.username = Aliyun_username,
-		.credentials.authentication.password = Aliyun_password,
+		.credentials.client_id = mqtt_out.client_id,
+		.credentials.username = mqtt_out.username,
+		.credentials.authentication.password = mqtt_out.password,
 
     };
 
