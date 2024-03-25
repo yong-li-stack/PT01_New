@@ -29,6 +29,9 @@
 static const char *TAG = "api_bridge";
 
 static nvs_handle_t handle;
+static bool s_part_init_flag;
+#define MFG_PARTITION_NAME "triad"
+#define NVS_PRODUCT "aliyun-key"
 
 #define DEVICE_BSP_TIMER_PERIOD 10000 			//10ms
 #define LEDC_LS_TIMER          LEDC_TIMER_1
@@ -299,4 +302,66 @@ void innotech_led_pwm_write(uint16_t r)
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL);
 
     // return ESP_OK;
+}
+
+esp_err_t innotech_triad_init(void)
+{
+    esp_err_t ret = ESP_OK;
+
+    do {
+        if (s_part_init_flag == false) {
+            if ((ret = nvs_flash_init_partition(MFG_PARTITION_NAME)) != ESP_OK) {
+                ESP_LOGE(TAG, "NVS Flash init %s failed, Please check that you have flashed fctry partition!!!", MFG_PARTITION_NAME);
+                break;
+            }
+
+            s_part_init_flag = true;
+        }
+    } while (0);
+
+    return ret;
+}
+
+int innotech_triad_get(char *param_name, const char *param_name_str)
+{
+    esp_err_t ret;
+    size_t read_len = 0;
+    nvs_handle handle;
+
+    do {
+        if (innotech_triad_init() != ESP_OK) {
+            break;
+        }
+
+        if (param_name == NULL) {
+            ESP_LOGE(TAG, "%s param %s NULL", __func__, param_name);
+            break;
+        }
+
+        ret = nvs_open_from_partition(MFG_PARTITION_NAME, NVS_PRODUCT, NVS_READONLY, &handle);
+
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "%s nvs_open failed with %x", __func__, ret);
+            break;
+        }
+
+        ret = nvs_get_str(handle, param_name_str, NULL, (size_t *)&read_len);
+
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "%s nvs_get_str get %s failed with %x", __func__, param_name_str, ret);
+            break;
+        }
+
+        ret = nvs_get_str(handle, param_name_str, param_name, (size_t *)&read_len);
+
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "%s nvs_get_str get %s failed with %x", __func__, param_name_str, ret);
+        } else {
+            ESP_LOGV(TAG, "%s %s %s", __func__, param_name_str, param_name);
+        }
+
+        nvs_close(handle);
+    } while (0);
+
+    return read_len;
 }

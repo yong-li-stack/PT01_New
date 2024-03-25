@@ -36,11 +36,6 @@ typedef struct
 	uint8_t password[65];
 } wifi_param_t;
 
-typedef struct _mqtt_topic_t{
-    char subtopic[64];
-    char pubtopic[64];
-}mqtt_topic_t;
-
 typedef void (*callback)(int);
 
 /* Exported functions ------------------------------------------------------- */

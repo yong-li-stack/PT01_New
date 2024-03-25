@@ -38,21 +38,25 @@
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
-struct mqtt_type {
+typedef struct _aliyun_mqtt_type {
 	uint32_t port;
     char address[150];
     char client_id[150];
     char username[65];
     char password[65];
-    char pubtopic[64];
-    char subtpoic[64];
-};
+    char pub_topic[100];
+    char location_topic[100];
+    char clear_topic[100];
+    char power_topic[100];
+    char reset_set_topic[100];
+    char reset_report_topic[100];
+}aliyun_matt_t;
+typedef struct _aliyun_triad_type {
+    char productkey[20];
+    char devicename[20];
+    char devicesecret[40];
+}aliyun_triad_t;
 
-struct aliyun_mqtt_type {
-    char productkey[64];
-    char devicename[64];
-    char devicesecret[64];
-};
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -64,22 +68,29 @@ static const char *TAG = "INNOTECH_WIFI";
 
 esp_mqtt_client_handle_t client;
 static wifi_param_t wifi_config;
+static aliyun_triad_t triad_config;
+static aliyun_matt_t mqtt_type;
 static int s_retry_num = 0;
 static uint8_t wifi_connect_state = 0;
 
 #define ESP_MAXIMUM_RETRY  5
 #define H2E_IDENTIFIER ""
 
-#define   AliyunSubscribeTopic_user_get     "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/property/set"
-#define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
-#define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
-#define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/GetLocationEvent/post"         
-
+// #define   AliyunPublishTopic_user_update    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/property/post"
+// #define   AliyunSubscribeTopic_user_reset   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/Reset"
+// #define   AliyunPublishTopic_device_location    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/GetLocationEvent/post"         
+// #define   AliyunSubscribeTopic_user_clear   "/sys/g8uj3GQEAGp/C411E10077EF/thing/service/ClearConsumption"
+// #define   AliyunPublishTopic_device_power    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/PowerOverloadEvent/post"  
+// #define   AliyunPublishTopic_device_reset    "/sys/g8uj3GQEAGp/C411E10077EF/thing/event/ResetEvent/post"  
 
 #define ALIYUN_MQTT_HOST "%s.iot-as-mqtt.cn-shanghai.aliyuncs.com"
 
 #define ALIYUN_MQTT_PUBLISH_TOPIC "/sys/%s/%s/thing/event/property/post"
-//#define ALIYUN_MQTT_SUBSCRIBE_TOPIC "clientId%sdeviceName%sproductKey%s"
+#define ALIYUN_MQTT_RESET_SET_TOPIC "/sys/%s/%s/thing/service/Reset"
+#define ALIYUN_MQTT_LOCATION_TOPIC "/sys/%s/%s/thing/event/GetLocationEvent/post"
+#define ALIYUN_MQTT_CLEAR_TOPIC "/sys/%s/%s/thing/service/ClearConsumption"
+#define ALIYUN_MQTT_POWER_TOPIC "/sys/%s/%s/thing/event/PowerOverloadEvent/post"
+#define ALIYUN_MQTT_RESET_REPORT_TOPIC "/sys/%s/%s/thing/event/ResetEvent/post"
 
 callback wifi_connect_result = NULL;
 void innotech_wifi_state_report(callback function) 
@@ -111,7 +122,7 @@ void mqtt_send_device_status(void)
     char version[] = "1.0";
 
     mqtt_json_pack(get_cmd, id, version, payload);
-    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+    esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0);
 }
 
 void mqtt_send_device_energy(void)
@@ -122,7 +133,7 @@ void mqtt_send_device_energy(void)
     char version[] = "1.0";
 
     mqtt_json_pack(get_cmd, id, version, payload);
-    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+    esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0);
 }
 
 void mqtt_send_device_info(char *cmd)
@@ -132,7 +143,7 @@ void mqtt_send_device_info(char *cmd)
     char version[] = "1.0";
 
     mqtt_json_pack(cmd, id, version, payload);
-    esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0);
+    esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0);
 }
 
 void mqtt_get_device_location(void)
@@ -141,7 +152,7 @@ void mqtt_get_device_location(void)
     char id[] = "1103";
 
     mqtt_json_location_get(id, payload);
-    esp_mqtt_client_publish(client, AliyunPublishTopic_device_location, payload, strlen(payload), 0, 0);
+    esp_mqtt_client_publish(client, mqtt_type.location_topic, payload, strlen(payload), 0, 0);
 }
 
 void mqtt_send_data_reply(char *set_topic, char *id, char *version)
@@ -202,7 +213,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        if(memcmp(event->topic, AliyunSubscribeTopic_user_reset, event->topic_len) == 0)
+        if(memcmp(event->topic, mqtt_type.reset_set_topic, event->topic_len) == 0)
         {
             innotech_factory_reset();
         }
@@ -215,7 +226,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             if(strncmp(get_cmd, "GeoLocatioin", strlen(get_cmd)) != 0)
             {
                 mqtt_json_pack(get_cmd, id, version, payload);
-                esp_mqtt_client_publish(client, AliyunPublishTopic_user_update, payload, strlen(payload), 0, 0); 
+                esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0); 
             }
         }
         break;
@@ -243,40 +254,42 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-void mqtt_generate_aliyun_password(struct aliyun_mqtt_type *in, struct mqtt_type *out)
+static void mqtt_app_start(void)
 {
+    
     int rc = 0;
     
-    sprintf(out->address, ALIYUN_MQTT_HOST, in->productkey);
+    sprintf(mqtt_type.address, ALIYUN_MQTT_HOST, triad_config.productkey);
+    sprintf(mqtt_type.pub_topic, ALIYUN_MQTT_PUBLISH_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.location_topic, ALIYUN_MQTT_LOCATION_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.clear_topic, ALIYUN_MQTT_CLEAR_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.power_topic, ALIYUN_MQTT_POWER_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.reset_set_topic, ALIYUN_MQTT_RESET_SET_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.reset_report_topic, ALIYUN_MQTT_RESET_REPORT_TOPIC, triad_config.productkey, triad_config.devicename);
  
-    if ((rc = aiotMqttSign(in->productkey, in->devicename, in->devicesecret, out->client_id,  out->username, out->password) < 0)) {
+    if ((rc = aiotMqttSign(triad_config.productkey, triad_config.devicename, triad_config.devicesecret, mqtt_type.client_id, mqtt_type.username, mqtt_type.password) < 0)) 
+    {
 		printf("aiotMqttSign -%0x4x\n", -rc);
 		return;
 	}
-
-    printf("broker: %s\n", out->address);
-    printf("client_id: %s\n", out->client_id);
-    printf("username: %s\n", out->username);
-    printf("password: %s\n", out->password);
-}
-
-struct aliyun_mqtt_type mqtt_in;
-struct mqtt_type mqtt_out;
-static void mqtt_app_start(void)
-{
-    memcpy(mqtt_in.devicename, "C411E10077EF", strlen("C411E10077EF")+1);
-    memcpy(mqtt_in.devicesecret, "5c21d4ce60faad62e9488aa62768fe81", strlen("5c21d4ce60faad62e9488aa62768fe81")+1);
-    memcpy(mqtt_in.productkey, "g8uj3GQEAGp", strlen("g8uj3GQEAGp")+1);
-    mqtt_generate_aliyun_password(&mqtt_in, &mqtt_out);
-
+    printf("broker: %s %d\n", mqtt_type.address, strlen(mqtt_type.address));
+    printf("client_id: %s %d\n", mqtt_type.client_id, strlen(mqtt_type.client_id));
+    printf("username: %s %d\n", mqtt_type.username, strlen(mqtt_type.username));
+    printf("password: %s %d\n", mqtt_type.password, strlen(mqtt_type.password));
+    printf("update: %s %d\n", mqtt_type.pub_topic, strlen(mqtt_type.pub_topic));
+    printf("reset: %s %d\n", mqtt_type.location_topic, strlen(mqtt_type.location_topic));
+    printf("location: %s %d\n", mqtt_type.clear_topic, strlen(mqtt_type.clear_topic));
+    printf("clear: %s %d\n", mqtt_type.power_topic, strlen(mqtt_type.power_topic));
+    printf("power: %s %d\n", mqtt_type.reset_set_topic, strlen(mqtt_type.reset_set_topic));
+    printf("reset: %s %d\n", mqtt_type.reset_report_topic, strlen(mqtt_type.reset_report_topic));
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.verification.certificate = (const char *)ali_ca_cert,
-		.broker.address.hostname = mqtt_out.address,
-		.broker.address.port = mqtt_out.port,
+		.broker.address.hostname = mqtt_type.address,
+		.broker.address.port = mqtt_type.port,
         .broker.address.transport = MQTT_TRANSPORT_OVER_SSL,
-		.credentials.client_id = mqtt_out.client_id,
-		.credentials.username = mqtt_out.username,
-		.credentials.authentication.password = mqtt_out.password,
+		.credentials.client_id = mqtt_type.client_id,
+		.credentials.username = mqtt_type.username,
+		.credentials.authentication.password = mqtt_type.password,
 
     };
 
@@ -395,6 +408,14 @@ void innotech_wifi_init(void)
     memset(&wifi_config, 0, sizeof(wifi_param_t));
     innotech_flash_read("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
 
+    memset(&triad_config, 0, sizeof(aliyun_triad_t));
+    innotech_triad_get(triad_config.devicename, "DeviceName");
+    innotech_triad_get(triad_config.devicesecret, "DeviceSecret");
+    innotech_triad_get(triad_config.productkey, "ProductKey");
+
+    printf("name: %s\r\n", triad_config.devicename);
+    printf("secret: %s\r\n", triad_config.devicesecret);
+    printf("key: %s\r\n", triad_config.productkey);
     if(wifi_config.flag == WIFI_CONFIG_SUC)
     {
         wifi_init_sta(wifi_config);
