@@ -297,13 +297,22 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
 {
+    aliyun_triad_t *triad_config = (aliyun_triad_t *)innotech_triad_get_handle();
+
     switch (event) {
         case ESP_GATTS_REG_EVT:{
             esp_err_t set_dev_name_ret = esp_ble_gap_set_device_name(SAMPLE_DEVICE_NAME);
             if (set_dev_name_ret){
                 ESP_LOGE(GATTS_TABLE_TAG, "set device name failed, error code = %x", set_dev_name_ret);
             }
-
+            uint8_t name[6] = {0};
+            hex_string_to_array(triad_config->devicename, name, sizeof(name));
+            raw_adv_data[10] = name[5];
+            raw_adv_data[11] = name[4];
+            raw_adv_data[12] = name[3];
+            raw_adv_data[13] = name[2];
+            raw_adv_data[14] = name[1];
+            raw_adv_data[15] = name[0];
             esp_err_t raw_adv_ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, sizeof(raw_adv_data));
             if (raw_adv_ret){
                 ESP_LOGE(GATTS_TABLE_TAG, "config raw adv data failed, error code = %x ", raw_adv_ret);
@@ -334,6 +343,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 uint8_t cmd = param->write.value[1];
                 uint8_t frame_len = param->write.value[3];
                 uint8_t data[20] = {0};
+                char devicename[20] = {0};
                 uint8_t len = 0;
 
                 if(cmd == 0x10)
@@ -344,7 +354,8 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     uint8_t cipher[16] = {0};
 
                     hex_array_to_string(param->write.value+4, frame_len, noncestr);
-                    sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "000000b4", "c411e10077f6", "72cf26b989c5566168fcf29f3c957a22");
+                    convert_to_lower(triad_config->devicename, devicename);
+                    sprintf((char *)combined, "%s,%s,%s,%s", noncestr, "000000b4", devicename, triad_config->devicesecret);
                     sha256_encrypt(combined, strlen((char *)combined), output);
                     memcpy((char *)ble_key, (char *)output, 16);
                     memcpy((char *)iv, (char *)param->write.value+4, 16);
@@ -532,10 +543,12 @@ void innotech_ble_init(void)
     }
     
     esp_err_t ret;
+    aliyun_triad_t *triad_config = (aliyun_triad_t *)innotech_triad_get_handle();
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
-    //uint8_t base_mac_addr[6] = {0xEF, 0x77, 0x00, 0xE1, 0x11, 0xC4};
-    uint8_t base_mac_addr[6] = {0xC4, 0x11, 0xE1, 0x00, 0x77, 0xF4};
+    uint8_t base_mac_addr[6] = {0};
+    hex_string_to_array(triad_config->devicename, base_mac_addr, sizeof(base_mac_addr));
+    base_mac_addr[5] -= 2;
     esp_iface_mac_addr_set(base_mac_addr, ESP_MAC_BASE);
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();

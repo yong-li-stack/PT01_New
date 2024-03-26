@@ -51,12 +51,6 @@ typedef struct _aliyun_mqtt_type {
     char reset_set_topic[100];
     char reset_report_topic[100];
 }aliyun_matt_t;
-typedef struct _aliyun_triad_type {
-    char productkey[20];
-    char devicename[20];
-    char devicesecret[40];
-}aliyun_triad_t;
-
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -96,6 +90,11 @@ callback wifi_connect_result = NULL;
 void innotech_wifi_state_report(callback function) 
 {
     wifi_connect_result = function;
+}
+
+void* innotech_triad_get_handle(void)
+{
+    return (void*)&triad_config;
 }
 
 uint8_t innotech_wifi_config_flag_get(void) 
@@ -272,16 +271,16 @@ static void mqtt_app_start(void)
 		printf("aiotMqttSign -%0x4x\n", -rc);
 		return;
 	}
-    printf("broker: %s %d\n", mqtt_type.address, strlen(mqtt_type.address));
-    printf("client_id: %s %d\n", mqtt_type.client_id, strlen(mqtt_type.client_id));
-    printf("username: %s %d\n", mqtt_type.username, strlen(mqtt_type.username));
-    printf("password: %s %d\n", mqtt_type.password, strlen(mqtt_type.password));
-    printf("update: %s %d\n", mqtt_type.pub_topic, strlen(mqtt_type.pub_topic));
-    printf("reset: %s %d\n", mqtt_type.location_topic, strlen(mqtt_type.location_topic));
-    printf("location: %s %d\n", mqtt_type.clear_topic, strlen(mqtt_type.clear_topic));
-    printf("clear: %s %d\n", mqtt_type.power_topic, strlen(mqtt_type.power_topic));
-    printf("power: %s %d\n", mqtt_type.reset_set_topic, strlen(mqtt_type.reset_set_topic));
-    printf("reset: %s %d\n", mqtt_type.reset_report_topic, strlen(mqtt_type.reset_report_topic));
+    // printf("broker: %s %d\n", mqtt_type.address, strlen(mqtt_type.address));
+    // printf("client_id: %s %d\n", mqtt_type.client_id, strlen(mqtt_type.client_id));
+    // printf("username: %s %d\n", mqtt_type.username, strlen(mqtt_type.username));
+    // printf("password: %s %d\n", mqtt_type.password, strlen(mqtt_type.password));
+    // printf("update: %s %d\n", mqtt_type.pub_topic, strlen(mqtt_type.pub_topic));
+    // printf("reset: %s %d\n", mqtt_type.location_topic, strlen(mqtt_type.location_topic));
+    // printf("location: %s %d\n", mqtt_type.clear_topic, strlen(mqtt_type.clear_topic));
+    // printf("clear: %s %d\n", mqtt_type.power_topic, strlen(mqtt_type.power_topic));
+    // printf("power: %s %d\n", mqtt_type.reset_set_topic, strlen(mqtt_type.reset_set_topic));
+    // printf("reset: %s %d\n", mqtt_type.reset_report_topic, strlen(mqtt_type.reset_report_topic));
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.verification.certificate = (const char *)ali_ca_cert,
 		.broker.address.hostname = mqtt_type.address,

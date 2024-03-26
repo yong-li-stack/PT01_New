@@ -36,6 +36,12 @@ typedef struct
 	uint8_t password[65];
 } wifi_param_t;
 
+typedef struct _aliyun_triad_type {
+    char productkey[20];
+    char devicename[20];
+    char devicesecret[40];
+}aliyun_triad_t;
+
 typedef void (*callback)(int);
 
 /* Exported functions ------------------------------------------------------- */
@@ -47,6 +53,7 @@ void wifi_init_sta(wifi_param_t wifi);
 void mqtt_send_device_info(char *cmd);
 void mqtt_send_device_energy(void);
 void innotech_wifi_init(void);
+void* innotech_triad_get_handle(void);
 
 #ifdef __cplusplus
 }
