@@ -326,10 +326,10 @@ static const st7701_lcd_init_cmd_t vendor_specific_init_default[] = {
     {0xC0, (uint8_t []){0x3B, 0x00}, 2, 0},
     {0xC1, (uint8_t []){0x10, 0x0C}, 2, 0},
     {0xC2, (uint8_t []){0x17, 0x0A}, 2, 0},
-    {0xC3, (uint8_t []){0x02}, 1, 0},
+    //{0xC3, (uint8_t []){0x02}, 1, 0},
     {0xC7, (uint8_t []){0x04}, 1, 0},
     {0xCC, (uint8_t []){0x10}, 1, 0},
-    {0xCD, (uint8_t []){0x08}, 1, 0},
+    //{0xCD, (uint8_t []){0x08}, 1, 0},
     {0xB0, (uint8_t []){0x40, 0x0E, 0x58, 0x0E, 0x12, 0x08, 0x0C, 0x09, 0x09, 0x27, 0x07, 0x18, 0x15, 0x78, 0x26, 0xC7}, 16, 0},
     {0xB1, (uint8_t []){0x40, 0x13, 0x5B, 0x0D, 0x11, 0x06, 0x0A, 0x08, 0x08, 0x26, 0x03, 0x13, 0x12, 0x79, 0x28, 0xC9}, 16, 0},
     {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x11}, 5, 0},
@@ -355,10 +355,13 @@ static const st7701_lcd_init_cmd_t vendor_specific_init_default[] = {
     {0xE9, (uint8_t []){0x36, 0x01}, 2, 0},
     {0xEB, (uint8_t []){0x00, 0x01, 0xE4, 0xE4, 0x44, 0x88, 0x40}, 7, 0},
     {0xED, (uint8_t []){0xFF, 0x45, 0x67, 0xFB, 0x01, 0x2A, 0xFC, 0xFF, 0xFF, 0xCF, 0xA2, 0x10, 0xBF, 0x76, 0x54, 0xFF}, 16, 0},
+    // {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x12}, 5, 0},
+    // {0xd1, (uint8_t []){0x81}, 1, 0},
+    // {0xd2, (uint8_t []){0x08}, 1, 0},
     {0xEF, (uint8_t []){0x10, 0x0D, 0x04, 0x08, 0x3F,0x1F}, 6, 0},
-    {0x36, (uint8_t []){0x10}, 1, 0},
+    {0x36, (uint8_t []){0x18}, 1, 0},
     // {0x36, (uint8_t []){0x00}, 1, 0},
-    {0x3a, (uint8_t []){0x50}, 1, 0},
+    {0x3a, (uint8_t []){0x55}, 1, 0},
     {0x11, (uint8_t []){0x00}, 0, 120},
     {0x29, (uint8_t []){0x00}, 0, 0},
     {0x35, (uint8_t []){0x00}, 1, 0},
@@ -542,21 +545,20 @@ static void monitor_task(void *arg)
 void innotech_lcd_process(void)
 { 
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
-    
-    if(((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch)) || (innotech_config->lcd_switch || innotech_config->power_switch))
+
+    if(!innotech_config->lcd_switch || !innotech_config->power_switch)
+    {
+        // printf("close  lcd ---- faild\n");
+        innotech_led_pwm_write(0);
+    }else if(((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch)) || (innotech_config->lcd_switch && innotech_config->power_switch))
     {
         //brightness = innotech_config->lcd_brightness * (100 - MIN_LED_LUMI) / 100 + MIN_LED_LUMI;
         innotech_led_pwm_write(innotech_config->lcd_brightness);
+        // printf("open lcd ---- success\n");
     }else if(innotech_config->brightness_switch)
     {
         innotech_led_pwm_write(100);
     }
-
-    if(!innotech_config->lcd_switch || !innotech_config->power_switch)
-    {
-        innotech_led_pwm_write(0);
-    }
-    
 }
 
 void innotech_lcd_init(void)

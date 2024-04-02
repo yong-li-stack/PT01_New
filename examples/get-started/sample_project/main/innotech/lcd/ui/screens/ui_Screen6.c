@@ -26,8 +26,8 @@ void ui_Screen6_screen_init(void)
     lv_img_set_src(ui_Image19, &ui_img_1_png);
     lv_obj_set_width(ui_Image19, LV_SIZE_CONTENT);   /// 144
     lv_obj_set_height(ui_Image19, LV_SIZE_CONTENT);    /// 234
-    lv_obj_set_x(ui_Image19, -163);
-    lv_obj_set_y(ui_Image19, 3);
+    lv_obj_set_x(ui_Image19, -144);
+    lv_obj_set_y(ui_Image19, -7);
     lv_obj_set_align(ui_Image19, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image19, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image19, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -36,8 +36,8 @@ void ui_Screen6_screen_init(void)
     lv_img_set_src(ui_Image20, &ui_img_15_png);
     lv_obj_set_width(ui_Image20, LV_SIZE_CONTENT);   /// 148
     lv_obj_set_height(ui_Image20, LV_SIZE_CONTENT);    /// 115
-    lv_obj_set_x(ui_Image20, 153);
-    lv_obj_set_y(ui_Image20, 3);
+    lv_obj_set_x(ui_Image20, 159);
+    lv_obj_set_y(ui_Image20, 0);
     lv_obj_set_align(ui_Image20, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image20, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image20, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -47,7 +47,7 @@ void ui_Screen6_screen_init(void)
     lv_obj_set_width(ui_Image50, LV_SIZE_CONTENT);   /// 83
     lv_obj_set_height(ui_Image50, LV_SIZE_CONTENT);    /// 76
     lv_obj_set_x(ui_Image50, -24);
-    lv_obj_set_y(ui_Image50, 7);
+    lv_obj_set_y(ui_Image50, 0);
     lv_obj_set_align(ui_Image50, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image50, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image50, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -59,6 +59,6 @@ void ui_Screen6_screen_init(void)
     lv_obj_set_y(ui_Label12, -197);
     lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label12, "配网成功\n正在进入");
-    lv_obj_set_style_text_font(ui_Label12, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label12, &ui_font_hanzi, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 }

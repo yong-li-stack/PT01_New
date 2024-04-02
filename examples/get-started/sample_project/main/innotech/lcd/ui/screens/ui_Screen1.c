@@ -4,7 +4,6 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
-
 void wifi_blink_callback()
 {
     static uint32_t last_blink_time = 0;
@@ -50,17 +49,25 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_Label3, -216);
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label3, "开始配网");
-    lv_obj_set_style_text_font(ui_Label3, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label3, &ui_font_hanzi, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label6 = lv_label_create(ui_Screen1);
     lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label6, 0);
-    lv_obj_set_y(ui_Label6, 141);
+    lv_obj_set_x(ui_Label6, -5);
+    lv_obj_set_y(ui_Label6, 118);
     lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label6, "下载手机公牛智家APP\n根据APP指引添加设备");
-    lv_obj_set_style_text_font(ui_Label6, &ui_font_R108, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text(ui_Label6, "下载手机公牛智家APP");
+    lv_obj_set_style_text_font(ui_Label6, &ui_font_hanzi, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_timer_create(wifi_blink_callback, 500, NULL);
+    ui_Label15 = lv_label_create(ui_Screen1);
+    lv_obj_set_width(ui_Label15, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label15, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label15, -2);
+    lv_obj_set_y(ui_Label15, 163);
+    lv_obj_set_align(ui_Label15, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label15, "根据APP指引添加设备");
+    lv_obj_set_style_text_font(ui_Label15, &ui_font_hanzi, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_timer_create(wifi_blink_callback, 300, NULL);
 }
