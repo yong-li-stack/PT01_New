@@ -21,7 +21,7 @@
 #include "innotech_ble.h"
 #include "innotech_wifi.h"
 #include "innotech_rtc.h"
-//#include "innotech_factory.h"
+#include "innotech_factory.h"
 #include "innotech_relay.h"
 #include "innotech_button.h"
 #include "innotech_meter.h"
@@ -45,7 +45,7 @@ void innotech_device_service_handle(void *args)
 {
     while(1)
     {
-        innotech_lcd_process();
+        //innotech_lcd_process();
         innotech_button_process();
 
         if(++time_tick >= 150)
@@ -81,12 +81,12 @@ void innotech_device_service_init(void)
 
 void innotech_device_init(void)
 {
-    //innotech_factory_init();
     innotech_config_init();
+    innotech_factory_init();
     innotech_relay_init();
     innotech_button_init();
     innotech_meter_init();
-    innotech_lcd_init();
+    //innotech_lcd_init();
     innotech_wifi_init();
     innotech_ble_init();
     innotech_rtc_init();

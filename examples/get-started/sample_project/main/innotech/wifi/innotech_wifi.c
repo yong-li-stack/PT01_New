@@ -330,13 +330,13 @@ void wifi_init_sta(wifi_param_t wifi)
 {
     s_wifi_event_group = xEventGroupCreate();
 
-    ESP_ERROR_CHECK(esp_netif_init());
+    // ESP_ERROR_CHECK(esp_netif_init());
 
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
+    // ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // esp_netif_create_default_wifi_sta();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
@@ -361,7 +361,8 @@ void wifi_init_sta(wifi_param_t wifi)
     memcpy(wifi_config.sta.password, wifi.password, wifi.pwd_len);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    ESP_ERROR_CHECK(esp_wifi_start() );
+    //ESP_ERROR_CHECK(esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_connect() );
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 
@@ -419,4 +420,38 @@ void innotech_wifi_init(void)
     {
         wifi_init_sta(wifi_config);
     }
+}
+
+void innotech_netif_init(void)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    assert(sta_netif);
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+/* Initialize Wi-Fi as sta and set scan method */
+uint16_t innotech_wifi_scan(uint8_t* ssid)
+{
+    // uint16_t number = 30;
+    // wifi_ap_record_t ap_info[30];
+    uint16_t ap_count = 0;
+    // memset(ap_info, 0, sizeof(ap_info));
+    
+    wifi_scan_config_t scan_config = { 0 };
+    scan_config.ssid = ssid;
+    esp_wifi_scan_start(&scan_config, true);
+    // esp_wifi_scan_start(NULL, true);
+    // ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+    ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
+    // for (int i = 0; (i < 30) && (i < ap_count); i++) {
+    //     ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
+    //     ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
+    // }
+    return ap_count;
 }
