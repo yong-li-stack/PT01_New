@@ -24,10 +24,12 @@ extern "C"
 
 /* Exported functions ------------------------------------------------------- */
 void hex_array_to_string(unsigned char *hexArray, int length, unsigned char *output);
+void hex_string_to_array(const char *hex_string, unsigned char *hex_array, size_t array_length);
 void sha256_encrypt(unsigned char *input, size_t len, unsigned char *output);
 void aes128_cbc_encrypt(unsigned char *key, unsigned char *iv, unsigned char *input, size_t len, unsigned char *output);
 void aes128_cbc_decrypt(unsigned char *key, unsigned char *iv, unsigned char *input, size_t len, unsigned char *output);
 void md5_compute(unsigned char *input, size_t len, unsigned char *output);
+void convert_to_lower(char *str, char* output);
 
 #ifdef __cplusplus
 }
