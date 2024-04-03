@@ -13,11 +13,19 @@
 *****************************************************************************/
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
+#include "esp_system.h"
+
+#include "esp_timer.h"
+#include "esp_log.h"
+#include "innotech_meter.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "innotech_meter.h"
-#include "api_bridge.h"
 
+#define ARRAY_SIZE 5
 #define GPIO_OUTPUT_IO_BL0937B_SEL    42//5
 #define GPIO_OUTPUT_PIN_SEL  (GPIO_OUTPUT_IO_BL0937B_SEL)
 
@@ -25,10 +33,41 @@
 #define GPIO_INPUT_IO_BL0937B_CF      40//7     // POWER
 #define GPIO_INPUT_PIN_SEL  (GPIO_INPUT_IO_BL0937B_CF1 | GPIO_INPUT_IO_BL0937B_CF)
 
-static int cf_isr_cnt = 0;
-static int cf1_isr_cnt = 0;
-static double consumption = 0;
 
+
+static uint32_t bsp_timer_cnt = 0;    
+// static double consumption = 0;
+
+volatile DRAM_ATTR float _current_multiplier; // Unit: us/A
+volatile DRAM_ATTR float _voltage_multiplier; // Unit: us/V
+volatile DRAM_ATTR float _power_multiplier;   // Unit: us/W
+
+volatile DRAM_ATTR uint64_t _last_cf_interrupt = 0;
+volatile DRAM_ATTR uint64_t _last_cf1_interrupt = 0;
+volatile DRAM_ATTR uint64_t _first_cf1_interrupt = 0;
+
+DRAM_ATTR float _current_resistor = R_CURRENT;
+DRAM_ATTR float _voltage_resistor = R_VOLTAGE_BL0;
+DRAM_ATTR float _vref = V_REF_BL0;
+
+DRAM_ATTR uint8_t _current_mode = 0;
+volatile DRAM_ATTR uint8_t _mode;
+static DRAM_ATTR uint8_t _setpin_io;
+
+DRAM_ATTR uint32_t _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
+volatile DRAM_ATTR uint32_t _voltage_pulse_width = 0; //Unit: us
+volatile DRAM_ATTR uint32_t _current_pulse_width = 0; //Unit: us
+volatile DRAM_ATTR uint32_t _power_pulse_width = 0;   //Unit: us
+volatile DRAM_ATTR uint32_t _pulse_count = 0;
+
+DRAM_ATTR float _current = 0;
+DRAM_ATTR float _voltage = 0;
+DRAM_ATTR float _power = 0;
+DRAM_ATTR float _consumption = 0;
+DRAM_ATTR float consumption = 0;
+    
+
+static int mid_power = 0;
 typedef struct _energy_manage_t{
     double current;
     double voltage;
@@ -37,6 +76,98 @@ typedef struct _energy_manage_t{
 }energy_manage_t;
 
 energy_manage_t energy;
+
+static DRAM_ATTR int power_cnt_num[40] = {0};
+static DRAM_ATTR int vol_cnt_num[40] = {0};
+
+void IRAM_ATTR reset_energe(void)
+{
+    _pulse_count = 0;
+}
+
+static void IRAM_ATTR bl0937_cf_isr_handler(void* arg)
+{
+    uint64_t now = esp_timer_get_time();
+    _power_pulse_width = now - _last_cf_interrupt;
+    _last_cf_interrupt = now;
+    _pulse_count++;
+}
+
+static void IRAM_ATTR bl0937_cf1_isr_handler(void* arg)
+{
+
+    uint64_t now = esp_timer_get_time();
+    if((now - _first_cf1_interrupt) > _pulse_timeout){
+ 
+        uint32_t pulse_width;
+
+        if(_last_cf1_interrupt == _first_cf1_interrupt){
+            pulse_width = 0;
+        }else{
+            pulse_width = now - _last_cf1_interrupt;
+        }
+
+         if (_mode == _current_mode) {
+            _current_pulse_width = pulse_width;
+        } else {
+            _voltage_pulse_width = pulse_width;
+        }
+
+        _mode = 1 - _mode;
+        gpio_set_level(_setpin_io , _mode);
+        _first_cf1_interrupt = now;
+
+    }
+    _last_cf1_interrupt = now;
+}
+
+static void IRAM_ATTR _calculateDefaultMultipliers() {
+ 
+    _power_multiplier =   (  50850000.0 * _vref * _vref * _voltage_resistor / _current_resistor / 48.0 / F_OSC_BL0) / 1.1371681416f;  //15102450
+    _voltage_multiplier = ( 221380000.0 * _vref * _voltage_resistor /  2.0 / F_OSC_BL0) / 1.0474137931f; //221384120,171674
+    _current_multiplier = ( 531500000.0 * _vref / _current_resistor / 24.0 / F_OSC_BL0) / 1.166666f; // 
+
+}
+
+void innotech_meter_init(void)
+{
+
+    _voltage_resistor = 1800;
+    _current_resistor = 0.0005;
+    _current_mode = 0;
+    _vref = V_REF_BL0;
+    _setpin_io = GPIO_OUTPUT_IO_BL0937B_SEL;
+
+    gpio_intr_disable(GPIO_INPUT_IO_BL0937B_CF);
+    gpio_intr_disable(GPIO_INPUT_IO_BL0937B_CF1);
+     
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (1ULL << GPIO_OUTPUT_IO_BL0937B_SEL);
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 0;
+    gpio_config(&io_conf);
+
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.pin_bit_mask = ((1ULL<<GPIO_INPUT_IO_BL0937B_CF1) | (1ULL<<GPIO_INPUT_IO_BL0937B_CF));
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_up_en = 1;
+    gpio_config(&io_conf);
+
+    gpio_install_isr_service(ESP_INTR_FLAG_IRAM);
+    gpio_isr_handler_add(GPIO_INPUT_IO_BL0937B_CF, bl0937_cf_isr_handler, NULL);
+    gpio_isr_handler_add(GPIO_INPUT_IO_BL0937B_CF1, bl0937_cf1_isr_handler, NULL);
+
+    _calculateDefaultMultipliers();
+    _mode = _current_mode;
+
+    gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
+
+    gpio_intr_enable(GPIO_INPUT_IO_BL0937B_CF);
+    gpio_intr_enable(GPIO_INPUT_IO_BL0937B_CF1);
+}
 
 double innotech_current_get(void)
 {
@@ -58,87 +189,208 @@ double innotech_consumption_get(void)
     return energy.consumption;
 }
 
-static void IRAM_ATTR cf_isr_handler(void* arg)
-{
-    cf_isr_cnt++;
+void IRAM_ATTR bl0937_setMode(bl0937_mode_t mode) {
+    _mode = (mode == MODE_CURRENT) ? _current_mode : 1 - _current_mode;
+    gpio_set_level(_setpin_io, _mode);
+    
+    _last_cf1_interrupt = _first_cf1_interrupt = esp_timer_get_time();
+   
 }
 
-static void IRAM_ATTR cf1_isr_handler(void* arg)
-{
-    cf1_isr_cnt++;
+bl0937_mode_t IRAM_ATTR bl0937_getMode() {
+    return (_mode == _current_mode) ? MODE_CURRENT : MODE_VOLTAGE;
 }
 
-static void meter_gpio_isr_init(void)
-{
-    innotech_gpio_mode_init(GPIO_OUTPUT_PIN_SEL, 2, 0, 0, 0);
-    innotech_set_gpio_level(GPIO_OUTPUT_PIN_SEL, 1);
-
-    innotech_gpio_mode_init(GPIO_INPUT_IO_BL0937B_CF, 1, 0, 0, 1);
-    innotech_gpio_mode_init(GPIO_INPUT_IO_BL0937B_CF1, 1, 0, 0, 1);
-    innotech_gpio_isr_service_init(0);
-    innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF, cf_isr_handler,NULL);
-    innotech_gpio_isr_handler_init(GPIO_INPUT_IO_BL0937B_CF1, cf1_isr_handler,NULL);
-
+bl0937_mode_t IRAM_ATTR bl0937_toggleMode() {
+    bl0937_mode_t new_mode = bl0937_getMode() == MODE_CURRENT ? MODE_VOLTAGE : MODE_CURRENT;
+    bl0937_setMode(new_mode);
+    return new_mode;
 }
 
-#define avg_num 20
-int get_avg(int num)
-{
-    static int avg_array[avg_num] = {0};
-    static int avg_cnt = 0;
-    int avg_array_sum = 0;
+float IRAM_ATTR bl0937_getEnergy() {
 
-    for(int i = 0; i < avg_num; i++)
-    {
-       avg_array_sum += avg_array[i];
+    return _pulse_count * _power_multiplier / 1000000.;
+}
+
+void IRAM_ATTR bl0937_checkCFSignal() {
+    if ((esp_timer_get_time() - _last_cf_interrupt) > _pulse_timeout) 
+        _power_pulse_width = 0;
+}
+
+void IRAM_ATTR bl0937_checkCF1Signal() {
+    if ((esp_timer_get_time() - _last_cf1_interrupt) > _pulse_timeout) {
+        if (_mode == _current_mode) {
+            _current_pulse_width = 0;
+        } else {
+            _voltage_pulse_width = 0;
+        }
+        bl0937_toggleMode();
     }
-    avg_array[avg_cnt] = num;
-    avg_cnt++;
-    avg_cnt = avg_cnt % avg_num;
-    avg_array_sum = avg_array_sum / avg_num;
-    if(avg_array_sum != 0)
-    {
-        avg_array_sum += 1;
-    }
-    return avg_array_sum;
 }
-static void device_bsp_timer_cb(void* tmr)
+
+float IRAM_ATTR bl0937_getVoltage() {
+    bl0937_checkCF1Signal();
+    
+    _voltage = (_voltage_pulse_width > 0) ? _voltage_multiplier / _voltage_pulse_width : 0;
+    return _voltage;
+}
+
+void bl0937_multiplier_init()
 {
-    static uint32_t bsp_timer_cnt = 0;        
-        
-    bsp_timer_cnt++;
-    if(bsp_timer_cnt >= 100) //1S
+    _calculateDefaultMultipliers();
+}
+
+void IRAM_ATTR bl0937_expectedVoltage(float value) {
+    if (_voltage == 0) bl0937_getVoltage();
+    if (_voltage > 0) _voltage_multiplier *= ((float) value / _voltage);
+}
+
+void IRAM_ATTR bl0937_expectedCurrent(float value) {
+    if (_current == 0) bl0937_getCurrent();
+    if (_current > 0) _current_multiplier *= (value / _current);
+}
+
+void IRAM_ATTR bl0937_expectedActivePower(float value) {
+    if (_power == 0) bl0937_getActivePower();
+    if (_power > 0) _power_multiplier *= ((float) value / _power);
+}
+
+
+float IRAM_ATTR bl0937_getActivePower() {
+
+    bl0937_checkCFSignal();
+
+    _power = (_power_pulse_width > 0) ? _power_multiplier / _power_pulse_width : 0;
+    return _power;
+}
+
+float IRAM_ATTR bl0937_getCurrent() {
+
+    // Power measurements are more sensitive to switch offs,
+    // so we first check if power is 0 to set _current to 0 too
+
+    bl0937_getActivePower();
+
+    if (_power == 0) {
+         _current_pulse_width = 0;
+
+    } else {
+         bl0937_checkCF1Signal();
+    }
+    _current = (_current_pulse_width > 0) ? _current_multiplier / _current_pulse_width  : 0;
+    return _current;
+
+}
+
+int power_always_callback()
+{
+    int max_count = 0; // 最大出现次数
+    int max_num = power_cnt_num[0]; // 出现次数最多的数字
+    int count = 0; // 临时计数器
+    int i, j;
+ 
+    // 遍历数组中的每个数字
+    for (i = 0; i < 40; i++) {
+        count = 0; // 重置计数器
+        for (j = 0; j < 40; j++) {
+            if (power_cnt_num[i] == power_cnt_num[j]) {
+                count++; // 相同数字则计数增加
+            }
+        }
+        // 更新最大出现次数和对应的数字
+        if (count > max_count) {
+            max_count = count;
+            max_num = power_cnt_num[i];
+        }
+    }
+    return max_num;
+}
+
+int vol_always_callback()
+{
+    int max_count = 0; // 最大出现次数
+    int max_num = vol_cnt_num[0]; // 出现次数最多的数字
+    int count = 0; // 临时计数器
+    int i, j;
+ 
+    // 遍历数组中的每个数字
+    for (i = 0; i < 40; i++) {
+        count = 0; // 重置计数器
+        for (j = 0; j < 40; j++) {
+            if (vol_cnt_num[i] == vol_cnt_num[j]) {
+                count++; // 相同数字则计数增加
+            }
+        }
+        // 更新最大出现次数和对应的数字
+        if (count > max_count) {
+            max_count = count;
+            max_num = vol_cnt_num[i];
+        }
+    }
+    return max_num;
+}
+
+void innotech_meter_process(void)
+{
+    static int queue_cnt = 0;
+    static int pre_vol = 0;
+    static int power_flag = 0;
+    static int vol_flag = 0;
+    static int vol_temp = 0;
+
+    if((queue_cnt % 2) == 0)
     {
-        bsp_timer_cnt = 0; 
-        // voltage
-        // energy.voltage = (double)(cf1_isr_cnt-1) * 1.1 / 15397 * 1200510 / 510;           
-        // current
-        // energy.current = (double)(cf1_isr_cnt-1) * 1.1 / 94638 / 0.5 * 1000;  
-        // power
-        energy.voltage = (double)cf1_isr_cnt / 4;
-        cf_isr_cnt = get_avg(cf_isr_cnt);
-        energy.power = (double)6.5 * cf_isr_cnt;
-        energy.current = energy.power / energy.voltage;
+        power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
+        vol_temp = (int)bl0937_getVoltage();
+        if(vol_temp > 210 && vol_temp < 240)
+        {
+            vol_cnt_num[vol_flag++] = vol_temp;
+        }
+        power_flag = power_flag % 40;
+        vol_flag = vol_flag % 40;
+    }
+    if(queue_cnt == 50)
+    {
         consumption += energy.power / 1000 / 3600;
         if(consumption >= 0.5)
         {
             energy.consumption += consumption;
             consumption = 0;
         }
-        // printf("consumption :%f energy.consumption  %f\n",consumption,energy.consumption);
-
-        // printf("vol: %f cf1_isr_cnt %d\n", energy.voltage,cf1_isr_cnt);
-        // printf("power: %f cf_isr_cnt  %d\n", energy.power,cf_isr_cnt);
-        // printf("energy.voltage: %f\n", energy.voltage);
-        // printf("energy.consumption %f\n", energy.consumption);
-        cf_isr_cnt = 0;
-        cf1_isr_cnt = 0;
-    }
-
+        // int vol_ = (int)bl0937_getVoltage();
+        // if((pre_vol != vol_) && (vol_ >210 && vol_ < 250))
+        // {
+        //     pre_vol = vol_;
+        // }
+        
+        energy.current = bl0937_getCurrent() * 0.58;
+        pre_vol = vol_always_callback();
+        mid_power = (float)power_always_callback() * 1.15;
+        if(abs(pre_vol - energy.voltage) > 3)
+        {
+            energy.voltage = pre_vol;
+        }
+        if(abs(mid_power - energy.power) > 3)
+        {
+            energy.power = mid_power;
+        }
+        queue_cnt = 0;
+        energy.current = energy.power / energy.voltage;
+        printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
+    } 
+    queue_cnt ++;
 }
 
-void innotech_meter_init(void)
-{
-    meter_gpio_isr_init();
-    innotech_timmer_init(device_bsp_timer_cb);
-}
+// float IRAM_ATTR bl0937_getApparentPower() {
+//     float current = bl0937_getCurrent();
+//     float voltage = bl0937_getVoltage();
+//     return voltage * current;
+// }
+
+// float IRAM_ATTR bl0937_getPowerFactor() {
+//     float active = bl0937_getActivePower();
+//     float apparent = bl0937_getApparentPower();
+//     if (active > apparent) return 1;
+//     if (apparent == 0) return 0;
+//     return (float) active / apparent;
+// }
