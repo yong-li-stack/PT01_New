@@ -80,7 +80,7 @@ bl0937_mode_t IRAM_ATTR bl0937_getMode();
 
 bl0937_mode_t IRAM_ATTR bl0937_toggleMode();
 void IRAM_ATTR bl0937_setMode(bl0937_mode_t mode);
-
+int fix_power_factory(void);
 
 #ifdef __cplusplus
 }

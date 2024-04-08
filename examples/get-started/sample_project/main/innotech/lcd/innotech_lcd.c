@@ -27,6 +27,7 @@
 #include "esp_lcd_panel_io_additions.h"
 #include "esp_io_expander_tca9554.h"
 #include "innotech_config.h"
+#include "innotech_factory.h"
 
 #include "esp_lcd_st7701.h"
 #include "lvgl.h"
@@ -583,5 +584,28 @@ void innotech_lcd_init(void)
     example_lvgl_unlock();
 
     //sys_monitor_start();
+}
+
+void innotech_lcd_pre_init(void)
+{
+    lvgl_mux = xSemaphoreCreateRecursiveMutex();
+    assert(lvgl_mux);
+    xTaskCreatePinnedToCore(example_lvgl_port_task, "LVGL", EXAMPLE_LVGL_TASK_STACK_SIZE, NULL, EXAMPLE_LVGL_TASK_PRIORITY, &lvgl_task_handle, 1);
+    
+    spi_init();
+    ESP_LOGI(TAG, "Display LVGL Scatter Chart");
+    //Lock the mutex due to the LVGL APIs are not thread-safe
+    innotech_led_pwm_write(100);
+    example_lvgl_lock(0);
+    lv_disp_t * dispp = lv_disp_get_default();
+    lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
+                                               true, LV_FONT_DEFAULT);
+    lv_disp_set_theme(dispp, theme);
+    ui_Screen11_screen_init();
+    ui____initial_actions0 = lv_obj_create(NULL);
+    
+    lv_disp_load_scr(ui_Screen11);
+
+    example_lvgl_unlock();
 }
 

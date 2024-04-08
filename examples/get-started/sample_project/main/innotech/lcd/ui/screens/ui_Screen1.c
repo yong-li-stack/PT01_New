@@ -14,7 +14,6 @@ void wifi_blink_callback()
     }
     last_blink_time++;
 }
-
 void ui_Screen1_screen_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);

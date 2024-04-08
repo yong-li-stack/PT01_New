@@ -27,6 +27,7 @@ extern "C"
 /* Exported functions ------------------------------------------------------- */
 void innotech_lcd_init(void);
 void innotech_lcd_process(void);
+void innotech_lcd_pre_init(void);
 
 #ifdef __cplusplus
 }

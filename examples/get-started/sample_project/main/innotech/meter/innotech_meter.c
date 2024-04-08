@@ -24,6 +24,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "innotech_factory.h"
+#include "api_bridge.h"
 
 #define ARRAY_SIZE 5
 #define GPIO_OUTPUT_IO_BL0937B_SEL    42//5
@@ -78,6 +80,7 @@ typedef struct _energy_manage_t{
 energy_manage_t energy;
 
 static DRAM_ATTR int power_cnt_num[40] = {0};
+static DRAM_ATTR int power_factory_num[40] = {0};
 static DRAM_ATTR int vol_cnt_num[40] = {0};
 
 void IRAM_ATTR reset_energe(void)
@@ -306,6 +309,30 @@ int power_always_callback()
     return max_num;
 }
 
+int power_factory_callback()
+{
+    int max_count = 0; // 最大出现次数
+    int max_num = power_factory_num[0]; // 出现次数最多的数字
+    int count = 0; // 临时计数器
+    int i, j;
+ 
+    // 遍历数组中的每个数字
+    for (i = 0; i < 40; i++) {
+        count = 0; // 重置计数器
+        for (j = 0; j < 40; j++) {
+            if (power_factory_num[i] == power_factory_num[j]) {
+                count++; // 相同数字则计数增加
+            }
+        }
+        // 更新最大出现次数和对应的数字
+        if (count > max_count) {
+            max_count = count;
+            max_num = power_factory_num[i];
+        }
+    }
+    return max_num;
+}
+
 int vol_always_callback()
 {
     int max_count = 0; // 最大出现次数
@@ -328,6 +355,15 @@ int vol_always_callback()
         }
     }
     return max_num;
+}
+
+int fix_power_factory(void)
+{
+    static int power_factory_flag = 0;
+    power_factory_num[power_factory_flag++] = (int)bl0937_getActivePower();
+    int power_factory_max = power_factory_callback();
+    power_factory_flag = power_factory_flag % 40;
+    return power_factory_max;
 }
 
 void innotech_meter_process(void)
@@ -363,9 +399,11 @@ void innotech_meter_process(void)
         //     pre_vol = vol_;
         // }
         
-        energy.current = bl0937_getCurrent() * 0.58;
+        // energy.current = bl0937_getCurrent() * 0.58;
         pre_vol = vol_always_callback();
-        mid_power = (float)power_always_callback() * 1.15;
+        innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
+        mid_power = (float)power_always_callback() * fix_num;
+        printf("fix_num    =========== %f\n",fix_num);
         if(abs(pre_vol - energy.voltage) > 3)
         {
             energy.voltage = pre_vol;

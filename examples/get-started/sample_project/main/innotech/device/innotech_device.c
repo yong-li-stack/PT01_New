@@ -47,7 +47,7 @@ void innotech_device_service_handle(void *args)
     {
         innotech_lcd_process();
         innotech_button_process();
-
+        innotech_meter_process();
         if(++time_tick >= 150)
         {
             time_tick = 0;

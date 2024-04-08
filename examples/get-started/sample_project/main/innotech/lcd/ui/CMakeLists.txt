@@ -8,7 +8,7 @@ SET(SOURCES screens/ui_Screen1.c
     screens/ui_Screen7.c
     screens/ui_Screen8.c
     screens/ui_Screen9.c
-    screens/ui_Screen10.c
+    screens/ui_Screen11.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
@@ -27,6 +27,8 @@ SET(SOURCES screens/ui_Screen1.c
     images/ui_img_12_png.c
     images/ui_img_10_png.c
     images/ui_img_37_png.c
+    images/ui_img_46_png.c
+    images/ui_img_47_png.c
     images/ui_img_i_png.c
     images/ui_img_313_png.c
     images/ui_img_17_png.c
@@ -60,11 +62,10 @@ SET(SOURCES screens/ui_Screen1.c
     images/ui_img_43_png.c
     images/ui_img_44_png.c
     images/ui_img_45_png.c
-    images/ui_img_46_png.c
-    images/ui_img_47_png.c
     fonts/ui_font_B108.c
     fonts/ui_font_B216.c
     fonts/ui_font_B432.c
+    fonts/ui_font_cance.c
     fonts/ui_font_Font1.c
     fonts/ui_font_hanzi.c
     fonts/ui_font_R108.c

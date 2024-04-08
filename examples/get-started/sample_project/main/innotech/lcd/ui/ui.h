@@ -22,6 +22,7 @@ extern lv_obj_t * ui_Image2;
 extern lv_obj_t * ui_Label3;
 extern lv_obj_t * ui_Label6;
 extern lv_obj_t * ui_Label15;
+extern lv_obj_t * ui_Label46;
 // SCREEN: ui_Screen2
 void ui_Screen2_screen_init(void);
 extern lv_obj_t * ui_Screen2;
@@ -55,10 +56,7 @@ extern lv_obj_t * ui_Label9;
 extern lv_obj_t * ui_Label10;
 extern lv_obj_t * ui_Image11;
 extern lv_obj_t * ui_Image12;
-extern lv_obj_t * ui_Label96;
 extern lv_obj_t * ui_Label11;
-extern lv_obj_t * ui_Image31;
-extern lv_obj_t * ui_Image36;
 extern lv_obj_t * ui_Label14;
 extern lv_obj_t * ui_Label16;
 extern lv_obj_t * ui_Label17;
@@ -68,6 +66,7 @@ extern lv_obj_t * ui_Label21;
 extern lv_obj_t * ui_Label22;
 extern lv_obj_t * ui_Label23;
 extern lv_obj_t * ui_Label24;
+extern lv_obj_t * ui_Label48;
 extern lv_obj_t * ui_Image13;
 extern lv_obj_t * ui_Label25;
 extern lv_obj_t * ui_Label26;
@@ -80,12 +79,16 @@ extern lv_obj_t * ui_Label34;
 extern lv_obj_t * ui_Label35;
 extern lv_obj_t * ui_Label76;
 extern lv_obj_t * ui_Label108;
+extern lv_obj_t * ui_Label194;
 extern lv_obj_t * ui_Label111;
 extern lv_obj_t * ui_Label112;
 extern lv_obj_t * ui_Label113;
 extern lv_obj_t * ui_Image32;
-extern lv_obj_t * ui_Label27;
 extern lv_obj_t * ui_Label94;
+extern lv_obj_t * ui_Label27;
+extern lv_obj_t * ui_Panel3;
+extern lv_obj_t * ui_Image31;
+extern lv_obj_t * ui_Image33;
 // SCREEN: ui_Screen6
 void ui_Screen6_screen_init(void);
 extern lv_obj_t * ui_Screen6;
@@ -148,48 +151,32 @@ extern lv_obj_t * ui_Container1;
 extern lv_obj_t * ui_Image29;
 extern lv_obj_t * ui_Label37;
 extern lv_obj_t * ui_Image30;
-// SCREEN: ui_Screen10
-void ui_Screen10_screen_init(void);
-extern lv_obj_t * ui_Screen10;
-extern lv_obj_t * ui_Label46;
-extern lv_obj_t * ui_Label47;
-extern lv_obj_t * ui_Label48;
+// SCREEN: ui_Screen11
+void ui_Screen11_screen_init(void);
+extern lv_obj_t * ui_Screen11;
+extern lv_obj_t * ui_Label96;
+extern lv_obj_t * ui_Label97;
 extern lv_obj_t * ui_Label49;
 extern lv_obj_t * ui_Label65;
-extern lv_obj_t * ui_Label66;
-extern lv_obj_t * ui_Image33;
-extern lv_obj_t * ui_Image34;
-extern lv_obj_t * ui_Label67;
-extern lv_obj_t * ui_Label68;
-extern lv_obj_t * ui_Label69;
-extern lv_obj_t * ui_Label70;
-extern lv_obj_t * ui_Label71;
-extern lv_obj_t * ui_Label72;
-extern lv_obj_t * ui_Label73;
-extern lv_obj_t * ui_Label74;
-extern lv_obj_t * ui_Label75;
-extern lv_obj_t * ui_Label77;
-extern lv_obj_t * ui_Image35;
-extern lv_obj_t * ui_Label78;
-extern lv_obj_t * ui_Label79;
-extern lv_obj_t * ui_Label80;
-extern lv_obj_t * ui_Label81;
-extern lv_obj_t * ui_Label82;
-extern lv_obj_t * ui_Label83;
-extern lv_obj_t * ui_Label84;
-extern lv_obj_t * ui_Label85;
-extern lv_obj_t * ui_Label86;
-extern lv_obj_t * ui_Label87;
-extern lv_obj_t * ui_Label88;
-extern lv_obj_t * ui_Label89;
-extern lv_obj_t * ui_Label90;
-extern lv_obj_t * ui_Label91;
-extern lv_obj_t * ui_Label92;
-extern lv_obj_t * ui_Image38;
-extern lv_obj_t * ui_Label93;
-extern lv_obj_t * ui_Label95;
-extern lv_obj_t * ui_Panel3;
-extern lv_obj_t * ui_Label98;
+extern lv_obj_t * ui_Label100;
+extern lv_obj_t * ui_Label101;
+extern lv_obj_t * ui_Label102;
+extern lv_obj_t * ui_Label103;
+extern lv_obj_t * ui_Label104;
+extern lv_obj_t * ui_Label105;
+extern lv_obj_t * ui_Label106;
+extern lv_obj_t * ui_Label107;
+extern lv_obj_t * ui_Label109;
+extern lv_obj_t * ui_Label110;
+extern lv_obj_t * ui_Label114;
+extern lv_obj_t * ui_Label115;
+extern lv_obj_t * ui_Label116;
+extern lv_obj_t * ui_Bar1;
+extern lv_obj_t * ui_Bar2;
+extern lv_obj_t * ui_Bar4;
+extern lv_obj_t * ui_Bar5;
+extern lv_obj_t * ui_Bar3;
+extern lv_obj_t * ui_Label47;
 extern lv_obj_t * ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_9_png);    // assets\9.png
@@ -206,6 +193,8 @@ LV_IMG_DECLARE(ui_img_11_png);    // assets\11.png
 LV_IMG_DECLARE(ui_img_12_png);    // assets\12.png
 LV_IMG_DECLARE(ui_img_10_png);    // assets\10.png
 LV_IMG_DECLARE(ui_img_37_png);    // assets\37.png
+LV_IMG_DECLARE(ui_img_46_png);    // assets\46.png
+LV_IMG_DECLARE(ui_img_47_png);    // assets\47.png
 LV_IMG_DECLARE(ui_img_i_png);    // assets\i.png
 LV_IMG_DECLARE(ui_img_313_png);    // assets\313.png
 LV_IMG_DECLARE(ui_img_17_png);    // assets\17.png
@@ -239,12 +228,11 @@ LV_IMG_DECLARE(ui_img_42_png);    // assets\42.png
 LV_IMG_DECLARE(ui_img_43_png);    // assets\43.png
 LV_IMG_DECLARE(ui_img_44_png);    // assets\44.png
 LV_IMG_DECLARE(ui_img_45_png);    // assets\45.png
-LV_IMG_DECLARE(ui_img_46_png);    // assets\46.png
-LV_IMG_DECLARE(ui_img_47_png);    // assets\47.png
 
 LV_FONT_DECLARE(ui_font_B108);
 LV_FONT_DECLARE(ui_font_B216);
 LV_FONT_DECLARE(ui_font_B432);
+LV_FONT_DECLARE(ui_font_cance);
 LV_FONT_DECLARE(ui_font_Font1);
 LV_FONT_DECLARE(ui_font_hanzi);
 LV_FONT_DECLARE(ui_font_R108);

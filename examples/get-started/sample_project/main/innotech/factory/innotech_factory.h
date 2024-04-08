@@ -16,9 +16,11 @@
 extern "C"
 {
 #endif
-
+extern double fix_num;
 void innotech_factory_reset(void);
+uint8_t innotech_fix_flag_get(void);
 void innotech_factory_init(void);
+
 
 #ifdef __cplusplus
 }
