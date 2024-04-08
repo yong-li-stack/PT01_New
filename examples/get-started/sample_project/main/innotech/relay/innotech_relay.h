@@ -24,6 +24,7 @@ void innotech_set_relay_status(uint8_t statu);
 void innotech_relay_state_save(void);
 uint8_t innotech_relay_state_get(void);
 void innotech_relay_state_toggle(void);
+void innotech_relay_factory_init(void);
 
 #ifdef __cplusplus
 }

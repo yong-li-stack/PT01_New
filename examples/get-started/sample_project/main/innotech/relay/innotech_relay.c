@@ -83,3 +83,15 @@ void innotech_relay_init(void)
     innotech_set_relay_status(innotech_config->power_switch);
 }
 
+void innotech_relay_factory_init(void)
+{
+    innotech_gpio_mode_init(GPIO_OUT_RELAY_ON_PIN, 2, 0, 0, 0);
+    innotech_gpio_mode_init(GPIO_OUT_RELAY_OFF_PIN, 2, 0, 0, 0);
+
+    innotech_set_gpio_level(GPIO_OUT_RELAY_ON_PIN, OFF);
+    innotech_set_gpio_level(GPIO_OUT_RELAY_OFF_PIN, OFF);    
+
+    innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
+    innotech_config->power_switch = 1;
+    innotech_set_relay_status(innotech_config->power_switch);
+}
