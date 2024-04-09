@@ -54,19 +54,19 @@ void factory_show_timer(void)
     char all_num[15];
     double current_value = innotech_current_get();
     double voltage_value = innotech_voltage_get();
-    uint32_t power_value = (int)innotech_power_get();
+    double power_value = innotech_power_get();
     double cosumption = (double)innotech_consumption_get();
 
-    snprintf(all_num,15, "%ld", power_value);
+    snprintf(all_num,15, "%.2lf", power_value);
     lv_label_set_text(ui_Label104, all_num);
 
-    snprintf(all_num, 15 ,"%lf", current_value);
+    snprintf(all_num, 15 ,"%.2lf", current_value);
     lv_label_set_text(ui_Label106, all_num);
 
-    snprintf(all_num, 15 ,"%lf", voltage_value);
+    snprintf(all_num, 15 ,"%.2lf", voltage_value);
     lv_label_set_text(ui_Label105, all_num);
 
-    snprintf(all_num, 15 ,"%lf", cosumption);
+    snprintf(all_num, 15 ,"%.2lf", cosumption);
     lv_label_set_text(ui_Label107, all_num);
 
     //adjust aliyun success

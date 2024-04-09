@@ -401,10 +401,10 @@ void innotech_meter_process(void)
         
         // energy.current = bl0937_getCurrent() * 0.58;
         pre_vol = vol_always_callback();
-        innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
+        // innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
         mid_power = (float)power_always_callback() * fix_num;
-        printf("fix_num    =========== %f\n",fix_num);
-        if(abs(pre_vol - energy.voltage) > 3)
+        // printf("fix_num    =========== %f\n",fix_num);
+        if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;
         }
@@ -413,8 +413,11 @@ void innotech_meter_process(void)
             energy.power = mid_power;
         }
         queue_cnt = 0;
-        energy.current = energy.power / energy.voltage;
-        printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
+        if(pre_vol != 0)
+        {
+            energy.current = energy.power / energy.voltage;
+        }
+        // printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
     } 
     queue_cnt ++;
 }

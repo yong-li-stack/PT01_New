@@ -241,7 +241,9 @@ void lvgl_blink_callback(void)
     }
     if(innotech_factory_flag_get() == 1)
     {
+        printf("66666666\n");
         lv_disp_load_scr(ui_Screen13);
+        printf("1111111\n");
     }
 }
 
@@ -260,9 +262,10 @@ void ui_init(void)
     ui_Screen7_screen_init();
     ui_Screen8_screen_init();
     ui_Screen9_screen_init();
-    // ui_Screen11_screen_init();
+    ui_Screen13_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     
-    lv_disp_load_scr(ui_Screen1);
+    lv_disp_load_scr(ui_Screen4);
+    
     lv_timer_create(lvgl_blink_callback, 500, NULL);
 }

@@ -56,7 +56,7 @@ static void innotech_rtc_thread(void *arg)
 {
     while(!innotech_wifi_state_get())  //must be wifi connected
     {
-        ESP_LOGI(RTC_TAG, "RTC wait wifi connect!!!\n");
+        // ESP_LOGI(RTC_TAG, "RTC wait wifi connect!!!\n");
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
