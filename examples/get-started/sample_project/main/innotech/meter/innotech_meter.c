@@ -83,6 +83,7 @@ energy_manage_t energy;
 static DRAM_ATTR int power_cnt_num[40] = {0};
 static DRAM_ATTR int power_factory_num[40] = {0};
 static DRAM_ATTR int vol_cnt_num[40] = {0};
+static DRAM_ATTR int vol_factory_num[40] = {0};
 
 void IRAM_ATTR reset_energe(void)
 {
@@ -166,6 +167,7 @@ void innotech_meter_init(void)
 
     _calculateDefaultMultipliers();
     _mode = _current_mode;
+    innotech_flash_read("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
     innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
 
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
@@ -335,22 +337,44 @@ int power_factory_callback()
     return max_num;
 }
 
-int vol_always_callback()
+int vol_factory_callback()
 {
-    int max_count = 0; // 最大出现次数
-    int max_num = vol_cnt_num[0]; // 出现次数最多的数字
-    int count = 0; // 临时计数器
+    int max_count = 0; 
+    int max_num = vol_factory_num[0];
+    int count = 0;
     int i, j;
  
-    // 遍历数组中的每个数字
+
     for (i = 0; i < 40; i++) {
-        count = 0; // 重置计数器
+        count = 0; 
         for (j = 0; j < 40; j++) {
-            if (vol_cnt_num[i] == vol_cnt_num[j]) {
-                count++; // 相同数字则计数增加
+            if (vol_factory_num[i] == vol_factory_num[j]) {
+                count++;
             }
         }
-        // 更新最大出现次数和对应的数字
+
+        if (count > max_count) {
+            max_count = count;
+            max_num = vol_factory_num[i];
+        }
+    }
+    return max_num;
+}
+
+int vol_always_callback()
+{
+    int max_count = 0; 
+    int max_num = vol_cnt_num[0]; 
+    int count = 0; 
+    int i, j;
+ 
+    for (i = 0; i < 40; i++) {
+        count = 0; 
+        for (j = 0; j < 40; j++) {
+            if (vol_cnt_num[i] == vol_cnt_num[j]) {
+                count++; 
+            }
+        }
         if (count > max_count) {
             max_count = count;
             max_num = vol_cnt_num[i];
@@ -366,6 +390,15 @@ int fix_power_factory(void)
     int power_factory_max = power_factory_callback();
     power_factory_flag = power_factory_flag % 40;
     return power_factory_max;
+}
+
+int fix_vol_factory(void)
+{
+    static int vol_factory_flag = 0;
+    vol_factory_num[vol_factory_flag++] = (int)bl0937_getVoltage();
+    int vol_factory_max = vol_factory_callback();
+    vol_factory_flag = vol_factory_flag % 40;
+    return vol_factory_max;
 }
 
 void innotech_meter_process(void)
@@ -396,10 +429,10 @@ void innotech_meter_process(void)
             consumption = 0;
         }
 
-        pre_vol = vol_always_callback();
+        pre_vol = vol_always_callback() * fix_vol_num;
         
         mid_power = (float)power_always_callback() * fix_num;
-        printf("fix_num    =========== %f\n",fix_num);
+        printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;

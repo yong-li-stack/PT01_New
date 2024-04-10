@@ -29,6 +29,7 @@
 #define FACTORY_SSID "gnpro*GB3Z*"
 #define TEST_Buzzer            (GPIO_NUM_3)
 double fix_num = 0;
+double fix_vol_num = 0;
 static char Buzzer_flag = 0;
 bool factory_flag = false;
 static uint8_t fix_flag = 0;
@@ -76,15 +77,17 @@ void innotech_factory_init(void)
 
         if(fix_flag == 0)
         {
-            if(++tick > 100 && fix_power_factory() != 0)
+            if(++tick > 100 && fix_power_factory() != 0 && fix_vol_factory() != 0)
             {
                 tick = 0;
                 fix_num = (double)200 / fix_power_factory();
-                if(fix_num != 0)
+                fix_vol_num = (double) 220 / fix_vol_factory();
+                if(fix_num != 0 && fix_vol_num != 0)
                 {
                     fix_flag = 1;
+                    innotech_flash_write("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
                     innotech_flash_write("fix_num", (char *)&fix_num, sizeof(double));
-                    printf("fix_num = %f\n", fix_num);
+                    printf("fix_num = %f fix_vol_num = %f\n", fix_num,fix_vol_num);
                 }
             }
             
