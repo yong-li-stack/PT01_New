@@ -27,7 +27,7 @@
 
 
 #define FACTORY_SSID "gnpro*GB3Z*"
-#define TEST_Buzzer            (GPIO_NUM_8)
+#define TEST_Buzzer            (GPIO_NUM_3)
 double fix_num = 0;
 static char Buzzer_flag = 0;
 bool factory_flag = false;
@@ -53,14 +53,6 @@ void innotech_factory_init(void)
 
     innotech_netif_init();
     
-    const gpio_config_t Buzzer_cfg = {
-        // .intr_type = GPIO_INTR_POSEDGE,
-        .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = BIT64(TEST_Buzzer),
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
-    };
-    gpio_config(&Buzzer_cfg);
     for(int i = 0; i < 2; i++)
     {
         if(innotech_wifi_scan((uint8_t*)FACTORY_SSID))
@@ -70,12 +62,13 @@ void innotech_factory_init(void)
             innotech_button_init();
             innotech_meter_init();
             innotech_lcd_pre_init();
+            innotech_buzzer_pwm_init();
+            
             break;
         }
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
-    //innotech_lcd_init();
-
+    
     while(factory_flag)
     {
         innotech_button_process();
@@ -83,7 +76,7 @@ void innotech_factory_init(void)
 
         if(fix_flag == 0)
         {
-            if(++tick > 100)
+            if(++tick > 100 && fix_power_factory() != 0)
             {
                 tick = 0;
                 fix_num = (double)200 / fix_power_factory();
@@ -99,13 +92,13 @@ void innotech_factory_init(void)
         
         if((fix_power_factory() * fix_num) >= 400)
         {
-            gpio_set_level(TEST_Buzzer, 1);
-            vTaskDelay(500);
-            gpio_set_level(TEST_Buzzer, 0);
-            vTaskDelay(500);
+            innotech_buzzer_pwm_write(4095);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+            innotech_buzzer_pwm_write(0);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
         }
         vTaskDelay(20 / portTICK_PERIOD_MS);
-
+        
     }
     
 }
