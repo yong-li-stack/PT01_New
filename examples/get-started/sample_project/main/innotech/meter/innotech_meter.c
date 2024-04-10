@@ -395,7 +395,11 @@ int fix_power_factory(void)
 int fix_vol_factory(void)
 {
     static int vol_factory_flag = 0;
-    vol_factory_num[vol_factory_flag++] = (int)bl0937_getVoltage();
+    int factory_vol_temp = (int)bl0937_getVoltage();
+    if(factory_vol_temp > 210 && factory_vol_temp < 240)
+    {
+        vol_factory_num[vol_factory_flag++] = factory_vol_temp;
+    }
     int vol_factory_max = vol_factory_callback();
     vol_factory_flag = vol_factory_flag % 40;
     return vol_factory_max;
