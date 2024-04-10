@@ -26,6 +26,7 @@
 #include "freertos/task.h"
 #include "innotech_factory.h"
 #include "api_bridge.h"
+#include "hal/gpio_ll.h"
 
 #define ARRAY_SIZE 5
 #define GPIO_OUTPUT_IO_BL0937B_SEL    42//5
@@ -117,7 +118,7 @@ static void IRAM_ATTR bl0937_cf1_isr_handler(void* arg)
         }
 
         _mode = 1 - _mode;
-        gpio_set_level(_setpin_io , _mode);
+        gpio_ll_set_level(&GPIO,_setpin_io , _mode);
         _first_cf1_interrupt = now;
 
     }
@@ -165,6 +166,7 @@ void innotech_meter_init(void)
 
     _calculateDefaultMultipliers();
     _mode = _current_mode;
+    innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
 
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
 
@@ -393,17 +395,11 @@ void innotech_meter_process(void)
             energy.consumption += consumption;
             consumption = 0;
         }
-        // int vol_ = (int)bl0937_getVoltage();
-        // if((pre_vol != vol_) && (vol_ >210 && vol_ < 250))
-        // {
-        //     pre_vol = vol_;
-        // }
-        
-        // energy.current = bl0937_getCurrent() * 0.58;
+
         pre_vol = vol_always_callback();
-        // innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
+        
         mid_power = (float)power_always_callback() * fix_num;
-        // printf("fix_num    =========== %f\n",fix_num);
+        printf("fix_num    =========== %f\n",fix_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;
