@@ -417,10 +417,7 @@ void innotech_meter_process(void)
     {
         power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
         vol_temp = (int)bl0937_getVoltage();
-        if(vol_temp > 210 && vol_temp < 240)
-        {
-            vol_cnt_num[vol_flag++] = vol_temp;
-        }
+        vol_cnt_num[vol_flag++] = vol_temp;
         power_flag = power_flag % 40;
         vol_flag = vol_flag % 40;
     }
@@ -436,7 +433,7 @@ void innotech_meter_process(void)
         pre_vol = vol_always_callback() * fix_vol_num;
         
         mid_power = (float)power_always_callback() * fix_num;
-        printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
+        // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;
@@ -450,7 +447,7 @@ void innotech_meter_process(void)
         {
             energy.current = energy.power / energy.voltage;
         }
-        // printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
+        printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
     } 
     queue_cnt ++;
 }
