@@ -18,6 +18,7 @@ extern "C"
 #endif
 extern double fix_num;
 extern double fix_vol_num;
+extern uint8_t fix_flag;
 void innotech_factory_reset(void);
 uint8_t innotech_fix_flag_get(void);
 void innotech_factory_init(void);
