@@ -48,6 +48,9 @@ uint8_t innotech_reset_reason_get(void);
 void innotech_led_pwm_init(void);
 void innotech_led_pwm_write(uint16_t r);
 
+void innotech_buzzer_pwm_init(void);
+void innotech_buzzer_pwm_write(uint16_t r);
+
 int innotech_triad_get(char *param_name, const char *param_name_str);
 #endif
 

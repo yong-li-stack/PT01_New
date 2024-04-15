@@ -241,9 +241,7 @@ void lvgl_blink_callback(void)
     }
     if(innotech_factory_flag_get() == 1)
     {
-        printf("66666666\n");
         lv_disp_load_scr(ui_Screen13);
-        printf("1111111\n");
     }
 }
 

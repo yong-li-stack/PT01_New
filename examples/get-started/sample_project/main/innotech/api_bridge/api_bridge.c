@@ -37,12 +37,19 @@ static bool s_part_init_flag;
 #define LEDC_LS_TIMER          LEDC_TIMER_1
 #define LEDC_LS_MODE           LEDC_LOW_SPEED_MODE
 
+#define LEDC_Buzzer_TIMER              LEDC_TIMER_0
+#define LEDC_Buzzer_MODE               LEDC_LOW_SPEED_MODE
+#define LEDC_Buzzer_OUTPUT_IO          (3) // Define the output GPIO
+#define LEDC_Buzzer_CHANNEL            LEDC_CHANNEL_2
+#define LEDC_Buzzer_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
+#define LEDC_Buzzer_DUTY               (4095) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
+#define LEDC_Buzzer_FREQUENCY          (2731) // Frequency in Hertz. Set frequency at 5 kHz
+
+
 #define LEDC_R_GPIO       (1)
 #define LEDC_R_CHANNEL    LEDC_CHANNEL_0
 #define LEDC_G_GPIO       (6)
 #define LEDC_G_CHANNEL    LEDC_CHANNEL_1
-#define LEDC_B_GPIO       (5)
-#define LEDC_B_CHANNEL    LEDC_CHANNEL_2
 #define LEDC_W_GPIO       (4)
 #define LEDC_W_CHANNEL    LEDC_CHANNEL_3
 
@@ -263,6 +270,8 @@ uint8_t innotech_reset_reason_get(void)
     return esp_rom_get_reset_reason(0);
 }
 
+
+
 void innotech_led_pwm_init(void)
 {
      // Setup LEDC peripheral for PWM backlight control
@@ -300,6 +309,39 @@ void innotech_led_pwm_write(uint16_t r)
         
     }
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_R_CHANNEL);
+
+    // return ESP_OK;
+}
+
+void innotech_buzzer_pwm_init(void)
+{
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_buzzer_timer = {
+        .speed_mode       = LEDC_Buzzer_MODE,
+        .timer_num        = LEDC_Buzzer_TIMER,
+        .duty_resolution  = LEDC_Buzzer_DUTY_RES,
+        .freq_hz          = LEDC_Buzzer_FREQUENCY,  // Set output frequency at 5 kHz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_buzzer_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_buzzer_channel = {
+        .speed_mode     = LEDC_Buzzer_MODE,
+        .channel        = LEDC_Buzzer_CHANNEL,
+        .timer_sel      = LEDC_Buzzer_TIMER,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = LEDC_Buzzer_OUTPUT_IO,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_buzzer_channel));
+}
+
+void innotech_buzzer_pwm_write(uint16_t buzzer_hz)
+{
+     ledc_set_duty(LEDC_Buzzer_MODE, LEDC_Buzzer_CHANNEL, buzzer_hz);
+     ledc_update_duty(LEDC_Buzzer_MODE, LEDC_Buzzer_CHANNEL);
 
     // return ESP_OK;
 }

@@ -53,18 +53,22 @@ void factory_show_timer(void)
     //show power current voltage cosumption
     char all_num[15];
     double current_value = innotech_current_get();
-    double voltage_value = innotech_voltage_get();
-    double power_value = innotech_power_get();
-    double cosumption = (double)innotech_consumption_get();
+    if(fix_flag == 1)
+    {
+        double voltage_value = (double)220;
+        double power_value = (double)200;  
 
-    snprintf(all_num,15, "%.2lf", power_value);
-    lv_label_set_text(ui_Label104, all_num);
+        snprintf(all_num, 15 ,"%.2lf", voltage_value);
+        lv_label_set_text(ui_Label105, all_num);
+
+        snprintf(all_num, 15 , "%.2lf", power_value);
+        lv_label_set_text(ui_Label104, all_num);
+    }
+    
+    double cosumption = (double)innotech_consumption_get();
 
     snprintf(all_num, 15 ,"%.2lf", current_value);
     lv_label_set_text(ui_Label106, all_num);
-
-    snprintf(all_num, 15 ,"%.2lf", voltage_value);
-    lv_label_set_text(ui_Label105, all_num);
 
     snprintf(all_num, 15 ,"%.2lf", cosumption);
     lv_label_set_text(ui_Label107, all_num);

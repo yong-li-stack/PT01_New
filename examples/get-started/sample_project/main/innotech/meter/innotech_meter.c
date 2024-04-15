@@ -26,6 +26,7 @@
 #include "freertos/task.h"
 #include "innotech_factory.h"
 #include "api_bridge.h"
+#include "hal/gpio_ll.h"
 
 #define ARRAY_SIZE 5
 #define GPIO_OUTPUT_IO_BL0937B_SEL    42//5
@@ -82,6 +83,7 @@ energy_manage_t energy;
 static DRAM_ATTR int power_cnt_num[40] = {0};
 static DRAM_ATTR int power_factory_num[40] = {0};
 static DRAM_ATTR int vol_cnt_num[40] = {0};
+static DRAM_ATTR int vol_factory_num[40] = {0};
 
 void IRAM_ATTR reset_energe(void)
 {
@@ -117,7 +119,7 @@ static void IRAM_ATTR bl0937_cf1_isr_handler(void* arg)
         }
 
         _mode = 1 - _mode;
-        gpio_set_level(_setpin_io , _mode);
+        gpio_ll_set_level(&GPIO,_setpin_io , _mode);
         _first_cf1_interrupt = now;
 
     }
@@ -165,6 +167,8 @@ void innotech_meter_init(void)
 
     _calculateDefaultMultipliers();
     _mode = _current_mode;
+    innotech_flash_read("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
+    innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
 
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
 
@@ -333,22 +337,44 @@ int power_factory_callback()
     return max_num;
 }
 
-int vol_always_callback()
+int vol_factory_callback()
 {
-    int max_count = 0; // 最大出现次数
-    int max_num = vol_cnt_num[0]; // 出现次数最多的数字
-    int count = 0; // 临时计数器
+    int max_count = 0; 
+    int max_num = vol_factory_num[0];
+    int count = 0;
     int i, j;
  
-    // 遍历数组中的每个数字
+
     for (i = 0; i < 40; i++) {
-        count = 0; // 重置计数器
+        count = 0; 
         for (j = 0; j < 40; j++) {
-            if (vol_cnt_num[i] == vol_cnt_num[j]) {
-                count++; // 相同数字则计数增加
+            if (vol_factory_num[i] == vol_factory_num[j]) {
+                count++;
             }
         }
-        // 更新最大出现次数和对应的数字
+
+        if (count > max_count) {
+            max_count = count;
+            max_num = vol_factory_num[i];
+        }
+    }
+    return max_num;
+}
+
+int vol_always_callback()
+{
+    int max_count = 0; 
+    int max_num = vol_cnt_num[0]; 
+    int count = 0; 
+    int i, j;
+ 
+    for (i = 0; i < 40; i++) {
+        count = 0; 
+        for (j = 0; j < 40; j++) {
+            if (vol_cnt_num[i] == vol_cnt_num[j]) {
+                count++; 
+            }
+        }
         if (count > max_count) {
             max_count = count;
             max_num = vol_cnt_num[i];
@@ -366,6 +392,19 @@ int fix_power_factory(void)
     return power_factory_max;
 }
 
+int fix_vol_factory(void)
+{
+    static int vol_factory_flag = 0;
+    int factory_vol_temp = (int)bl0937_getVoltage();
+    if(factory_vol_temp > 210 && factory_vol_temp < 240)
+    {
+        vol_factory_num[vol_factory_flag++] = factory_vol_temp;
+    }
+    int vol_factory_max = vol_factory_callback();
+    vol_factory_flag = vol_factory_flag % 40;
+    return vol_factory_max;
+}
+
 void innotech_meter_process(void)
 {
     static int queue_cnt = 0;
@@ -374,14 +413,11 @@ void innotech_meter_process(void)
     static int vol_flag = 0;
     static int vol_temp = 0;
 
-    if((queue_cnt % 2) == 0)
+    if((queue_cnt % 10) == 0)
     {
         power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
         vol_temp = (int)bl0937_getVoltage();
-        if(vol_temp > 210 && vol_temp < 240)
-        {
-            vol_cnt_num[vol_flag++] = vol_temp;
-        }
+        vol_cnt_num[vol_flag++] = vol_temp;
         power_flag = power_flag % 40;
         vol_flag = vol_flag % 40;
     }
@@ -393,17 +429,11 @@ void innotech_meter_process(void)
             energy.consumption += consumption;
             consumption = 0;
         }
-        // int vol_ = (int)bl0937_getVoltage();
-        // if((pre_vol != vol_) && (vol_ >210 && vol_ < 250))
-        // {
-        //     pre_vol = vol_;
-        // }
+
+        pre_vol = vol_always_callback() * fix_vol_num;
         
-        // energy.current = bl0937_getCurrent() * 0.58;
-        pre_vol = vol_always_callback();
-        // innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
         mid_power = (float)power_always_callback() * fix_num;
-        // printf("fix_num    =========== %f\n",fix_num);
+        // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;
@@ -417,7 +447,7 @@ void innotech_meter_process(void)
         {
             energy.current = energy.power / energy.voltage;
         }
-        // printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
+        //printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
     } 
     queue_cnt ++;
 }

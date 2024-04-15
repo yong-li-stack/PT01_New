@@ -388,8 +388,8 @@ void show_power()
         show_Overpower_flag = 0;
     }else if(show_normal_power_flag == 1)
     {
-        lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_Label26, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_Label26, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_img_set_src(ui_Image13, &ui_img_10_png);
         lv_label_set_text(ui_Label94, " ");
         show_normal_power_flag = 0;
