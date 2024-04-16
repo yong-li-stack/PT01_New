@@ -19,6 +19,7 @@
 #include "innotech_mqtt_json.h"
 #include "innotech_config.h"
 #include "innotech_factory.h"
+#include "innotech_ota.h"
 #include "aiot_mqtt_sign.h"
 
 #include "freertos/FreeRTOS.h"
@@ -50,6 +51,9 @@ typedef struct _aliyun_mqtt_type {
     char power_topic[100];
     char reset_set_topic[100];
     char reset_report_topic[100];
+    char ota_sub_topic[100];
+    char ota_pub_topic[100];
+    char ota_report_topic[100];
 }aliyun_matt_t;
 
 /* The event group allows multiple bits for each event, but we only care about two events:
@@ -85,6 +89,9 @@ static uint8_t wifi_connect_state = 0;
 #define ALIYUN_MQTT_CLEAR_TOPIC "/sys/%s/%s/thing/service/ClearConsumption"
 #define ALIYUN_MQTT_POWER_TOPIC "/sys/%s/%s/thing/event/PowerOverloadEvent/post"
 #define ALIYUN_MQTT_RESET_REPORT_TOPIC "/sys/%s/%s/thing/event/ResetEvent/post"
+#define ALIYUN_MQTT_OTA_SUBSCRIBE_TOPIC "/%s/%s/user/ota/device/upgrade"
+#define ALIYUN_MQTT_OTA_PUBLISH_TOPIC "/%s/%s/user/ota/device/inform"
+#define ALIYUN_MQTT_OTA_REPORT_TOPIC "/ota/device/inform/%s/%s"
 
 callback wifi_connect_result = NULL;
 void innotech_wifi_state_report(callback function) 
@@ -165,6 +172,17 @@ void mqtt_send_data_reply(char *set_topic, char *id, char *version)
     esp_mqtt_client_publish(client, reply_topic, payload, strlen(payload), 0, 0);
 }
 
+void mqtt_send_ota_version(void)
+{
+    char payload[1024] = {0};
+    char id[] = "123";
+    char version[] = "1.0";
+
+    mqtt_json_pack_ota(id, version, payload);
+    esp_mqtt_client_publish(client, mqtt_type.ota_pub_topic, payload, strlen(payload), 0, 0);
+    esp_mqtt_client_publish(client, mqtt_type.ota_report_topic, payload, strlen(payload), 0, 0);
+}
+
 /*
  * @brief Event handler registered to receive MQTT events
  *
@@ -193,6 +211,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         mqtt_send_device_status();
         mqtt_get_device_location();
+        mqtt_send_ota_version();
+        esp_mqtt_client_subscribe(client, mqtt_type.ota_sub_topic, 1);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -216,16 +236,23 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         {
             innotech_factory_reset();
         }
-        ret = mqtt_json_unpack(event->data, get_cmd, method, id, version);
-        if(ret == PERM_WRITE)
+        else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {
-            memcpy(topic, event->topic, event->topic_len);
-            mqtt_send_data_reply(topic, id, version);
-            //printf("get_cmd: %s\r\n",get_cmd);
-            if(strncmp(get_cmd, "GeoLocatioin", strlen(get_cmd)) != 0)
+            innotech_ota_start(event->data);
+        }
+        else
+        {
+            ret = mqtt_json_unpack(event->data, get_cmd, method, id, version);
+            if(ret == PERM_WRITE)
             {
-                mqtt_json_pack(get_cmd, id, version, payload);
-                esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0); 
+                memcpy(topic, event->topic, event->topic_len);
+                mqtt_send_data_reply(topic, id, version);
+                //printf("get_cmd: %s\r\n",get_cmd);
+                if(strncmp(get_cmd, "GeoLocatioin", strlen(get_cmd)) != 0)
+                {
+                    mqtt_json_pack(get_cmd, id, version, payload);
+                    esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0); 
+                }
             }
         }
         break;
@@ -265,6 +292,9 @@ static void mqtt_app_start(void)
     sprintf(mqtt_type.power_topic, ALIYUN_MQTT_POWER_TOPIC, triad_config.productkey, triad_config.devicename);
     sprintf(mqtt_type.reset_set_topic, ALIYUN_MQTT_RESET_SET_TOPIC, triad_config.productkey, triad_config.devicename);
     sprintf(mqtt_type.reset_report_topic, ALIYUN_MQTT_RESET_REPORT_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.ota_sub_topic, ALIYUN_MQTT_OTA_SUBSCRIBE_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.ota_pub_topic, ALIYUN_MQTT_OTA_PUBLISH_TOPIC, triad_config.productkey, triad_config.devicename);
+    sprintf(mqtt_type.ota_report_topic, ALIYUN_MQTT_OTA_REPORT_TOPIC, triad_config.productkey, triad_config.devicename);
  
     if ((rc = aiotMqttSign(triad_config.productkey, triad_config.devicename, triad_config.devicesecret, mqtt_type.client_id, mqtt_type.username, mqtt_type.password) < 0)) 
     {
@@ -281,6 +311,8 @@ static void mqtt_app_start(void)
     // printf("clear: %s %d\n", mqtt_type.power_topic, strlen(mqtt_type.power_topic));
     // printf("power: %s %d\n", mqtt_type.reset_set_topic, strlen(mqtt_type.reset_set_topic));
     // printf("reset: %s %d\n", mqtt_type.reset_report_topic, strlen(mqtt_type.reset_report_topic));
+    // printf("ota_sub_topic: %s %d\n", mqtt_type.ota_sub_topic, strlen(mqtt_type.ota_sub_topic));
+    // printf("ota_pub_topic: %s %d\n", mqtt_type.ota_pub_topic, strlen(mqtt_type.ota_pub_topic));
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.verification.certificate = (const char *)ali_ca_cert,
 		.broker.address.hostname = mqtt_type.address,
