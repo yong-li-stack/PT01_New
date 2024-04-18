@@ -21,6 +21,8 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "innotech_meter.h"
+#include "innotech_relay.h"
+#include "innotech_config.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -38,7 +40,7 @@
 
 
 
-static uint32_t bsp_timer_cnt = 0;    
+// static uint32_t bsp_timer_cnt = 0;    
 // static double consumption = 0;
 
 volatile DRAM_ATTR float _current_multiplier; // Unit: us/A
@@ -169,6 +171,7 @@ void innotech_meter_init(void)
     _mode = _current_mode;
     innotech_flash_read("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
     innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
+    innotech_buzzer_pwm_init();
 
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
 
@@ -291,20 +294,18 @@ float IRAM_ATTR bl0937_getCurrent() {
 
 int power_always_callback()
 {
-    int max_count = 0; // 最大出现次数
-    int max_num = power_cnt_num[0]; // 出现次数最多的数字
-    int count = 0; // 临时计数器
+    int max_count = 0; 
+    int max_num = power_cnt_num[0];
+    int count = 0; 
     int i, j;
  
-    // 遍历数组中的每个数字
     for (i = 0; i < 40; i++) {
-        count = 0; // 重置计数器
+        count = 0;
         for (j = 0; j < 40; j++) {
             if (power_cnt_num[i] == power_cnt_num[j]) {
-                count++; // 相同数字则计数增加
+                count++; 
             }
         }
-        // 更新最大出现次数和对应的数字
         if (count > max_count) {
             max_count = count;
             max_num = power_cnt_num[i];
@@ -315,20 +316,18 @@ int power_always_callback()
 
 int power_factory_callback()
 {
-    int max_count = 0; // 最大出现次数
-    int max_num = power_factory_num[0]; // 出现次数最多的数字
-    int count = 0; // 临时计数器
+    int max_count = 0; 
+    int max_num = power_factory_num[0]; 
+    int count = 0;
     int i, j;
  
-    // 遍历数组中的每个数字
     for (i = 0; i < 40; i++) {
-        count = 0; // 重置计数器
+        count = 0;
         for (j = 0; j < 40; j++) {
             if (power_factory_num[i] == power_factory_num[j]) {
-                count++; // 相同数字则计数增加
+                count++; 
             }
         }
-        // 更新最大出现次数和对应的数字
         if (count > max_count) {
             max_count = count;
             max_num = power_factory_num[i];
@@ -396,10 +395,10 @@ int fix_vol_factory(void)
 {
     static int vol_factory_flag = 0;
     int factory_vol_temp = (int)bl0937_getVoltage();
-    if(factory_vol_temp > 210 && factory_vol_temp < 240)
-    {
+    // if(factory_vol_temp > 170 && factory_vol_temp < 190)
+    // {
         vol_factory_num[vol_factory_flag++] = factory_vol_temp;
-    }
+    // }
     int vol_factory_max = vol_factory_callback();
     vol_factory_flag = vol_factory_flag % 40;
     return vol_factory_max;
@@ -429,10 +428,16 @@ void innotech_meter_process(void)
             energy.consumption += consumption;
             consumption = 0;
         }
-
-        pre_vol = vol_always_callback() * fix_vol_num;
+        if(innotech_factory_get() == 1)
+        {
+            pre_vol = vol_always_callback() * 5.5;
+            mid_power = (float)power_always_callback() * 6.5;
+        }else
+        {
+            pre_vol = vol_always_callback() * fix_vol_num;
+            mid_power = (float)power_always_callback() * fix_num;
+        }
         
-        mid_power = (float)power_always_callback() * fix_num;
         // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
@@ -451,6 +456,71 @@ void innotech_meter_process(void)
     } 
     queue_cnt ++;
 }
+
+void buzzer_timer(int time_buzzer)
+{
+    for(int i = 0;i < time_buzzer;i++)
+    {
+        innotech_buzzer_pwm_write(4095);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        innotech_buzzer_pwm_write(0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+}
+
+void innotech_overload_buzzer(void)
+{
+    innotech_config_t *innotech_config_buzzer = (innotech_config_t *)innotech_config_get_handle();
+    int power = (int)innotech_power_get();
+    if(innotech_config_buzzer->line_diameter == 1.5)
+    {
+        //
+        if(power > 4000 && power <= 4400)
+        {
+            buzzer_timer(12);
+            innotech_set_relay_status(0);
+        }else if(power > 4400 && power <= 4800)
+        {
+            buzzer_timer(6);
+            innotech_set_relay_status(0);
+        }else if(power > 4800)
+        {
+            buzzer_timer(3);
+            innotech_set_relay_status(0);
+        }
+    }else if(innotech_config_buzzer->line_diameter == 2.5)
+    {
+        if(power > 6250 && power <= 6875)
+        {
+            buzzer_timer(12);
+            innotech_set_relay_status(0);
+        }else if(power > 6875 && power <= 7500)
+        {
+            buzzer_timer(6);
+            innotech_set_relay_status(0);
+        }else if(power > 7500)
+        {
+            buzzer_timer(3);
+            innotech_set_relay_status(0);
+        }
+    }else if(innotech_config_buzzer->line_diameter == 4)
+    {
+        if(power > 8000 && power <= 8800)
+        {
+            buzzer_timer(12);
+            innotech_set_relay_status(0);
+        }else if(power > 8800 && power <= 9600)
+        {
+            buzzer_timer(6);
+            innotech_set_relay_status(0);
+        }else if(power > 9600)
+        {
+            buzzer_timer(3);
+            innotech_set_relay_status(0);
+        }
+    }
+}
+
 
 // float IRAM_ATTR bl0937_getApparentPower() {
 //     float current = bl0937_getCurrent();

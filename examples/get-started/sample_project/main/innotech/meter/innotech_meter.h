@@ -82,6 +82,7 @@ bl0937_mode_t IRAM_ATTR bl0937_toggleMode();
 void IRAM_ATTR bl0937_setMode(bl0937_mode_t mode);
 int fix_power_factory(void);
 int fix_vol_factory(void);
+void innotech_overload_buzzer(void);
 
 #ifdef __cplusplus
 }
