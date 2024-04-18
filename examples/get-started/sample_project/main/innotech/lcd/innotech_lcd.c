@@ -514,29 +514,29 @@ void lvgl_init(void)
     
 }
 
-static void monitor_task(void *arg)
-{
-    (void) arg;
+// static void monitor_task(void *arg)
+// {
+//     (void) arg;
 
-    while (true) {
-        ESP_LOGI(TAG, "System Info Trace");
-        // printf("\tDescription\tInternal\tSPIRAM\n");
-        printf("Current Free Memory\t%d\t\t%d\n",
-               heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-               heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-        printf("Largest Free Block\t%d\t\t%d\n",
-               heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-               heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-        printf("Min. Ever Free Size\t%d\t\t%d\n",
-               heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-               heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
+//     while (true) {
+//         ESP_LOGI(TAG, "System Info Trace");
+//         // printf("\tDescription\tInternal\tSPIRAM\n");
+//         printf("Current Free Memory\t%d\t\t%d\n",
+//                heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+//                heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+//         printf("Largest Free Block\t%d\t\t%d\n",
+//                heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+//                heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+//         printf("Min. Ever Free Size\t%d\t\t%d\n",
+//                heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+//                heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
 
-        // esp_intr_dump(stdout);
-        vTaskDelay(pdMS_TO_TICKS(5 * 1000));
-    }
+//         // esp_intr_dump(stdout);
+//         vTaskDelay(pdMS_TO_TICKS(5 * 1000));
+//     }
 
-    vTaskDelete(NULL);
-}
+//     vTaskDelete(NULL);
+// }
 
 // static void sys_monitor_start(void)
 // {
@@ -549,13 +549,11 @@ void innotech_lcd_process(void)
 
     if(!innotech_config->lcd_switch || !innotech_config->power_switch)
     {
-        // printf("close  lcd ---- faild\n");
         innotech_led_pwm_write(0);
     }else if(((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch)) || (innotech_config->lcd_switch && innotech_config->power_switch))
     {
         //brightness = innotech_config->lcd_brightness * (100 - MIN_LED_LUMI) / 100 + MIN_LED_LUMI;
         innotech_led_pwm_write(innotech_config->lcd_brightness);
-        // printf("open lcd ---- success\n");
     }else if(innotech_config->brightness_switch)
     {
         innotech_led_pwm_write(100);

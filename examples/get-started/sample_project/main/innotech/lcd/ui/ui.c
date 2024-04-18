@@ -210,15 +210,19 @@ const lv_img_dsc_t * ui_imgset_[48] = {&ui_img_1_png, &ui_img_10_png, &ui_img_11
 #endif
 
 ///////////////////// ANIMATIONS ////////////////////
-static uint32_t last_blink_time = 1;
+static uint32_t last_blink_time = 0;
+// static bool key_flag = 0;
 ///////////////////// FUNCTIONS ////////////////////
 void lvgl_blink_callback(void)
 {
-   
-    if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
+    if(innotech_first_key_press_get() == 1 && last_blink_time == 0)
     {
-        lv_disp_load_scr(ui_Screen3);//展示时间的界面
-    }else//正常配网
+        lv_disp_load_scr(ui_Screen4);
+        last_blink_time = 1;
+    }else if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
+    {
+        lv_disp_load_scr(ui_Screen3);//The interface for displaying time
+    }else//Normal distribution network
     {
         if(last_blink_time == 1)
         {
@@ -242,6 +246,9 @@ void lvgl_blink_callback(void)
     if(innotech_factory_flag_get() == 1)
     {
         lv_disp_load_scr(ui_Screen13);
+    }else if(innotech_factory_flag_get() == 2)
+    {
+        lv_disp_load_scr(ui_Screen1);
     }
 }
 
