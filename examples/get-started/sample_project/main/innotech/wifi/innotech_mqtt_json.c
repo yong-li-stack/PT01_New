@@ -532,3 +532,18 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *method, 
     return ret;
 }
 
+void mqtt_ota_json_unpack(char *json_data, char *ota_url)
+{
+    cJSON *data = cJSON_Parse(json_data);
+    if (data == NULL) {
+        printf("Error parsing JSON: %s\n", cJSON_GetErrorPtr());
+        return;
+    }
+
+    cJSON *params = cJSON_GetObjectItem(data, "params");
+    cJSON *url = cJSON_GetObjectItem(params, "url");
+
+    memcpy(ota_url, url->valuestring, strlen(url->valuestring));
+
+    cJSON_Delete(data);
+}

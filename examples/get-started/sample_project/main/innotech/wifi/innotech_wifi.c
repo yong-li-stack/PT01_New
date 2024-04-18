@@ -238,7 +238,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         }
         else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {
-            innotech_ota_start(event->data);
+            char ota_url[256] = {0};
+            mqtt_ota_json_unpack(event->data, ota_url);
+            innotech_ota_start(ota_url);
         }
         else
         {
