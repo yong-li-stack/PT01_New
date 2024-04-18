@@ -150,7 +150,7 @@ void show_time(void)
     itoa(time_info.tm_min%10, &time, 10);
     lv_label_set_text(ui_Label23, &time);
 
-    /*展示上面的日期与星期*/
+    /*Display the date and week*/
     //show week
     if(time_info.tm_wday == 1)
     {
@@ -205,6 +205,7 @@ void show_time(void)
     }else
     {
         lv_label_set_text(ui_Label46, " ");
+        // lv_obj_set_x(ui_Label46, 48);//maybe behind after number
         itoa(time_info.tm_mon+1, &time, 10);
         lv_label_set_text(ui_Label2, &time);
         lv_obj_set_x(ui_Image31, -204);
@@ -228,7 +229,27 @@ void show_time(void)
             lv_obj_set_x(ui_Label10, -96);
         }
     }
-    
+}
+
+static uint8_t consumption_site_num = 0;
+static int consumption_site[5][8] = 
+{
+    {0 ,14 ,28 ,52 ,72 ,90 ,106,-55},
+    {8 ,30 ,45 ,69 ,89 ,107 ,123,-55},
+    {0 ,30 ,45 ,69 ,89 ,107 ,123,-74},
+    {0 ,40 ,52 ,76 ,96 ,114 ,130,-81},
+    {-4 ,45 ,59 ,83 ,103 ,121 ,137,-96}
+};
+void show_consumption_format(void)
+{
+    lv_obj_set_x(ui_Label28, consumption_site[consumption_site_num-1][0]);
+    lv_obj_set_x(ui_Label34, consumption_site[consumption_site_num-1][1]);
+    lv_obj_set_x(ui_Label35, consumption_site[consumption_site_num-1][2]);
+    lv_obj_set_x(ui_Label29, consumption_site[consumption_site_num-1][3]);
+    lv_obj_set_x(ui_Label30, consumption_site[consumption_site_num-1][4]);
+    lv_obj_set_x(ui_Label31, consumption_site[consumption_site_num-1][5]);
+    lv_obj_set_x(ui_Label32, consumption_site[consumption_site_num-1][6]);
+    lv_obj_set_x(ui_Label27, consumption_site[consumption_site_num-1][7]);
 }
 
 static int power_site[4] = {-16,-16,-25,-23};
@@ -352,19 +373,28 @@ void show_power()
             lv_label_set_text(ui_Label35, "0");
         }
         //If adding a number moves the position of a number back
-        if((count / 2) / 10)
+        if(((count / 2) / 10 > 0) && ((count / 2) / 10 < 10))
         {
             //Add a number
-        }else if((count / 2) / 100)
+            consumption_site_num = 2;
+        }else if(((count / 2) / 100 > 0) && ((count / 2) / 100 < 10))
         {
             //Add a number
-        }else if((count / 2) / 1000)
+            consumption_site_num = 3;
+        }else if(((count / 2) / 1000 > 0) && ((count / 2) / 1000 < 10))
         {
             //Add a number
-        }else if((count / 2) / 10000)
+            consumption_site_num = 4;
+        }else if(((count / 2) / 10000 > 0) && ((count / 2) / 10000 < 10))
         {
             //Add a number
+            consumption_site_num = 5;
+        }else
+        {
+            //normal
+            consumption_site_num = 1;
         }
+        show_consumption_format();
     }
     if(show_high_power_flag == 1)
     {
@@ -456,16 +486,16 @@ void animation_blink_callback()
 
 }
 
-void maohao_blink_callback()
+void colon_blink_callback()
 {
-    //冒号的显示
-    static uint8_t maohao_blink_time = 0;
-    if(maohao_blink_time%2){
+    //display colon
+    static uint8_t colon_blink_time = 0;
+    if(colon_blink_time%2){
         lv_obj_clear_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_add_flag(ui_Label24, LV_OBJ_FLAG_HIDDEN);
     }
-    maohao_blink_time++;
+    colon_blink_time++;
 }
 
 void ui_Screen3_screen_init(void)
@@ -843,7 +873,6 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_style_text_opa(ui_Label48, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label48, &ui_font_hanzi, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-     printf("7777777777\n");
     lv_timer_create(animation_blink_callback, 500, NULL);
-    lv_timer_create(maohao_blink_callback, 500, NULL);
+    lv_timer_create(colon_blink_callback, 500, NULL);
 }
