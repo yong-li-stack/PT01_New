@@ -272,6 +272,29 @@ void mqtt_json_pack_reply(char *id, char *version, char *package_msg)
 
 }
 
+void mqtt_json_pack_ota(char *id, char *version, char *package_msg)
+{
+	cJSON *IOTJSObject = NULL, *dataJSObject = NULL;
+	char *iot_json = NULL;
+
+	//pack msg
+	if((IOTJSObject = cJSON_CreateObject()) != NULL)
+	{
+		cJSON_AddItemToObject(IOTJSObject, "id", cJSON_CreateString(id));  		 
+		cJSON_AddItemToObject(IOTJSObject, "version", cJSON_CreateString(version));
+        cJSON_AddItemToObject(IOTJSObject, "params", dataJSObject = cJSON_CreateObject());
+        cJSON_AddItemToObject(dataJSObject, "version", cJSON_CreateString(PT01_VERSION));
+        cJSON_AddItemToObject(dataJSObject, "module", cJSON_CreateString("default"));		  
+
+		iot_json = cJSON_PrintUnformatted(IOTJSObject);  
+		sprintf(package_msg, "%s", iot_json);
+		printf("pack:%s\n", package_msg);
+		free((void *)iot_json);
+		cJSON_Delete(IOTJSObject);
+	}
+
+}
+
 static void mqtt_json_unpack_location(cJSON *locationObject)
 {
     if(locationObject == NULL)
@@ -509,3 +532,18 @@ data_permission_e mqtt_json_unpack(char *iot_json, char *get_cmd, char *method, 
     return ret;
 }
 
+void mqtt_ota_json_unpack(char *json_data, char *ota_url)
+{
+    cJSON *data = cJSON_Parse(json_data);
+    if (data == NULL) {
+        printf("Error parsing JSON: %s\n", cJSON_GetErrorPtr());
+        return;
+    }
+
+    cJSON *params = cJSON_GetObjectItem(data, "params");
+    cJSON *url = cJSON_GetObjectItem(params, "url");
+
+    memcpy(ota_url, url->valuestring, strlen(url->valuestring));
+
+    cJSON_Delete(data);
+}
