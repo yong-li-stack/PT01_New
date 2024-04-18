@@ -53,7 +53,7 @@ void innotech_device_service_handle(void *args)
             time_tick = 0;
             innotech_config_check();
         }
-        if(++energy_tick >= 1500)
+        if(++energy_tick >= 3000)
         {
             energy_tick = 0;
             if(innotech_wifi_state_get() == 1)
