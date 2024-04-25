@@ -72,7 +72,9 @@ DRAM_ATTR float _consumption = 0;
 DRAM_ATTR float consumption = 0;
     
 
-static int mid_power = 0;
+static uint8_t mid_power = 0;
+static uint8_t buzzer_delay = 0;
+static uint8_t idx = 0;
 typedef struct _energy_manage_t{
     double current;
     double voltage;
@@ -457,81 +459,96 @@ void innotech_meter_process(void)
     queue_cnt ++;
 }
 
-void buzzer_timer(int time_buzzer)
+uint8_t inntech_buzzer_timer(uint8_t time)
 {
-    for(int i = 0;i < time_buzzer;i++)
+    if(time > 0 && idx < time)
+    {
+        if(buzzer_delay > 0 && buzzer_delay < 25)
     {
         innotech_buzzer_pwm_write(4095);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+        else if(buzzer_delay > 25 && buzzer_delay <= 50)
+        {
         innotech_buzzer_pwm_write(0);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        if(buzzer_delay == 50)
+            {
+                buzzer_delay = 1;
+                idx++;
+            }
+        }
+        buzzer_delay++;
     }
+    printf("idx = %d buzzer_delay = %d\n",idx,buzzer_delay);
+    return idx;
 }
 
 void innotech_overload_buzzer(void)
 {
     innotech_config_t *innotech_config_buzzer = (innotech_config_t *)innotech_config_get_handle();
     int power = (int)innotech_power_get();
+    double current = innotech_current_get();
+
     if(innotech_config_buzzer->line_diameter == 1.5)
     {
         //
-        if(power > 4000 && power <= 4400)
+        if((power > 4000 && power <= 4400) || (current > 16.0 && current < 17.6))
         {
-            buzzer_timer(12);
+            if(inntech_buzzer_timer(12) == 12)
             innotech_set_relay_status(0);
-        }else if(power > 4400 && power <= 4800)
+        }else if((power > 4400 && power <= 4800) || (current >= 17.6 && current < 19.2))
         {
-            buzzer_timer(6);
+            if(inntech_buzzer_timer(6) == 6)
             innotech_set_relay_status(0);
-        }else if(power > 4800)
+        }else if(power > 4800 || current >= 19.2)
         {
-            buzzer_timer(3);
+            if(inntech_buzzer_timer(3) == 3)
             innotech_set_relay_status(0);
         }
     }else if(innotech_config_buzzer->line_diameter == 2.5)
     {
-        if(power > 6250 && power <= 6875)
+        if((power > 6250 && power <= 6875) || (current > 25.0 && current < 27.5))
         {
-            buzzer_timer(12);
+            if(inntech_buzzer_timer(12) == 12)
             innotech_set_relay_status(0);
-        }else if(power > 6875 && power <= 7500)
+        }else if((power > 6875 && power <= 7500) || (current >= 27.5 && current < 30.0))
         {
-            buzzer_timer(6);
+            if(inntech_buzzer_timer(6) == 6)
             innotech_set_relay_status(0);
-        }else if(power > 7500)
+        }else if(power > 7500 || current >= 30.0)
         {
-            buzzer_timer(3);
+            if(inntech_buzzer_timer(3) == 3)
             innotech_set_relay_status(0);
         }
     }else if(innotech_config_buzzer->line_diameter == 4)
     {
-        if(power > 8000 && power <= 8800)
+        if((power > 8000 && power <= 8800) || (current > 32.0 && current < 35.2))
         {
-            buzzer_timer(12);
+            if(inntech_buzzer_timer(12) == 12)
             innotech_set_relay_status(0);
-        }else if(power > 8800 && power <= 9600)
+        }else if((power > 8800 && power <= 9600) || (current >= 35.2 && current < 38.4))
         {
-            buzzer_timer(6);
+            if(inntech_buzzer_timer(6) == 6)
             innotech_set_relay_status(0);
-        }else if(power > 9600)
+        }else if(power > 9600 || current >= 38.4)
         {
-            buzzer_timer(3);
+            if(inntech_buzzer_timer(3) == 3)
             innotech_set_relay_status(0);
         }
     }
 }
 
+float IRAM_ATTR bl0937_getApparentPower() {
+float current = bl0937_getCurrent();
+float voltage = bl0937_getVoltage();
+return voltage * current;
+}
 
-// float IRAM_ATTR bl0937_getApparentPower() {
-//     float current = bl0937_getCurrent();
-//     float voltage = bl0937_getVoltage();
-//     return voltage * current;
-// }
+float IRAM_ATTR bl0937_getPowerFactor() {
+float active = bl0937_getActivePower();
+float apparent = bl0937_getApparentPower();
+if (active > apparent) return 1;
+if (apparent == 0) return 0;
 
-// float IRAM_ATTR bl0937_getPowerFactor() {
-//     float active = bl0937_getActivePower();
-//     float apparent = bl0937_getApparentPower();
-//     if (active > apparent) return 1;
-//     if (apparent == 0) return 0;
-//     return (float) active / apparent;
-// }
+    return (float) active / apparent;
+}
+

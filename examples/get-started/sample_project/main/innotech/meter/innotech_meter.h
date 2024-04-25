@@ -83,6 +83,9 @@ void IRAM_ATTR bl0937_setMode(bl0937_mode_t mode);
 int fix_power_factory(void);
 int fix_vol_factory(void);
 void innotech_overload_buzzer(void);
+uint8_t inntech_buzzer_timer(uint8_t time);
+uint8_t innotech_get_meter_protect(void);
+uint8_t innotech_energy_check(void);
 
 #ifdef __cplusplus
 }

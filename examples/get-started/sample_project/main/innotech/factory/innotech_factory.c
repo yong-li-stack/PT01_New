@@ -50,6 +50,11 @@ void innotech_factory_reset(void)
     esp_restart();
 }
 
+bool innotech_factory_get(void)
+{
+    return factory_flag;
+}
+
 void innotech_factory_init(void)
 {
     uint8_t tick = 0;
