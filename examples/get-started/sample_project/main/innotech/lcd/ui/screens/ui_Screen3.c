@@ -262,6 +262,7 @@ void show_power()
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
 
     int power = (int)innotech_power_get();
+    double current = innotech_current_get();
     static uint8_t show_Protection_flag = 0;
     static uint8_t show_high_power_flag = 0;
     static uint8_t show_Overpower_flag = 0;
@@ -269,15 +270,11 @@ void show_power()
 
     if(innotech_config->line_diameter == 1.5)
     {
-        if(power > 4000)
-        {
-            //Display Protection Mode
-            show_Protection_flag = 1;
-        }else if(power > 3200 && power <= 3600)
+        if((power > 3200 && power <= 3600) || (current > 12.8 && current < 14.4))
         {
            //Display high power
             show_high_power_flag = 1;
-        }else if(power > 3600 && power <= 4000)
+        }else if((power > 3600 && power <= 4000) || (current >= 14.4 && current < 16.0))
         {
             //Display Overpower
             show_Overpower_flag = 1;
@@ -287,15 +284,11 @@ void show_power()
         }
     }else if(innotech_config->line_diameter == 4)
     {
-        if(power > 8000)
-        {
-            //Display Protection Mode
-            show_Protection_flag = 1;        
-        }else if(power > 6400 && power <= 7200)
+        if((power > 6400 && power <= 7200) || (current > 25.6 && current < 28.8))
         {
             //Display high power
             show_high_power_flag = 1;
-        }else if(power > 7200 && power <= 8000)
+        }else if((power > 7200 && power <= 8000) || (current >= 28.8 && current < 32.0))
         {
            //Display Overpower
             show_Overpower_flag = 1;
@@ -305,15 +298,11 @@ void show_power()
         }
     }else if(innotech_config->line_diameter == 2.5)
     {
-        if(power > 6250)
-        {
-           //Display Protection Mode
-            show_Protection_flag = 1;
-        }else if(power > 5000 && power <= 5625)
+        if((power > 5000 && power <= 5625) || (current > 20.0 && current < 22.5))
         {
             //Display high power
             show_high_power_flag = 1;
-        }else if(power > 5625 && power <= 6250)
+        }else if((power > 5625 && power <= 6250) || (current >= 22.5 && current < 25.0))
         {
             //Display Overpower
             show_Overpower_flag = 1;
@@ -322,7 +311,7 @@ void show_power()
             show_normal_power_flag = 1;
         }
     }
-    if(show_Protection_flag == 1)
+    if(innotech_get_meter_protect() == 1)
     {
         lv_label_set_text(ui_Label94, " ");
         lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);

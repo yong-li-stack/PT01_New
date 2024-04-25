@@ -29,8 +29,9 @@
 #define FACTORY_SSID "gnpro*GB3Z*"
 #define TEST_Buzzer            (GPIO_NUM_3)
 #define ABS(a,b) (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
-double fix_num = 0;
-double fix_vol_num = 0;
+float fix_current = 0;
+float fix_voltage = 0;
+float fix_power = 0;
 static char Buzzer_flag = 0;
 bool factory_flag = false;
  uint8_t fix_flag = 0;
@@ -108,6 +109,20 @@ int vol_tick_callback(void)
     return max_num;
 }
 
+void innotech_factory_fix(void)
+{
+    bl0937_expectedActivePower(200);
+    bl0937_expectedVoltage(220);
+    bl0937_expectedCurrent(0.909091);
+    fix_current = _current_multiplier;
+    fix_voltage = _voltage_multiplier;
+    fix_power = _power_multiplier;
+    innotech_flash_write("fix_current", (char *)&fix_current, sizeof(float));
+    innotech_flash_write("fix_voltage", (char *)&fix_voltage, sizeof(float));
+    innotech_flash_write("fix_power", (char *)&fix_power, sizeof(float)); 
+    printf("fix_power %f   fix_voltage = %f\n", fix_power,fix_voltage);
+}
+
 void innotech_factory_init(void)
 {
     uint8_t tick = 0;
@@ -124,8 +139,11 @@ void innotech_factory_init(void)
             innotech_button_init();
             innotech_meter_init();
             innotech_lcd_pre_init();
-            printf("fix_num == %f fix_vol_num == %f\n",fix_num,fix_vol_num);
-            if(fix_num && fix_vol_num)
+            innotech_flash_read("fix_current", (char *)&fix_current, sizeof(float));
+            innotech_flash_read("fix_voltage", (char *)&fix_voltage, sizeof(float));
+            innotech_flash_read("fix_power", (char *)&fix_power, sizeof(float)); 
+            printf("fix_power == %f fix_voltage == %f\n",fix_power,fix_voltage);
+            if(fix_current && fix_voltage && fix_power)
             {
                 check_down = 1;
             }
@@ -153,47 +171,27 @@ void innotech_factory_init(void)
                 tick = 0;
                 power_tick = power_tick_callback();
                 vol_tick = vol_tick_callback();
-                printf("power_tick == %d vol_tick == %d\n",power_tick,vol_tick);//156   217
-                if(check_down == 1)
+                // printf("power_tick = %d vol_tick = %d\n",power_tick,vol_tick);
+                if(vol_tick > 0 && power_tick > 0)
                 {
-                    if(((ABS(power_tick,200 / fix_num) < 5)) && ((ABS(vol_tick,220 / fix_vol_num) < 5)))
-                    {
-                        fix_num = (double)200 / power_tick;
-                        fix_vol_num = (double) 220 / vol_tick;
-                        if(fix_num != 0 && fix_vol_num != 0)
-                        {
-                            fix_flag = 1;
-                            innotech_flash_write("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
-                            innotech_flash_write("fix_num", (char *)&fix_num, sizeof(double));
-                            printf("fix_num = %f fix_vol_num = %f\n", fix_num,fix_vol_num);
-                        }
-                    }
-                }else
-                {
-                    fix_num = (double)200 / power_tick;
-                    fix_vol_num = (double) 220 / vol_tick;
-                    if(fix_num != 0 && fix_vol_num != 0)
-                    {
-                        fix_flag = 1;
-                        innotech_flash_write("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
-                        innotech_flash_write("fix_num", (char *)&fix_num, sizeof(double));
-                        printf("fix_num = %f fix_vol_num = %f\n", fix_num,fix_vol_num);
-                    }
-                }
-                
+                    innotech_factory_fix();
+                    fix_flag = 1;
+                }  
+            }
+        }
+        if(fix_flag == 1)
+        {
+            if(fix_power_factory() >= 400)
+            {
+                innotech_buzzer_pwm_write(4095);
+                vTaskDelay(500 / portTICK_PERIOD_MS);
+                innotech_buzzer_pwm_write(0);
+                vTaskDelay(500 / portTICK_PERIOD_MS);
             }
         }
         
-        if((fix_power_factory() * fix_num) >= 400)
-        {
-            innotech_buzzer_pwm_write(4095);
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-            innotech_buzzer_pwm_write(0);
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-        }
         vTaskDelay(20 / portTICK_PERIOD_MS);
-        
     }
-    
+        
 }
-
+    
