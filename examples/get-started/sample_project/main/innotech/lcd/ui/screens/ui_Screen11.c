@@ -51,20 +51,26 @@ uint8_t adjust_aliyun_success(void)
 void factory_show_timer(void)
 {
     //show power current voltage cosumption
+    static uint8_t factory_tick = 0;
+    static uint8_t success_flag_200 = 0;
+    if(factory_tick < 35)
+    {
+        factory_tick ++;
+    }
     char all_num[15];
     double current_value = innotech_current_get();
-    if(fix_flag == 1)
+    static double voltage_value = 0;
+    static double power_value = 0;  
     {
-        double voltage_value = (double)220;
-        double power_value = (double)200;  
-
-        snprintf(all_num, 15 ,"%.2lf", voltage_value);
-        lv_label_set_text(ui_Label105, all_num);
-
-        snprintf(all_num, 15 , "%.2lf", power_value);
-        lv_label_set_text(ui_Label104, all_num);
+        voltage_value = innotech_voltage_get();
+        power_value = innotech_power_get();
     }
-    
+    snprintf(all_num, 15 ,"%.2lf", voltage_value);
+    lv_label_set_text(ui_Label105, all_num);
+
+    snprintf(all_num, 15 , "%.2lf", power_value);
+    lv_label_set_text(ui_Label104, all_num);
+
     double cosumption = (double)innotech_consumption_get();
 
     snprintf(all_num, 15 ,"%.2lf", current_value);
@@ -88,12 +94,29 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    if(innotech_fix_flag_get() == 1)
+    if(factory_tick == 28)
     {
-        lv_obj_clear_flag(ui_Label115, LV_OBJ_FLAG_HIDDEN);
-    }else
+        if(innotech_fix_flag_get() == 1)
+        {
+            lv_obj_set_x(ui_Label115, -147);
+            lv_label_set_text(ui_Label115, "200W校准完成");
+            success_flag_200 = 1;
+            
+        }else
+        {
+            lv_obj_set_x(ui_Label115, -147);
+            lv_label_set_text(ui_Label115, "200W校准失败");
+
+        }
+    }
+
+    if(factory_tick == 35)
     {
-        lv_obj_add_flag(ui_Label115, LV_OBJ_FLAG_HIDDEN);
+        if(innotech_fix_flag_get() == 1 && success_flag_200 == 1)
+        {
+            lv_label_set_text(ui_Label_success, "开始200W测试");
+            lv_label_set_text(ui_Label_success, "200W测试成功");
+        }
     }
     //adjust 400w overflow
 }
@@ -265,10 +288,10 @@ void ui_Screen11_screen_init(void)
     ui_Label115 = lv_label_create(ui_Screen11);
     lv_obj_set_width(ui_Label115, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label115, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label115, -121);
+    lv_obj_set_x(ui_Label115, -144);
     lv_obj_set_y(ui_Label115, 144);
     lv_obj_set_align(ui_Label115, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label115, "200W校准进入成功");
+    lv_label_set_text(ui_Label115, "开始200W校准");
     lv_obj_set_style_text_color(ui_Label115, lv_color_hex(0x1AE6E2), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label115, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label115, &ui_font_cance, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -283,6 +306,17 @@ void ui_Screen11_screen_init(void)
     lv_obj_set_style_text_color(ui_Label116, lv_color_hex(0x1AE6E2), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label116, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label116, &ui_font_cance, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label_success = lv_label_create(ui_Screen11);
+    lv_obj_set_width(ui_Label_success, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label_success, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label_success, -148);
+    lv_obj_set_y(ui_Label_success, 178);
+    lv_obj_set_align(ui_Label_success, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label_success, " ");
+    lv_obj_set_style_text_color(ui_Label_success, lv_color_hex(0x1AE6E2), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label_success, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label_success, &ui_font_cance, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bar1 = lv_bar_create(ui_Screen11);
     lv_bar_set_value(ui_Bar1, 100, LV_ANIM_OFF);

@@ -180,6 +180,7 @@ lv_obj_t * ui_Label49;
 lv_obj_t * ui_Label65;
 lv_obj_t * ui_Label97;
 lv_obj_t * ui_Label100;
+lv_obj_t * ui_Label_success;
 lv_obj_t * ui_Label101;
 lv_obj_t * ui_Label102;
 lv_obj_t * ui_Label103;

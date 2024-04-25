@@ -168,6 +168,7 @@ extern lv_obj_t * ui_Label106;
 extern lv_obj_t * ui_Label107;
 extern lv_obj_t * ui_Label109;
 extern lv_obj_t * ui_Label110;
+extern lv_obj_t * ui_Label_success;
 extern lv_obj_t * ui_Label114;
 extern lv_obj_t * ui_Label115;
 extern lv_obj_t * ui_Label116;
