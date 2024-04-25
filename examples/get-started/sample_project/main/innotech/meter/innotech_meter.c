@@ -83,6 +83,7 @@ typedef struct _energy_manage_t{
 }energy_manage_t;
 
 energy_manage_t energy;
+energy_manage_t energy_last;
 
 static DRAM_ATTR int power_cnt_num[40] = {0};
 static DRAM_ATTR int power_factory_num[40] = {0};
@@ -552,3 +553,17 @@ if (apparent == 0) return 0;
     return (float) active / apparent;
 }
 
+uint8_t innotech_energy_check(void)
+{
+    if((energy.current > energy_last.current * 2)|| (energy_last.current >  energy.current* 2))
+    {
+        energy_last.current = energy.current;
+        return 1;
+    }
+    else if ((energy.power > energy_last.power * 2)|| (energy_last.power >  energy.power* 2))
+    {
+        energy_last.power = energy.power;
+        return 1;
+    }
+    return 0;
+}

@@ -60,6 +60,9 @@ typedef struct {
     float divider_resistor;
 } chip_config_t;
 
+extern volatile DRAM_ATTR float _power_multiplier;
+extern volatile DRAM_ATTR float _voltage_multiplier;
+extern volatile DRAM_ATTR float _current_multiplier;
 void innotech_meter_init(void);
 double innotech_current_get(void);
 double innotech_voltage_get(void);
