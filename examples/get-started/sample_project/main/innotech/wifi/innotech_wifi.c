@@ -183,6 +183,16 @@ void mqtt_send_ota_version(void)
     esp_mqtt_client_publish(client, mqtt_type.ota_report_topic, payload, strlen(payload), 0, 0);
 }
 
+void mqtt_send_ota_reply(char *set_topic, char *id, char *version, char *taskId)
+{
+    char payload[1024] = {0};
+    char reply_topic[64] = {0};
+
+    sprintf(reply_topic, "%s_reply", set_topic);
+    mqtt_ota_pack_reply(id, version, taskId, payload);
+    esp_mqtt_client_publish(client, reply_topic, payload, strlen(payload), 0, 0);
+}
+
 /*
  * @brief Event handler registered to receive MQTT events
  *
@@ -239,7 +249,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {
             char ota_url[256] = {0};
-            mqtt_ota_json_unpack(event->data, ota_url);
+            char taskId[50] = {0};
+            mqtt_ota_json_unpack(event->data, id, version, ota_url, taskId);
+            memcpy(topic, event->topic, event->topic_len);
+            mqtt_send_ota_reply(topic, id, version, taskId);
             innotech_ota_start(ota_url);
         }
         else
