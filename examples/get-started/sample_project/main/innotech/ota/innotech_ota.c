@@ -36,7 +36,14 @@ static const char *TAG = "innotech_ota";
 
 /*an ota data write buffer ready to write to the flash*/
 static char ota_write_data[BUFFSIZE + 1] = { 0 };
-char ota_url[256] = {0};
+static char ota_url[256] = {0};
+static int total_len = 0;
+static int step = 0;
+
+int innotech_ota_step_get(void)
+{
+    return step;
+}
 
 static void http_cleanup(esp_http_client_handle_t client)
 {
@@ -136,6 +143,7 @@ static void innotech_ota_task(void *pvParameter)
                 task_fatal_error();
             }
             binary_file_length += data_read;
+            step = binary_file_length * 100 / total_len;
             ESP_LOGD(TAG, "Written image length %d", binary_file_length);
         } else if (data_read == 0) {
            /*
@@ -178,12 +186,17 @@ static void innotech_ota_task(void *pvParameter)
         task_fatal_error();
     }
     ESP_LOGI(TAG, "Prepare to restart system!");
-    esp_restart();
-    return ;
+    while(1)
+    {
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+    //esp_restart();
+    //return ;
 }
 
-void innotech_ota_start(char *url)
+void innotech_ota_start(char *url, int size)
 {
+    total_len = size;
     memcpy(ota_url, url, strlen(url));
     xTaskCreate(&innotech_ota_task, "innotech_ota_task", 8192, NULL, 5, NULL);
 }

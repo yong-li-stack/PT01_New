@@ -53,6 +53,7 @@ void innotech_device_service_handle(void *args)
         {
             time_tick = 0;
             innotech_config_check();
+            mqtt_send_ota_step();
         }
         if(++energy_tick >= 3000)
         {
