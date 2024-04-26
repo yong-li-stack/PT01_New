@@ -57,14 +57,10 @@ void innotech_device_service_handle(void *args)
         if(++energy_tick >= 3000)
         {
             energy_tick = 0;
-            if(innotech_wifi_state_get() == 1 )
+            if(innotech_wifi_state_get() == 1 && innotech_energy_check()== 1)
             {
                 mqtt_send_device_energy();
             }
-        }
-        if(innotech_energy_check()== 1)
-        {
-            mqtt_send_device_energy();
         }
         vTaskDelay(20 / portTICK_PERIOD_MS);
        /*static int tick = 0;
