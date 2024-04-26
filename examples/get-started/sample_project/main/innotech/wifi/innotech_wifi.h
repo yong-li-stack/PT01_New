@@ -52,6 +52,7 @@ uint8_t innotech_wifi_state_get(void);
 void wifi_init_sta(wifi_param_t wifi);
 void mqtt_send_device_info(char *cmd);
 void mqtt_send_device_energy(void);
+void mqtt_send_ota_step(void);
 void innotech_wifi_init(void);
 void* innotech_triad_get_handle(void);
 uint16_t innotech_wifi_scan(uint8_t* ssid);

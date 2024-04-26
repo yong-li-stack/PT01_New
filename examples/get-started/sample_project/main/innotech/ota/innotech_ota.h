@@ -24,7 +24,8 @@ extern "C"
 /* Exported constants --------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
-void innotech_ota_start(char *iot_json);
+void innotech_ota_start(char *url, int size);
+int innotech_ota_step_get(void);
 
 #ifdef __cplusplus
 }

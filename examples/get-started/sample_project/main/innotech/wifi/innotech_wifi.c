@@ -70,6 +70,8 @@ static aliyun_triad_t triad_config;
 static aliyun_matt_t mqtt_type;
 static int s_retry_num = 0;
 static uint8_t wifi_connect_state = 0;
+static char ota_taskId[50] = {0};
+static uint8_t ota_start_flag = 0;
 
 #define ESP_MAXIMUM_RETRY  5
 #define H2E_IDENTIFIER ""
@@ -92,6 +94,7 @@ static uint8_t wifi_connect_state = 0;
 #define ALIYUN_MQTT_OTA_SUBSCRIBE_TOPIC "/%s/%s/user/ota/device/upgrade"
 #define ALIYUN_MQTT_OTA_PUBLISH_TOPIC "/%s/%s/user/ota/device/inform"
 #define ALIYUN_MQTT_OTA_REPORT_TOPIC "/ota/device/inform/%s/%s"
+#define ALIYUN_MQTT_OTA_STEP_TOPIC "/%s/%s/user/ota/device/progress"
 
 callback wifi_connect_result = NULL;
 void innotech_wifi_state_report(callback function) 
@@ -183,6 +186,37 @@ void mqtt_send_ota_version(void)
     esp_mqtt_client_publish(client, mqtt_type.ota_report_topic, payload, strlen(payload), 0, 0);
 }
 
+void mqtt_send_ota_reply(char *set_topic, char *id, char *version, char *taskId)
+{
+    char payload[1024] = {0};
+    char reply_topic[64] = {0};
+
+    sprintf(reply_topic, "%s_reply", set_topic);
+    mqtt_ota_pack_reply(id, version, taskId, payload);
+    esp_mqtt_client_publish(client, reply_topic, payload, strlen(payload), 0, 0);
+}
+
+void mqtt_send_ota_step(void)
+{
+    if(ota_start_flag == 1)
+    {
+        char payload[1024] = {0};
+        char id[] = "123";
+        char version[] = "1.0";
+        char step_topic[100] = {0};
+
+        sprintf(step_topic, ALIYUN_MQTT_OTA_STEP_TOPIC, triad_config.productkey, triad_config.devicename);
+        mqtt_ota_pack_step(id, version, ota_taskId, innotech_ota_step_get(), payload);
+        esp_mqtt_client_publish(client, step_topic, payload, strlen(payload), 0, 0);
+
+        if(innotech_ota_step_get() == 100)
+        {
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
+            esp_restart();
+        }
+    }
+}
+
 /*
  * @brief Event handler registered to receive MQTT events
  *
@@ -239,8 +273,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {
             char ota_url[256] = {0};
-            mqtt_ota_json_unpack(event->data, ota_url);
-            innotech_ota_start(ota_url);
+            int size = 0;
+
+            size = mqtt_ota_json_unpack(event->data, id, version, ota_url, ota_taskId);
+            memcpy(topic, event->topic, event->topic_len);
+            mqtt_send_ota_reply(topic, id, version, ota_taskId);
+            innotech_ota_start(ota_url, size);
+            ota_start_flag = 1;
         }
         else
         {
