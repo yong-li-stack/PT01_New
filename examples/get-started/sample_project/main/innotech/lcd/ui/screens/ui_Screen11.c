@@ -94,23 +94,21 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    if(factory_tick == 28)
+    if(factory_tick == 25)
     {
         if(innotech_fix_flag_get() == 1)
         {
             lv_obj_set_x(ui_Label115, -147);
             lv_label_set_text(ui_Label115, "200W校准完成");
             success_flag_200 = 1;
-            
         }else
         {
             lv_obj_set_x(ui_Label115, -147);
             lv_label_set_text(ui_Label115, "200W校准失败");
-
         }
     }
 
-    if(factory_tick == 35)
+    if(factory_tick > 28)
     {
         if(innotech_fix_flag_get() == 1 && success_flag_200 == 1)
         {

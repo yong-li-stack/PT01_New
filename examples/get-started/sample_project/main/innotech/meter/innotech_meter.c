@@ -73,7 +73,7 @@ DRAM_ATTR float consumption = 0;
     
 static uint8_t meter_protect_flag = 0;
 
-static uint8_t mid_power = 0;
+static int mid_power = 0;
 static uint8_t buzzer_delay = 0;
 static uint8_t idx = 0;
 typedef struct _energy_manage_t{
@@ -86,10 +86,11 @@ typedef struct _energy_manage_t{
 energy_manage_t energy;
 energy_manage_t energy_last;
 
-static DRAM_ATTR int power_cnt_num[40] = {0};
-static DRAM_ATTR int power_factory_num[40] = {0};
-static DRAM_ATTR int vol_cnt_num[40] = {0};
-static DRAM_ATTR int vol_factory_num[40] = {0};
+static DRAM_ATTR int power_cnt_num[30] = {0};
+static DRAM_ATTR int power_factory_num[30] = {0};
+static DRAM_ATTR int vol_cnt_num[30] = {0};
+static DRAM_ATTR int vol_factory_num[30] = {0};
+static DRAM_ATTR int current_factory_num[30] = {0};
 
 void IRAM_ATTR reset_energe(void)
 {
@@ -173,6 +174,9 @@ void innotech_meter_init(void)
 
     _calculateDefaultMultipliers();
     _mode = _current_mode;
+    innotech_flash_read("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
+    innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
+    innotech_flash_read("fix_cur_num", (char *)&fix_cur_num, sizeof(double));
     innotech_buzzer_pwm_init();
 
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
@@ -307,9 +311,9 @@ int power_always_callback()
     int count = 0; 
     int i, j;
  
-    for (i = 0; i < 40; i++) {
+    for (i = 0; i < 30; i++) {
         count = 0;
-        for (j = 0; j < 40; j++) {
+        for (j = 0; j < 30; j++) {
             if (power_cnt_num[i] == power_cnt_num[j]) {
                 count++; 
             }
@@ -329,9 +333,9 @@ int power_factory_callback()
     int count = 0;
     int i, j;
  
-    for (i = 0; i < 40; i++) {
+    for (i = 0; i < 30; i++) {
         count = 0;
-        for (j = 0; j < 40; j++) {
+        for (j = 0; j < 30; j++) {
             if (power_factory_num[i] == power_factory_num[j]) {
                 count++; 
             }
@@ -352,9 +356,9 @@ int vol_factory_callback()
     int i, j;
  
 
-    for (i = 0; i < 40; i++) {
+    for (i = 0; i < 30; i++) {
         count = 0; 
-        for (j = 0; j < 40; j++) {
+        for (j = 0; j < 30; j++) {
             if (vol_factory_num[i] == vol_factory_num[j]) {
                 count++;
             }
@@ -368,6 +372,29 @@ int vol_factory_callback()
     return max_num;
 }
 
+float currrent_factory_callback()
+{
+    int max_count = 0; 
+    float max_num = current_factory_num[0];
+    int count = 0;
+    int i, j;
+ 
+
+    for (i = 0; i < 30; i++) {
+        count = 0; 
+        for (j = 0; j < 30; j++) {
+            if (current_factory_num[i] == current_factory_num[j]) {
+                count++;
+            }
+        }
+
+        if (count > max_count) {
+            max_count = count;
+            max_num = current_factory_num[i];
+        }
+    }
+    return max_num;
+}
 int vol_always_callback()
 {
     int max_count = 0; 
@@ -375,9 +402,9 @@ int vol_always_callback()
     int count = 0; 
     int i, j;
  
-    for (i = 0; i < 40; i++) {
+    for (i = 0; i < 30; i++) {
         count = 0; 
-        for (j = 0; j < 40; j++) {
+        for (j = 0; j < 30; j++) {
             if (vol_cnt_num[i] == vol_cnt_num[j]) {
                 count++; 
             }
@@ -395,7 +422,7 @@ int fix_power_factory(void)
     static int power_factory_flag = 0;
     power_factory_num[power_factory_flag++] = (int)bl0937_getActivePower();
     int power_factory_max = power_factory_callback();
-    power_factory_flag = power_factory_flag % 40;
+    power_factory_flag = power_factory_flag % 30;
     return power_factory_max;
 }
 
@@ -403,13 +430,20 @@ int fix_vol_factory(void)
 {
     static int vol_factory_flag = 0;
     int factory_vol_temp = (int)bl0937_getVoltage();
-    // if(factory_vol_temp > 170 && factory_vol_temp < 190)
-    // {
-        vol_factory_num[vol_factory_flag++] = factory_vol_temp;
-    // }
+    vol_factory_num[vol_factory_flag++] = factory_vol_temp;
     int vol_factory_max = vol_factory_callback();
-    vol_factory_flag = vol_factory_flag % 40;
+    vol_factory_flag = vol_factory_flag % 30;
     return vol_factory_max;
+}
+
+float fix_current_factory(void)
+{
+    static int current_factory_flag = 0;
+    float factory_current_temp = bl0937_getCurrent();
+    current_factory_num[current_factory_flag++] = factory_current_temp;
+    float current_factory_max = currrent_factory_callback();
+    current_factory_flag = current_factory_flag % 30;
+    return current_factory_max;
 }
 
 void innotech_meter_process(void)
@@ -419,26 +453,14 @@ void innotech_meter_process(void)
     static int power_flag = 0;
     static int vol_flag = 0;
     static int vol_temp = 0;
-    static int is_first_num = 1;
-    if((innotech_factory_get() == 0) && is_first_num == 1)
-    {
-        innotech_flash_read("fix_current", (char *)&fix_current, sizeof(float));
-        innotech_flash_read("fix_voltage", (char *)&fix_voltage, sizeof(float));
-        innotech_flash_read("fix_power", (char *)&fix_power, sizeof(float)); 
-        _current_multiplier = fix_current;
-        _voltage_multiplier = fix_voltage;
-        _power_multiplier = fix_power;
-        printf("_current_multiplier %f   _current_multiplier = %f\n", fix_power,fix_voltage);
-        is_first_num = 0;
-    }
 
     if((queue_cnt % 10) == 0)
     {
         power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
         vol_temp = (int)bl0937_getVoltage();
         vol_cnt_num[vol_flag++] = vol_temp;
-        power_flag = power_flag % 40;
-        vol_flag = vol_flag % 40;
+        power_flag = power_flag % 30;
+        vol_flag = vol_flag % 30;
     }
     if(queue_cnt >= 50)
     {
@@ -448,16 +470,26 @@ void innotech_meter_process(void)
             energy.consumption += consumption;
             consumption = 0;
         }
-        pre_vol = vol_always_callback();
-        mid_power = (float)power_always_callback();
-        energy.voltage = pre_vol;
-        energy.power = mid_power;
-        // bl0937_setMode(0);
-        // vTaskDelay(5 / portTICK_PERIOD_MS);
-        energy.current = bl0937_getCurrent();
-        
 
+        pre_vol = vol_always_callback() * fix_vol_num;
+        mid_power = (float)power_always_callback() * fix_num;
+        
+        // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
+        if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
+        {
+            energy.voltage = pre_vol;
+        }
+        if(abs(mid_power - energy.power) > 3)
+        {
+            energy.power = mid_power;
+        }
         queue_cnt = 0;
+        if(energy.voltage)
+        {
+            energy.current = energy.power / energy.voltage;
+        }
+        
+        //printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
     } 
     queue_cnt ++;
 }
@@ -481,7 +513,6 @@ uint8_t inntech_buzzer_timer(uint8_t time)
         }
         buzzer_delay++;
     }
-    printf("idx = %d buzzer_delay = %d\n",idx,buzzer_delay);
     return idx;
 }
 
@@ -490,7 +521,7 @@ void innotech_overload_buzzer(void)
     innotech_config_t *innotech_config_buzzer = (innotech_config_t *)innotech_config_get_handle();
     int power = (int)innotech_power_get();
     double current = innotech_current_get();
-
+    
     if(innotech_config_buzzer->line_diameter == 1.5)
     {
         //
@@ -564,8 +595,8 @@ void innotech_overload_buzzer(void)
                 innotech_set_relay_status(0);
                 meter_protect_flag = 1;
             }
-        }
     }
+}
 }
 
 float IRAM_ATTR bl0937_getApparentPower() {
