@@ -131,7 +131,7 @@ void innotech_default_device_config(void)
 {   
     memset(&base_config, 0, sizeof(base_config_t));
     memcpy(base_config.flash_init, config_init_check, 4);
-    base_config.power_switch      = true;
+    base_config.power_switch      = false;
     base_config.lcd_switch        = true;
     base_config.brightness_switch = true;
     base_config.lcd_brightness    = 100;
