@@ -285,7 +285,7 @@ static void example_increase_lvgl_tick(void *arg)
     lv_tick_inc(EXAMPLE_LVGL_TICK_PERIOD_MS);
 }
 
-static bool example_lvgl_lock(int timeout_ms)
+bool example_lvgl_lock(int timeout_ms)
 {
     assert(lvgl_mux && "bsp_lvgl_port_init must be called first");
 
@@ -293,7 +293,7 @@ static bool example_lvgl_lock(int timeout_ms)
     return xSemaphoreTakeRecursive(lvgl_mux, timeout_ticks) == pdTRUE;
 }
 
-static void example_lvgl_unlock(void)
+void example_lvgl_unlock(void)
 {
     assert(lvgl_mux && "bsp_lvgl_port_init must be called first");
     xSemaphoreGiveRecursive(lvgl_mux);

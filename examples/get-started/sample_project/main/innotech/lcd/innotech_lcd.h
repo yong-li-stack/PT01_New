@@ -28,6 +28,8 @@ extern "C"
 void innotech_lcd_init(void);
 void innotech_lcd_process(void);
 void innotech_lcd_pre_init(void);
+bool example_lvgl_lock(int timeout_ms);
+void example_lvgl_unlock(void);
 
 #ifdef __cplusplus
 }

@@ -31,7 +31,6 @@
 double fix_num = 0;
 double fix_vol_num = 0;
 double fix_cur_num = 0;
-static char Buzzer_flag = 0;
 bool factory_flag = false;
  uint8_t fix_flag = 0;
 static uint8_t power_tick = 0;
