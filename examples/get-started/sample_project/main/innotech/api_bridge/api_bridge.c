@@ -266,8 +266,8 @@ void innotech_timmer_init(interrupt function)
 
 uint8_t innotech_reset_reason_get(void)
 {
-    //printf("reset reason: %d\r\n",esp_rom_get_reset_reason(0));
-    return esp_rom_get_reset_reason(0);
+    //printf("reset reason: %d\r\n", esp_reset_reason());
+    return esp_reset_reason();
 }
 
 
