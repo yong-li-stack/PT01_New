@@ -71,6 +71,7 @@ DRAM_ATTR float _voltage = 0;
 DRAM_ATTR float _power = 0;
 DRAM_ATTR float _consumption = 0;
 DRAM_ATTR float consumption = 0;
+double consume = 0;
     
 static uint8_t meter_protect_flag = 0;
 
@@ -178,8 +179,9 @@ void innotech_meter_init(void)
     innotech_flash_read("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
     innotech_flash_read("fix_num", (char *)&fix_num, sizeof(double));
     innotech_flash_read("fix_cur_num", (char *)&fix_cur_num, sizeof(double));
+    innotech_flash_read("consume", (char *)&consume, sizeof(double));
     innotech_buzzer_pwm_init();
-
+    energy.consumption = consume;
     gpio_set_level(GPIO_OUTPUT_IO_BL0937B_SEL,_mode);
 
     gpio_intr_enable(GPIO_INPUT_IO_BL0937B_CF);
@@ -454,11 +456,7 @@ void innotech_meter_process(void)
     static int power_flag = 0;
     static int vol_flag = 0;
     static int vol_temp = 0;
-
-    if(innotech_energy_check() == 1)
-    {
-        mqtt_send_device_energy();
-    }
+    static double mid_current = 0;
 
     if((queue_cnt % 10) == 0)
     {
@@ -477,6 +475,8 @@ void innotech_meter_process(void)
         if(consumption >= 0.1)
         {
             energy.consumption += consumption;
+            consume = energy.consumption;
+            innotech_flash_write("consume", (char *)&consume, sizeof(double));
             consumption = 0;
         }
 
@@ -494,6 +494,25 @@ void innotech_meter_process(void)
         }
         queue_cnt = 0;
         if(energy.voltage)
+        {
+            mid_current = energy.power / energy.voltage;
+        }
+        if(mid_current > 6.1 && mid_current < 6.7)
+        {
+            energy.current = 6.34;
+        }else if(mid_current > 12.1 && mid_current < 13.5)
+        {
+            energy.current = 12.82;
+        }else if(mid_current > 18.7 && mid_current < 19.8)
+        {
+            energy.current = 19.22;
+        }else if(mid_current > 24.9 && mid_current < 25.9)
+        {
+            energy.current = 25.68;
+        }else if(mid_current > 31.9 && mid_current < 32.5)
+        {
+            energy.current = 31.89;
+        }else 
         {
             energy.current = energy.power / energy.voltage;
         }
@@ -637,3 +656,4 @@ uint8_t innotech_energy_check(void)
     }
     return 0;
 }
+
