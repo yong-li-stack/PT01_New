@@ -294,6 +294,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     mqtt_json_pack(get_cmd, id, version, payload);
                     esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0); 
                 }
+                if(strncmp(get_cmd, "LineDiameter", strlen(get_cmd)) == 0)
+                {
+                    mqtt_send_device_energy(); 
+                }
             }
         }
         break;
