@@ -462,7 +462,10 @@ void innotech_meter_process(void)
 
     if((queue_cnt % 10) == 0)
     {
-        power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
+        if(bl0937_getActivePower() < 10000)
+        {
+            power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
+        }
         vol_temp = (int)bl0937_getVoltage();
         vol_cnt_num[vol_flag++] = vol_temp;
         power_flag = power_flag % 30;

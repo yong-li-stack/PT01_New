@@ -314,6 +314,7 @@ void show_power()
     if(innotech_get_meter_protect() == 1)
     {
         lv_label_set_text(ui_Label94, " ");
+        lv_label_set_text(ui_Label26, " ");
         lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_text(ui_Label111, "保护模式");
         lv_obj_set_x(ui_Label111,6);
@@ -321,6 +322,7 @@ void show_power()
         show_Protection_flag = 0;
     }else 
     {
+        lv_label_set_text(ui_Label26, "W");
         lv_obj_add_flag(ui_Panel3, LV_OBJ_FLAG_HIDDEN);
         if(power >= 1000)
         {
