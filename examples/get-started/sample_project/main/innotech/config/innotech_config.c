@@ -139,6 +139,12 @@ void innotech_default_device_config(void)
     base_config.memory            = false;
 
 	innotech_flash_write("innotech", (char *)&base_config, sizeof(base_config_t));
+
+    memset(&timer_config, 0, sizeof(timer_config_t));
+    innotech_flash_write("timer", (char *)&timer_config, sizeof(timer_config_t));
+
+    memset(&sleep_config, 0, sizeof(sleep_config_t));
+    innotech_flash_write("sleep", (char *)&sleep_config, sizeof(sleep_config_t));
 }
 
 void* innotech_config_get_handle(void)
