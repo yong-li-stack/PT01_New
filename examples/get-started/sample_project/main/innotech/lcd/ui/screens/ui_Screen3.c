@@ -267,7 +267,7 @@ void show_power()
     static uint8_t show_Protection_flag = 0;
     static uint8_t show_high_power_flag = 0;
     static uint8_t show_Overpower_flag = 0;
-    static uint8_t show_normal_power_flag = 0;
+    static uint8_t show_normal_power_flag = 1;
 
     if(innotech_config->line_diameter == 1.5)
     {
@@ -388,6 +388,20 @@ void show_power()
         }
         show_consumption_format();
     }
+    lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if(innotech_get_disconnet_flag() == 1)
+    {
+        lv_label_set_text(ui_Label94, "请检查网络");
+    }else if(show_Overpower_flag == 1)
+    {
+        lv_label_set_text(ui_Label94, "超功率");
+    }else if(show_high_power_flag == 1)
+    {
+        lv_label_set_text(ui_Label94, "高功率");
+    }else if(show_normal_power_flag == 1)
+    {
+        lv_label_set_text(ui_Label94, " ");
+    }
     if(show_high_power_flag == 1)
     {
         //Font and background display in yellow
@@ -409,20 +423,7 @@ void show_power()
         lv_img_set_src(ui_Image13, &ui_img_10_png);
         show_normal_power_flag = 0;
     }
-    lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xE33539), LV_PART_MAIN | LV_STATE_DEFAULT);
-    if(innotech_get_disconnet_flag() == 1)
-    {
-        lv_label_set_text(ui_Label94, "请检查网络");
-    }else if(show_Overpower_flag == 1)
-    {
-        lv_label_set_text(ui_Label94, "超功率");
-    }else if(show_high_power_flag == 1)
-    {
-        lv_label_set_text(ui_Label94, "高功率");
-    }else if(show_normal_power_flag == 1)
-    {
-        lv_label_set_text(ui_Label94, " ");
-    }
+    
 }
 
 // static uint8_t humi_flag[2] = {-146,-165};
