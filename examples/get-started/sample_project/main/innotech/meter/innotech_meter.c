@@ -474,7 +474,7 @@ void innotech_meter_process(void)
     if(queue_cnt >= 50)
     {
         consumption += energy.power / 1000 / 3600;
-        if(consumption >= 0.5)
+        if(consumption >= 0.1)
         {
             energy.consumption += consumption;
             consumption = 0;
