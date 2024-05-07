@@ -29,6 +29,7 @@
 #include "innotech_factory.h"
 #include "api_bridge.h"
 #include "hal/gpio_ll.h"
+#include "innotech_wifi.h"
 
 #define ARRAY_SIZE 5
 #define GPIO_OUTPUT_IO_BL0937B_SEL    42//5
@@ -454,6 +455,11 @@ void innotech_meter_process(void)
     static int vol_flag = 0;
     static int vol_temp = 0;
 
+    if(innotech_energy_check() == 1)
+    {
+        mqtt_send_device_energy();
+    }
+
     if((queue_cnt % 10) == 0)
     {
         power_cnt_num[power_flag++] = (int)bl0937_getActivePower();
@@ -499,13 +505,13 @@ uint8_t inntech_buzzer_timer(uint8_t time)
     if(time > 0 && idx < time)
     {
         if(buzzer_delay > 0 && buzzer_delay < 25)
-    {
-        innotech_buzzer_pwm_write(4095);
+        {
+            innotech_buzzer_pwm_write(4095);
         }
         else if(buzzer_delay > 25 && buzzer_delay <= 50)
         {
-        innotech_buzzer_pwm_write(0);
-        if(buzzer_delay == 50)
+            innotech_buzzer_pwm_write(0);
+            if(buzzer_delay == 50)
             {
                 buzzer_delay = 1;
                 idx++;
