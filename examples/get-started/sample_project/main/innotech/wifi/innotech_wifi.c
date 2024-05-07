@@ -72,6 +72,7 @@ static int s_retry_num = 0;
 static uint8_t wifi_connect_state = 0;
 static char ota_taskId[50] = {0};
 static uint8_t ota_start_flag = 0;
+static uint8_t disconnet_flag = 1;
 
 #define ESP_MAXIMUM_RETRY  5
 #define H2E_IDENTIFIER ""
@@ -101,7 +102,10 @@ void innotech_wifi_state_report(callback function)
 {
     wifi_connect_result = function;
 }
-
+uint8_t innotech_get_disconnet_flag(void)
+{
+    return disconnet_flag;
+}
 void* innotech_triad_get_handle(void)
 {
     return (void*)&triad_config;
@@ -242,6 +246,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
  
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
+        disconnet_flag = 0;
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         mqtt_send_device_status();
         mqtt_get_device_location();
@@ -302,6 +307,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         }
         break;
     case MQTT_EVENT_ERROR:
+        disconnet_flag = 1;
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
             ESP_LOGI(TAG, "Last error code reported from esp-tls: 0x%x", event->error_handle->esp_tls_last_esp_err);
