@@ -57,7 +57,8 @@ bool innotech_factory_get(void)
 void innotech_factory_reset(void)
 {
     innotech_default_device_config();
-    innotech_wifi_config_reset();        
+    innotech_wifi_config_reset(); 
+    innotech_clear_consume();       
     esp_restart();
 }
 

@@ -20,6 +20,7 @@
 #include "innotech_config.h"
 #include "innotech_factory.h"
 #include "innotech_ota.h"
+#include "innotech_meter.h"
 #include "aiot_mqtt_sign.h"
 
 #include "freertos/FreeRTOS.h"
@@ -285,6 +286,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             mqtt_send_ota_reply(topic, id, version, ota_taskId);
             innotech_ota_start(ota_url, size);
             ota_start_flag = 1;
+        }
+        else if(memcmp(event->topic, mqtt_type.clear_topic, event->topic_len) == 0)
+        {
+            innotech_clear_consume();
+            mqtt_send_device_energy();
         }
         else
         {

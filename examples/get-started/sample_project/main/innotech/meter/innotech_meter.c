@@ -657,3 +657,8 @@ uint8_t innotech_energy_check(void)
     return 0;
 }
 
+void innotech_clear_consume(void)
+{
+    consume = 0;
+    innotech_flash_write("consume", (char *)&consume, sizeof(double));
+}
