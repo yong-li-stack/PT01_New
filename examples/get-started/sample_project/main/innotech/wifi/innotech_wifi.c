@@ -20,7 +20,6 @@
 #include "innotech_config.h"
 #include "innotech_factory.h"
 #include "innotech_ota.h"
-#include "innotech_meter.h"
 #include "aiot_mqtt_sign.h"
 
 #include "freertos/FreeRTOS.h"
@@ -37,6 +36,8 @@
 
 #include "mqtt_client.h"
 #include "mqtt_ca.h"
+
+#include "innotech_meter.h"
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -320,11 +321,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             ESP_LOGI(TAG, "Last tls stack error number: 0x%x", event->error_handle->esp_tls_stack_err);
             ESP_LOGI(TAG, "Last captured errno : %d (%s)",  event->error_handle->esp_transport_sock_errno,
                      strerror(event->error_handle->esp_transport_sock_errno));
-            static uint8_t count = 0;
-            if(count++ >= 8)
-            {
-                esp_restart();
-            }
         } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
             ESP_LOGI(TAG, "Connection refused error: 0x%x", event->error_handle->connect_return_code);
         } else {
