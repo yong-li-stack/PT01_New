@@ -78,6 +78,7 @@ static uint8_t meter_protect_flag = 0;
 static int mid_power = 0;
 static uint8_t buzzer_delay = 0;
 static uint8_t idx = 0;
+static uint8_t stop_flag = 0;
 typedef struct _energy_manage_t{
     double current;
     double voltage;
@@ -509,7 +510,7 @@ void innotech_meter_process(void)
 
 uint8_t inntech_buzzer_timer(uint8_t time)
 {
-    if(time > 0 && idx < time)
+    if(time > 0 && idx < time && !stop_flag)
     {
         if(buzzer_delay > 0 && buzzer_delay < 25)
         {
@@ -539,11 +540,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 0.8)
+            if(current >= 15.52)
             {
                 stop_flag = 0;
             }
-            if(current >= 0.8 && current < 17.6)
+            if(current >= 15.52 && current < 17.6)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -564,7 +565,7 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 0.8)
+            }else if(current >= 0 && current < 15.52)
             {
                 meter_protect_flag = 0;
                 stop_flag = 1;
