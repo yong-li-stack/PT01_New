@@ -611,3 +611,8 @@ void innotech_ble_connect_timeout(void)
         esp_ble_gap_stop_advertising();
     }
 }
+
+uint8_t innotech_get_adv_start_flag(void)
+{
+    return adv_start_flag;
+}

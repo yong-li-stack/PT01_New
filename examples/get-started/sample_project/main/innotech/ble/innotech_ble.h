@@ -48,6 +48,7 @@ enum
 void innotech_ble_init(void);
 uint8_t innotech_pre_wifi(void);
 void innotech_ble_connect_timeout(void);
+uint8_t innotech_get_adv_start_flag(void);
 
 #ifdef __cplusplus
 }
