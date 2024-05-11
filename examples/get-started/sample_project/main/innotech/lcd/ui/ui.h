@@ -63,6 +63,7 @@ extern lv_obj_t * ui_Label17;
 extern lv_obj_t * ui_Label19;
 extern lv_obj_t * ui_Label20;
 extern lv_obj_t * ui_Label21;
+extern lv_obj_t * ui_protect;
 extern lv_obj_t * ui_Label22;
 extern lv_obj_t * ui_Label23;
 extern lv_obj_t * ui_Label24;

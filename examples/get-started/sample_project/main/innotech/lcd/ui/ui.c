@@ -87,6 +87,7 @@ lv_obj_t * ui_Label30;
 lv_obj_t * ui_Label31;
 lv_obj_t * ui_Label32;
 lv_obj_t * ui_Label34;
+lv_obj_t * ui_protect;
 lv_obj_t * ui_Label35;
 lv_obj_t * ui_Label76;
 lv_obj_t * ui_Label108;
@@ -214,52 +215,48 @@ const lv_img_dsc_t * ui_imgset_[48] = {&ui_img_1_png, &ui_img_10_png, &ui_img_11
 #endif
 
 ///////////////////// ANIMATIONS ////////////////////
-static uint32_t last_blink_time = 0;
+static uint32_t last_blink_time = 1;
 // static bool key_flag = 0;
 ///////////////////// FUNCTIONS ////////////////////
-void lvgl_anim_callback(void *args)
+void lvgl_blink_callback(void)
 {
-    while(1)
+    example_lvgl_lock(0);
+    if(innotech_first_key_press_get() == 1 && last_blink_time == 0)
     {
-        example_lvgl_lock(0);
-        if(innotech_first_key_press_get() == 1 && last_blink_time == 0)
-        {
-            lv_disp_load_scr(ui_Screen4);
-            last_blink_time = 1;
-        }else if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
-        {
-            lv_disp_load_scr(ui_Screen3);//The interface for displaying time
-        }else//Normal distribution network
-        {
-            if(last_blink_time == 1)
-            {
-                lv_disp_load_scr(ui_Screen1);
-            }
-            if(innotech_pre_wifi() == 1)
-            {
-                lv_disp_load_scr(ui_Screen2);
-            }
-            if(innotech_wifi_state_get() == 1)
-            {
-                lv_disp_load_scr(ui_Screen6);
-                last_blink_time = 3;
-            }
-            if(innotech_wifi_state_get() == 2)
-            {
-                lv_disp_load_scr(ui_Screen5);
-                last_blink_time = 1;
-            }
-        }
-        if(innotech_factory_flag_get() == 1)
-        {
-            lv_disp_load_scr(ui_Screen13);
-        }else if(innotech_factory_flag_get() == 2)
+        lv_disp_load_scr(ui_Screen4);
+        last_blink_time = 1;
+    }else if(((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3)) && innotech_first_key_press_get() == 1)
+    {
+        lv_disp_load_scr(ui_Screen3);//The interface for displaying time
+    }else if(innotech_first_key_press_get() == 1)//Normal distribution network
+    {
+        if(last_blink_time == 1)
         {
             lv_disp_load_scr(ui_Screen1);
         }
-        example_lvgl_unlock();
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        if(innotech_pre_wifi() == 1)
+        {
+            lv_disp_load_scr(ui_Screen2);
+        }
+        if(innotech_wifi_state_get() == 1)
+        {
+            lv_disp_load_scr(ui_Screen6);
+            last_blink_time = 3;
+        }
+        if(innotech_wifi_state_get() == 2)
+        {
+            lv_disp_load_scr(ui_Screen5);
+            last_blink_time = 1;
+        }
     }
+    if(innotech_factory_flag_get() == 1)
+    {
+        lv_disp_load_scr(ui_Screen13);
+    }else if(innotech_factory_flag_get() == 2)
+    {
+        lv_disp_load_scr(ui_Screen1);
+    }
+    example_lvgl_unlock();
 }
 
 void ui_init(void)
@@ -280,5 +277,7 @@ void ui_init(void)
     ui_Screen13_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     
-    xTaskCreate(lvgl_anim_callback, "lvgl_callback", 5120, NULL, 24, NULL);
+    lv_disp_load_scr(ui_Screen4);
+    
+    lv_timer_create(lvgl_blink_callback, 500, NULL);
 }
