@@ -30,6 +30,7 @@
 
 static uint16_t time_tick = 0;
 static uint16_t energy_tick = 0;
+static uint16_t ble_tick = 0;
 
 void innotech_update_save_tick(void)
 {
@@ -63,7 +64,11 @@ void innotech_device_service_handle(void *args)
                 mqtt_send_device_energy();
             }
         }
-
+        if(++ble_tick >= 30000)
+        {
+            ble_tick = 0;
+            innotech_ble_connect_timeout();
+        }
         vTaskDelay(20 / portTICK_PERIOD_MS);
        /*static int tick = 0;
         if(++tick >= 50)
