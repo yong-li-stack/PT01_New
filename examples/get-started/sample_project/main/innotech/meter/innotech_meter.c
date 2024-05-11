@@ -487,20 +487,35 @@ void innotech_meter_process(void)
 
         pre_vol = vol_always_callback() * fix_vol_num;
         mid_power = (float)power_always_callback() * fix_num;
-        
+        if(energy.voltage)
+        {
+            energy.current = mid_power / energy.voltage;
+        }
+        if(energy.current >= 15.52 && energy.current <= 16.48)
+        {
+            energy.power = 4000;
+        }else if(energy.current >= 24.25 && energy.current <= 25.75)
+        {
+            energy.power = 6250;
+        }else if(energy.current >= 31.04 && energy.current <= 32.96)
+        {
+            energy.power = 8000;
+        }else 
+        {
+            if((abs(mid_power - energy.power) > 3) && (mid_power > 5))
+            {
+                energy.power = mid_power;
+            }else if(mid_power <= 5)
+            {
+                energy.power = 0;
+            }
+        }
         // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
         if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
         {
             energy.voltage = pre_vol;
         }
-        if((abs(mid_power - energy.power) > 3))
-        {
-            energy.power = mid_power;
-        }
-                if(energy.voltage)
-        {
-            energy.current = mid_power / energy.voltage;
-        }
+        
         queue_cnt = 0;
         
         //printf("pre_vol = %f  energy.power== %f current_ = %f\n",energy.voltage,energy.power,energy.current);
