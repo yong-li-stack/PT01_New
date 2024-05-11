@@ -4,15 +4,23 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
+#include "innotech_ble.h"
 void wifi_blink_callback()
 {
     static uint32_t last_blink_time = 0;
-    if(last_blink_time%2){
+    if(innotech_get_adv_start_flag() == 1)
+    {
+        if(last_blink_time%2){
+            lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+        }
+        last_blink_time++;
+    }else
+    {
         lv_obj_clear_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
     }
-    last_blink_time++;
+    
 }
 void ui_Screen1_screen_init(void)
 {
