@@ -259,72 +259,119 @@ void show_power()
 {
      //show power
     char power_num;
+    char consumption_num;
     double cosumption = (double)innotech_consumption_get();
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
 
     int power = (int)innotech_power_get();
     double current = innotech_current_get();
-    static uint8_t show_Protection_flag = 0;
+    int vol = (int)innotech_voltage_get();
     static uint8_t show_high_power_flag = 0;
     static uint8_t show_Overpower_flag = 0;
     static uint8_t show_normal_power_flag = 1;
 
     if(innotech_config->line_diameter == 1.5)
     {
-        if((power > 3200 && power <= 3600) || (current > 12.8 && current < 14.4))
+        if(vol <= 250)
         {
-           //Display high power
-            show_high_power_flag = 1;
-        }else if((power > 3600 && power <= 4000) || (current >= 14.4 && current < 16.0))
-        {
-            //Display Overpower
-            show_Overpower_flag = 1;
+            if(current >= 12.8 && current < 14.4)
+            {
+                //Display high power
+                show_high_power_flag = 1;
+            }else if(current >= 14.4)
+            {
+                //Display Overpower
+                show_Overpower_flag = 1;
+            }else if(current < 12.8)
+            {
+                show_normal_power_flag = 1;
+            }
         }else
         {
-            show_normal_power_flag = 1;
+            if(power > 3200 && power <= 3600)
+            {
+                show_high_power_flag = 1;
+            }else if(power > 3600)
+            {
+                show_Overpower_flag = 1;
+            }else if(power < 3200)
+            {
+                show_normal_power_flag = 1;
+            }
         }
+        
     }else if(innotech_config->line_diameter == 4)
     {
-        if((power > 6400 && power <= 7200) || (current > 25.6 && current < 28.8))
+        if(vol <= 250)
         {
-            //Display high power
-            show_high_power_flag = 1;
-        }else if((power > 7200 && power <= 8000) || (current >= 28.8 && current < 32.0))
-        {
-           //Display Overpower
-            show_Overpower_flag = 1;
+            if(current >= 25.6 && current < 28.8)
+            {
+                //Display high power
+                show_high_power_flag = 1;
+            }else if(current >= 28.8)
+            {
+                //Display Overpower
+                show_Overpower_flag = 1;
+            }else if(current < 25.6)
+            {
+                show_normal_power_flag = 1;
+            }
         }else
         {
-            show_normal_power_flag = 1;
+            if(power >= 6400 && power <= 7200)
+            {
+                show_high_power_flag = 1;
+            }else if(power > 7200)
+            {
+                show_Overpower_flag = 1;
+            }else if(power < 6400)
+            {
+                show_normal_power_flag = 1;
+            }
         }
     }else if(innotech_config->line_diameter == 2.5)
     {
-        if((power > 5000 && power <= 5625) || (current > 20.0 && current < 22.5))
+        if(vol <= 250)
         {
-            //Display high power
-            show_high_power_flag = 1;
-        }else if((power > 5625 && power <= 6250) || (current >= 22.5 && current < 25.0))
-        {
-            //Display Overpower
-            show_Overpower_flag = 1;
+            if(current >= 20.0 && current < 22.5)
+            {
+                //Display high power
+                show_high_power_flag = 1;
+            }else if(current >= 22.5)
+            {
+                //Display Overpower
+                show_Overpower_flag = 1;
+            }else if(current < 20.0)
+            {
+                show_normal_power_flag = 1;
+            }
         }else
         {
-            show_normal_power_flag = 1;
+            if(power > 5000 && power <= 5625)
+                {
+                    show_high_power_flag = 1;
+                }else if(power > 5625)
+                {
+                    show_Overpower_flag = 1;
+                }else if(power < 5000)
+                {
+                show_normal_power_flag = 1;
+            }
         }
     }
     if(innotech_get_meter_protect() == 1)
     {
         lv_label_set_text(ui_Label94, " ");
         lv_label_set_text(ui_Label26, " ");
-        lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_text(ui_Label111, "保护模式");
-        lv_obj_set_x(ui_Label111,6);
+        lv_label_set_text(ui_Label111, " ");
+        lv_label_set_text(ui_protect, "保护模式");
         lv_obj_clear_flag(ui_Panel3, LV_OBJ_FLAG_HIDDEN);
-        show_Protection_flag = 0;
-    }else 
+    }else if(innotech_get_meter_protect() == 0) 
     {
+        lv_label_set_text(ui_protect, " ");
         lv_label_set_text(ui_Label26, "W");
         lv_obj_add_flag(ui_Panel3, LV_OBJ_FLAG_HIDDEN);
+
         if(power >= 1000)
         {
             itoa(power, &power_num, 10);
@@ -350,34 +397,28 @@ void show_power()
             lv_obj_set_x(ui_Label111, power_site[0]);
             lv_obj_set_x(ui_Label26, power_flag_site[0]);
         }
+        
         //show kw.h
-        uint32_t count = (uint32_t)(innotech_consumption_get() / 0.5);
-        if(count / 2)
-        {
-            itoa(count / 2, &power_num, 10);
-            lv_label_set_text(ui_Label28, &power_num);
-        }
-        if(count % 2)
-        {
-            lv_label_set_text(ui_Label35, "5");
-        }else 
-        {
-            lv_label_set_text(ui_Label35, "0");
-        }
-        //If adding a number moves the position of a number back
-        if(((count / 2) / 10 > 0) && ((count / 2) / 10 < 10))
+        float count = innotech_consumption_get();
+        int count_int = (int)(count * 10);
+            itoa((count_int % 10), &consumption_num, 10);
+            lv_label_set_text(ui_Label35, &consumption_num);
+        itoa((count_int / 10), &consumption_num, 10);
+        lv_label_set_text(ui_Label28, &consumption_num);
+                //If adding a number moves the position of a number back
+        if((count_int / 100 > 0) && (count_int / 100 < 10))
         {
             //Add a number
             consumption_site_num = 2;
-        }else if(((count / 2) / 100 > 0) && ((count / 2) / 100 < 10))
+        }else if((count_int / 1000 > 0) && (count_int / 1000 < 10))
         {
             //Add a number
             consumption_site_num = 3;
-        }else if(((count / 2) / 1000 > 0) && ((count / 2) / 1000 < 10))
+        }else if((count_int / 10000 > 0) && (count_int / 10000 < 10))
         {
             //Add a number
             consumption_site_num = 4;
-        }else if(((count / 2) / 10000 > 0) && ((count / 2) / 10000 < 10))
+        }else if((count_int / 100000 > 0) && (count_int / 100000 < 10))
         {
             //Add a number
             consumption_site_num = 5;
@@ -388,25 +429,26 @@ void show_power()
         }
         show_consumption_format();
     }
-    lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
-    if(innotech_get_disconnet_flag() == 1)
+        if(innotech_get_disconnet_flag() == 1)
     {
         lv_label_set_text(ui_Label94, "请检查网络");
+        lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    }else if((show_normal_power_flag == 1) || (innotech_get_meter_protect() == 1))
+    {
+        lv_label_set_text(ui_Label94, " ");
     }else if(show_Overpower_flag == 1)
     {
         lv_label_set_text(ui_Label94, "超功率");
     }else if(show_high_power_flag == 1)
     {
         lv_label_set_text(ui_Label94, "高功率");
-    }else if(show_normal_power_flag == 1)
-    {
-        lv_label_set_text(ui_Label94, " ");
-    }
+        }
     if(show_high_power_flag == 1)
     {
         //Font and background display in yellow
         lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_color(ui_Label26, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_img_set_src(ui_Image13, &ui_img_45_png);
         show_high_power_flag = 0;
     }else if(show_Overpower_flag == 1)
@@ -414,6 +456,7 @@ void show_power()
         //Font and background display in red
         lv_obj_set_style_text_color(ui_Label111, lv_color_hex(0xE33539), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_color(ui_Label26, lv_color_hex(0xE33539), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xE33539), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_img_set_src(ui_Image13, &ui_img_44_png);
         show_Overpower_flag = 0;
     }else if(show_normal_power_flag == 1)
@@ -782,6 +825,16 @@ void ui_Screen3_screen_init(void)
     lv_obj_set_align(ui_Label111, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label111, "0");
     lv_obj_set_style_text_font(ui_Label111, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_protect = lv_label_create(ui_Screen3);
+    lv_obj_set_width(ui_protect, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_protect, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_protect, 6);
+    lv_obj_set_y(ui_protect, 156);
+    lv_obj_set_align(ui_protect, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_protect, " ");
+    lv_obj_set_style_text_color(ui_protect, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_protect, &ui_font_B216, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label112 = lv_label_create(ui_Screen3);
     lv_obj_set_width(ui_Label112, LV_SIZE_CONTENT);   /// 1
