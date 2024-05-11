@@ -429,11 +429,11 @@ void show_power()
         }
         show_consumption_format();
     }
-        if(innotech_get_disconnet_flag() == 1)
+    if(innotech_get_disconnet_flag() == 1)
     {
         lv_label_set_text(ui_Label94, "请检查网络");
         lv_obj_set_style_text_color(ui_Label94, lv_color_hex(0xD59B00), LV_PART_MAIN | LV_STATE_DEFAULT);
-    }else if((show_normal_power_flag == 1) || (innotech_get_meter_protect() == 1))
+    }else if((show_normal_power_flag == 1) || (innotech_get_meter_protect() == 1) || (innotech_get_disconnet_flag() == 0))
     {
         lv_label_set_text(ui_Label94, " ");
     }else if(show_Overpower_flag == 1)
