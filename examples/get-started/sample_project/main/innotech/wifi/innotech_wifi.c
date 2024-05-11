@@ -20,6 +20,7 @@
 #include "innotech_config.h"
 #include "innotech_factory.h"
 #include "innotech_ota.h"
+
 #include "aiot_mqtt_sign.h"
 
 #include "freertos/FreeRTOS.h"
@@ -307,6 +308,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                     esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0); 
                 }
                 if(strncmp(get_cmd, "LineDiameter", strlen(get_cmd)) == 0)
+                {
+                    mqtt_send_device_energy(); 
+                }else if(strncmp(get_cmd, "ScreenSwitch", strlen(get_cmd)) == 0)
+                {
+                    mqtt_send_device_energy(); 
+                }else if(strncmp(get_cmd, "ScreenBrightValue", strlen(get_cmd)) == 0)
                 {
                     mqtt_send_device_energy(); 
                 }
