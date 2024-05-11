@@ -47,6 +47,7 @@
 #define SCAN_RSP_CONFIG_FLAG        (1 << 1)
 
 static uint8_t adv_config_done       = 0;
+static uint8_t adv_start_flag        = 0;
 uint8_t pre_wifi = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
@@ -260,6 +261,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 ESP_LOGE(GATTS_TABLE_TAG, "advertising start failed");
             }else{
                 ESP_LOGI(GATTS_TABLE_TAG, "advertising start successfully");
+                adv_start_flag = 1;
                 if(innotech_wifi_state_get()) 
                 {
                     /*esp_ble_gap_stop_advertising();
@@ -601,3 +603,11 @@ void innotech_ble_init(void)
     innotech_wifi_state_report(innotech_ble_report_wifi_state);
 }
 
+void innotech_ble_connect_timeout(void)
+{
+    if (adv_start_flag == 1) 
+    {
+        adv_start_flag = 0;
+        esp_ble_gap_stop_advertising();
+    }
+}

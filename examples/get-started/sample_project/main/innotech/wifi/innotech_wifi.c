@@ -411,7 +411,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
             esp_wifi_connect();
             vTaskDelay(30000 / portTICK_PERIOD_MS);
         }
-        
+        xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
     } 
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) 
     {
@@ -419,6 +419,10 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        if(wifi_connect_state != 1)
+        {
+            mqtt_app_start();
+        }
     }
 }
 
@@ -471,7 +475,6 @@ void wifi_init_sta(wifi_param_t wifi)
     if (bits & WIFI_CONNECTED_BIT) 
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
-        mqtt_app_start();
         wifi_connect_state = 1;
         if(wifi.flag == WIFI_CONFIG_FAIL)
         {
