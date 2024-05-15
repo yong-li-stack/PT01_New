@@ -414,11 +414,10 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 }
                 else if (cmd == 0x0d)
                 {
-                    uint8_t cipher[64] = {0};
-                    uint8_t dec_plain[32] = {0};
-                    memcpy((char *)cipher, (char *)param->write.value+4, 32);
-                    aes128_cbc_decrypt(ble_key, iv, cipher, 32, dec_plain);
-
+                    uint8_t cipher[128] = {0};
+                    uint8_t dec_plain[128] = {0};
+                    memcpy((char *)cipher, (char *)param->write.value+4, param->write.len);
+                    aes128_cbc_decrypt(ble_key, iv, cipher, 128, dec_plain);
                     wifi_param_t wifi;
                     memset(&wifi, 0, sizeof(wifi_param_t));
                     if(dec_plain[2] == 0x01)
