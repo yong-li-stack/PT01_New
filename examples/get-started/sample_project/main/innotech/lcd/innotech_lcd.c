@@ -437,7 +437,7 @@ void spi_init(void)
         .init_cmds = vendor_specific_init_default,
         .init_cmds_size = sizeof(vendor_specific_init_default) / sizeof(st7701_lcd_init_cmd_t),
         .flags = {
-            .auto_del_panel_io = 0,
+            .auto_del_panel_io = 1,
         },
     };
     const esp_lcd_panel_dev_config_t panel_config = {
@@ -449,7 +449,7 @@ void spi_init(void)
     };
     esp_lcd_panel_handle_t panel_handle = NULL;
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(io_handle, &panel_config, &panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
+    // ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
