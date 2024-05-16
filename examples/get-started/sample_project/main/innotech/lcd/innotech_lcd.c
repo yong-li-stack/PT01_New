@@ -45,7 +45,7 @@
 #define TEST_LCD_IO_RGB_DISP        (GPIO_NUM_NC)
 #define TEST_LCD_IO_RGB_VSYNC       (GPIO_NUM_47)
 #define TEST_LCD_IO_RGB_HSYNC       (GPIO_NUM_48)
-#define TEST_LCD_IO_RGB_DE          (GPIO_NUM_33)
+#define TEST_LCD_IO_RGB_DE          (GPIO_NUM_38)
 #define TEST_LCD_IO_RGB_PCLK        (GPIO_NUM_21)
 
 #define TEST_LCD_IO_RGB_DATA0       (GPIO_NUM_18) //R3
@@ -65,10 +65,10 @@
 #define TEST_LCD_IO_RGB_DATA14      (GPIO_NUM_19)  //B6
 #define TEST_LCD_IO_RGB_DATA15      (GPIO_NUM_20) //B7
 
-#define TEST_LCD_IO_SPI_CS_1        (GPIO_NUM_37)
-#define TEST_LCD_IO_SPI_SCL         (GPIO_NUM_36)
-#define TEST_LCD_IO_SPI_SDA         (GPIO_NUM_35)
-#define TEST_LCD_IO_RST             (GPIO_NUM_34)
+#define TEST_LCD_IO_SPI_CS_1        (GPIO_NUM_46)
+#define TEST_LCD_IO_SPI_SCL         (GPIO_NUM_13)
+#define TEST_LCD_IO_SPI_SDA         (GPIO_NUM_14)
+#define TEST_LCD_IO_RST             (GPIO_NUM_39)
 #define TEST_LCD_IO_BL              (GPIO_NUM_1)
 
 #define TEST_DELAY_TIME_MS              (3000)
@@ -460,7 +460,6 @@ void spi_init(void)
 #endif
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, NULL);
-
     /* =============== Initialize LVGL =============== */
     ESP_LOGI(TAG, "Initialize LVGL");
 

@@ -20,8 +20,8 @@
 #define     ON             1
 #define     OFF            0
 
-#define		GPIO_OUT_RELAY_ON_PIN  	    39
-#define		GPIO_OUT_RELAY_OFF_PIN  	38
+#define		GPIO_OUT_RELAY_ON_PIN  	    3
+#define		GPIO_OUT_RELAY_OFF_PIN  	2
 
 void innotech_set_relay_status(uint8_t state)
 {
