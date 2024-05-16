@@ -21,6 +21,8 @@
 
 #include "esp_system.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_bt.h"
 #include "esp_gap_ble_api.h"
 #include "esp_gatts_api.h"
@@ -240,6 +242,29 @@ static void innotech_ble_report_wifi_state(int state)
     esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
 }
 
+void bt_release_task(void)
+{
+    
+    {
+        ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        esp_ble_gap_stop_advertising();
+        esp_ble_gatts_app_unregister(ESP_APP_ID);
+        esp_bluedroid_disable();
+        esp_bluedroid_deinit();
+        esp_bt_controller_disable();
+        esp_bt_controller_deinit();
+        // esp_bt_mem_release(ESP_BT_MODE_BLE);
+        ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        
+        // esp_restart();
+    }
+    vTaskDelete(NULL);
+}
+
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     switch (event) {
@@ -264,15 +289,9 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 adv_start_flag = 1;
                 if(innotech_wifi_state_get()) 
                 {
-                    /*esp_ble_gap_stop_advertising();
-                    esp_ble_gatts_app_unregister(ESP_APP_ID);
-                    esp_bluedroid_disable();
-                    esp_bluedroid_deinit();
-                    esp_bt_controller_disable();
-                    esp_bt_controller_deinit();
-                    esp_bt_mem_release(ESP_BT_MODE_CLASSIC_BT);*/
-                    esp_restart();
+                    xTaskCreate(bt_release_task,"bt_release",2500,NULL,20,NULL);
                 }
+                
             }
             break;
         case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
@@ -600,6 +619,7 @@ void innotech_ble_init(void)
         ESP_LOGE(GATTS_TABLE_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
     innotech_wifi_state_report(innotech_ble_report_wifi_state);
+    
 }
 
 void innotech_ble_connect_timeout(void)

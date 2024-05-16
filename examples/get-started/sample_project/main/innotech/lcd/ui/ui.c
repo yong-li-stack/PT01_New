@@ -165,6 +165,7 @@ lv_obj_t * ui_Label58;
 lv_obj_t * ui_Label59;
 lv_obj_t * ui_Label60;
 lv_obj_t * ui_Label61;
+lv_obj_t * ui_Image_gn;
 lv_obj_t * ui_Label62;
 lv_obj_t * ui_Label63;
 lv_obj_t * ui_Label64;
@@ -215,40 +216,47 @@ const lv_img_dsc_t * ui_imgset_[48] = {&ui_img_1_png, &ui_img_10_png, &ui_img_11
 #endif
 
 ///////////////////// ANIMATIONS ////////////////////
-static uint32_t last_blink_time = 1;
+static uint8_t last_blink_time = 0;
 // static bool key_flag = 0;
 ///////////////////// FUNCTIONS ////////////////////
 void lvgl_blink_callback(void)
 {
     example_lvgl_lock(0);
-    if(innotech_first_key_press_get() == 1 && last_blink_time == 0)
+    
+    if((innotech_reset_reason_get() == 1) && (innotech_first_key_press_get() == 1) && (last_blink_time == 0))
     {
         lv_disp_load_scr(ui_Screen4);
         last_blink_time = 1;
-    }else if(((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3)) && innotech_first_key_press_get() == 1)
+    }
+    if(innotech_get_ota_start_flag() == 1)
+    {
+        lv_disp_load_scr(ui_Screen8);
+    }else if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
     {
         lv_disp_load_scr(ui_Screen3);//The interface for displaying time
-    }else if(innotech_first_key_press_get() == 1)//Normal distribution network
+    }else//Normal distribution network
     {
-        if(last_blink_time == 1)
+        if(innotech_wifi_config_flag_get() != WIFI_CONFIG_SUC)
         {
             lv_disp_load_scr(ui_Screen1);
         }
         if(innotech_pre_wifi() == 1)
         {
             lv_disp_load_scr(ui_Screen2);
+            last_blink_time = 2;
         }
-        if(innotech_wifi_state_get() == 1)
+        if((innotech_wifi_state_get() == 1) && (last_blink_time == 2))
         {
             lv_disp_load_scr(ui_Screen6);
             last_blink_time = 3;
         }
-        if(innotech_wifi_state_get() == 2)
+        if((innotech_wifi_state_get() == 2) && (last_blink_time == 2))
         {
             lv_disp_load_scr(ui_Screen5);
-            last_blink_time = 1;
         }
+        
     }
+
     if(innotech_factory_flag_get() == 1)
     {
         lv_disp_load_scr(ui_Screen13);
@@ -256,6 +264,8 @@ void lvgl_blink_callback(void)
     {
         lv_disp_load_scr(ui_Screen1);
     }
+    
+    
     example_lvgl_unlock();
 }
 
@@ -276,8 +286,10 @@ void ui_init(void)
     ui_Screen9_screen_init();
     ui_Screen13_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
-    
-    lv_disp_load_scr(ui_Screen4);
-    
+    //if(innotech_reset_reason_get() == 1)
+    {
+        lv_disp_load_scr(ui_Screen4);
+    }
+
     lv_timer_create(lvgl_blink_callback, 500, NULL);
 }

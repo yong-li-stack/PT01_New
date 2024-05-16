@@ -59,6 +59,8 @@ void innotech_netif_init(void);
 uint8_t innotech_get_disconnet_flag(void);
 void innotech_wifi_connect(void);
 void innotech_wifi_config_init(void);
+uint8_t innotech_get_ota_start_flag(void);
+
 #ifdef __cplusplus
 }
 #endif

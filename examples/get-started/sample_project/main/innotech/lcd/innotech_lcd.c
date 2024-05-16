@@ -45,7 +45,7 @@
 #define TEST_LCD_IO_RGB_DISP        (GPIO_NUM_NC)
 #define TEST_LCD_IO_RGB_VSYNC       (GPIO_NUM_47)
 #define TEST_LCD_IO_RGB_HSYNC       (GPIO_NUM_48)
-#define TEST_LCD_IO_RGB_DE          (GPIO_NUM_33)
+#define TEST_LCD_IO_RGB_DE          (GPIO_NUM_38)
 #define TEST_LCD_IO_RGB_PCLK        (GPIO_NUM_21)
 
 #define TEST_LCD_IO_RGB_DATA0       (GPIO_NUM_18) //R3
@@ -65,10 +65,10 @@
 #define TEST_LCD_IO_RGB_DATA14      (GPIO_NUM_19)  //B6
 #define TEST_LCD_IO_RGB_DATA15      (GPIO_NUM_20) //B7
 
-#define TEST_LCD_IO_SPI_CS_1        (GPIO_NUM_37)
-#define TEST_LCD_IO_SPI_SCL         (GPIO_NUM_36)
-#define TEST_LCD_IO_SPI_SDA         (GPIO_NUM_35)
-#define TEST_LCD_IO_RST             (GPIO_NUM_34)
+#define TEST_LCD_IO_SPI_CS_1        (GPIO_NUM_46)
+#define TEST_LCD_IO_SPI_SCL         (GPIO_NUM_13)
+#define TEST_LCD_IO_SPI_SDA         (GPIO_NUM_14)
+#define TEST_LCD_IO_RST             (GPIO_NUM_39)
 #define TEST_LCD_IO_BL              (GPIO_NUM_1)
 
 #define TEST_DELAY_TIME_MS              (3000)
@@ -437,7 +437,7 @@ void spi_init(void)
         .init_cmds = vendor_specific_init_default,
         .init_cmds_size = sizeof(vendor_specific_init_default) / sizeof(st7701_lcd_init_cmd_t),
         .flags = {
-            .auto_del_panel_io = 0,
+            .auto_del_panel_io = 1,
         },
     };
     const esp_lcd_panel_dev_config_t panel_config = {
@@ -449,7 +449,7 @@ void spi_init(void)
     };
     esp_lcd_panel_handle_t panel_handle = NULL;
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(io_handle, &panel_config, &panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
+    // ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
@@ -460,7 +460,6 @@ void spi_init(void)
 #endif
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, NULL);
-
     /* =============== Initialize LVGL =============== */
     ESP_LOGI(TAG, "Initialize LVGL");
 

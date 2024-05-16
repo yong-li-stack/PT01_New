@@ -39,7 +39,7 @@ static bool s_part_init_flag;
 
 #define LEDC_Buzzer_TIMER              LEDC_TIMER_0
 #define LEDC_Buzzer_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_Buzzer_OUTPUT_IO          (3) // Define the output GPIO
+#define LEDC_Buzzer_OUTPUT_IO          (4) // Define the output GPIO
 #define LEDC_Buzzer_CHANNEL            LEDC_CHANNEL_2
 #define LEDC_Buzzer_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
 #define LEDC_Buzzer_DUTY               (4095) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
