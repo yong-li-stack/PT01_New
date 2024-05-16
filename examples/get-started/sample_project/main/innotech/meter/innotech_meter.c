@@ -574,11 +574,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 15.52)
+            if(current >= 16.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 15.52 && current < 17.6)
+            if(current >= 16.0 && current < 17.6)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -599,7 +599,7 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 15.52)
+            }else if(current >= 0 && current < 16.0)
             {
                 meter_protect_flag = 0;
                 stop_flag = 1;
@@ -641,11 +641,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 24.25)
+            if(current >= 25.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 24.25 && current < 27.5)
+            if(current >= 25.0 && current < 27.5)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -666,7 +666,7 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 24.25)
+            }else if(current >= 0 && current < 25.0)
             {
                 meter_protect_flag = 0;
                 stop_flag = 1;
@@ -707,11 +707,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 31.04)
+            if(current >= 32.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 31.04 && current < 35.2)
+            if(current >= 32.0 && current < 35.2)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -732,7 +732,7 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 31.04)
+            }else if(current >= 0 && current < 32.0)
             {
                 meter_protect_flag = 0;
                 stop_flag = 1;
