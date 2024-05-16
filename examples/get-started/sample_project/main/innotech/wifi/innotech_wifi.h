@@ -58,6 +58,7 @@ void* innotech_triad_get_handle(void);
 uint16_t innotech_wifi_scan(uint8_t* ssid);
 void innotech_netif_init(void);
 uint8_t innotech_get_disconnet_flag(void);
+uint8_t innotech_get_ota_start_flag(void);
 #ifdef __cplusplus
 }
 #endif

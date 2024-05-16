@@ -105,6 +105,11 @@ void innotech_wifi_state_report(callback function)
 {
     wifi_connect_result = function;
 }
+
+uint8_t innotech_get_ota_start_flag(void)
+{
+    return ota_start_flag;
+}
 uint8_t innotech_get_disconnet_flag(void)
 {
     return disconnet_flag;
@@ -276,7 +281,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         printf("DATA=%.*s\r\n", event->data_len, event->data);
         if(memcmp(event->topic, mqtt_type.reset_set_topic, event->topic_len) == 0)
         {
-            innotech_factory_reset();
+            // innotech_factory_reset();
         }
         else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {
