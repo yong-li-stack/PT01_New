@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "innotech_config.h"
+#include "innotech_wifi.h"
 #include "api_bridge.h"
 
 typedef struct _base_config_t
@@ -131,7 +132,7 @@ void innotech_default_device_config(void)
 {   
     memset(&base_config, 0, sizeof(base_config_t));
     memcpy(base_config.flash_init, config_init_check, 4);
-    base_config.power_switch      = false;
+    base_config.power_switch      = true;
     base_config.lcd_switch        = true;
     base_config.brightness_switch = true;
     base_config.lcd_brightness    = 100;
@@ -158,8 +159,6 @@ void innotech_config_init(void)
     uint8_t* p_flag = (uint8_t*)config_init_check;
     uint8_t i = 0;
 
-    innotech_flash_init();
-    
     memset(&base_config, 0, sizeof(base_config_t));
     innotech_flash_read("innotech", (char *)&base_config, sizeof(base_config_t));
 
@@ -179,7 +178,7 @@ void innotech_config_init(void)
     }
     innotech_config_copy();
     //innotech_config_printf();
-    if(innotech_config.memory == 0 && innotech_reset_reason_get() == 1)
+    if(innotech_config.memory == 0 && innotech_reset_reason_get() == 1 && innotech_wifi_config_flag_get() == 1)
     {
         innotech_config.power_switch = 0;
     }

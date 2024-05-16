@@ -31,7 +31,7 @@ typedef struct
 {
     uint8_t flag;
     uint8_t ssid_len;
-	uint8_t ssid[33];
+	uint8_t ssid[65];
     uint8_t pwd_len;
 	uint8_t password[65];
 } wifi_param_t;
@@ -53,11 +53,12 @@ void wifi_init_sta(wifi_param_t wifi);
 void mqtt_send_device_info(char *cmd);
 void mqtt_send_device_energy(void);
 void mqtt_send_ota_step(void);
-void innotech_wifi_init(void);
 void* innotech_triad_get_handle(void);
 uint16_t innotech_wifi_scan(uint8_t* ssid);
 void innotech_netif_init(void);
 uint8_t innotech_get_disconnet_flag(void);
+void innotech_wifi_connect(void);
+void innotech_wifi_config_init(void);
 #ifdef __cplusplus
 }
 #endif

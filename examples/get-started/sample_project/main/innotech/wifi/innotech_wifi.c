@@ -397,6 +397,8 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     } 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
     {
+        wifi_event_sta_disconnected_t *disconnected = (wifi_event_sta_disconnected_t*) event_data;
+        ESP_LOGE(TAG, "Disconnect reason : %d", disconnected->reason);
         if (s_retry_num < ESP_MAXIMUM_RETRY) 
         {
             esp_wifi_connect();
@@ -429,7 +431,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 void wifi_init_sta(wifi_param_t wifi)
 {
     s_wifi_event_group = xEventGroupCreate();
-
+    
     // ESP_ERROR_CHECK(esp_netif_init());
 
     // ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -457,6 +459,7 @@ void wifi_init_sta(wifi_param_t wifi)
             .sae_h2e_identifier = H2E_IDENTIFIER,
         },
     };
+
     memcpy(wifi_config.sta.ssid, wifi.ssid, wifi.ssid_len);
     memcpy(wifi_config.sta.password, wifi.password, wifi.pwd_len);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
@@ -502,7 +505,15 @@ void wifi_init_sta(wifi_param_t wifi)
     }
 }
 
-void innotech_wifi_init(void)
+void innotech_wifi_connect(void)
+{
+    if(wifi_config.flag == WIFI_CONFIG_SUC)
+    {
+        wifi_init_sta(wifi_config);
+    }
+}
+
+void innotech_wifi_config_init(void)
 {
     memset(&wifi_config, 0, sizeof(wifi_param_t));
     innotech_flash_read("wifi", (char *)&wifi_config, sizeof(wifi_param_t));
@@ -515,10 +526,6 @@ void innotech_wifi_init(void)
     printf("name: %s\r\n", triad_config.devicename);
     printf("secret: %s\r\n", triad_config.devicesecret);
     printf("key: %s\r\n", triad_config.productkey);
-    if(wifi_config.flag == WIFI_CONFIG_SUC)
-    {
-        wifi_init_sta(wifi_config);
-    }
 }
 
 void innotech_netif_init(void)
@@ -554,3 +561,4 @@ uint16_t innotech_wifi_scan(uint8_t* ssid)
     // }
     return ap_count;
 }
+
