@@ -91,6 +91,7 @@ uint8_t inntech_buzzer_timer(uint8_t time);
 uint8_t innotech_get_meter_protect(void);
 uint8_t innotech_energy_check(void);
 void innotech_clear_consume(void);
+void innotech_protect_flag_clear(void);
 
 #ifdef __cplusplus
 }

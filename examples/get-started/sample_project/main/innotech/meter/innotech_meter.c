@@ -327,6 +327,10 @@ int power_always_callback()
             max_num = power_cnt_num[i];
         }
     }
+    if(bl0937_getActivePower() == 0.0)
+    {
+        max_num = 0;
+    }
     return max_num;
 }
 
@@ -348,6 +352,10 @@ int power_factory_callback()
             max_count = count;
             max_num = power_factory_num[i];
         }
+    }
+    if(bl0937_getActivePower() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -372,6 +380,10 @@ int vol_factory_callback()
             max_count = count;
             max_num = vol_factory_num[i];
         }
+    }
+    if(bl0937_getVoltage() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -417,6 +429,10 @@ int vol_always_callback()
             max_count = count;
             max_num = vol_cnt_num[i];
         }
+    }
+    if(bl0937_getVoltage() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -574,13 +590,14 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 16.0)
+            if(current >= 0.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 16.0 && current < 17.6)
+            // 
+            if(current > 0.0 && current < 17.6)
             {
-                if(inntech_buzzer_timer(12) == 12)
+                if(inntech_buzzer_timer(3) == 3)
                 {
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
@@ -601,7 +618,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(current >= 0 && current < 16.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -632,7 +648,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(power < 4000)
             {
-                meter_protect_flag = 0;
                 idx = 0;
             }
         }
@@ -668,7 +683,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(current >= 0 && current < 25.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -697,8 +711,7 @@ void innotech_overload_buzzer(void)
                     meter_protect_flag = 1;
                 }
             }else if(power < 6250)
-            {
-                meter_protect_flag = 0;
+            {             
                 idx = 0;
             }
         }
@@ -734,7 +747,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(current >= 0 && current < 32.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -764,7 +776,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(power < 8000)
             {
-                meter_protect_flag = 0;
                 idx = 0;
             }
         }
@@ -807,4 +818,12 @@ void innotech_clear_consume(void)
     consume = 0;
     energy.consumption = 0;
     innotech_flash_write("consume", (char *)&consume, sizeof(double));
+}
+
+void innotech_protect_flag_clear(void)
+{
+    if(meter_protect_flag == 1)
+    {
+        meter_protect_flag = 0;
+    }
 }
