@@ -23,6 +23,7 @@ extern uint8_t fix_flag;
 void innotech_factory_reset(void);
 uint8_t innotech_fix_flag_get(void);
 void innotech_factory_init(void);
+bool innotech_factory_get(void);
 
 
 #ifdef __cplusplus

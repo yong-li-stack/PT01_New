@@ -318,7 +318,7 @@ int power_always_callback()
     for (i = 0; i < 30; i++) {
         count = 0;
         for (j = 0; j < 30; j++) {
-            if (power_cnt_num[i] == power_cnt_num[j]) {
+            if (power_cnt_num[i] == power_cnt_num[j] && power_cnt_num[j] != 0) {
                 count++; 
             }
         }
@@ -340,7 +340,7 @@ int power_factory_callback()
     for (i = 0; i < 30; i++) {
         count = 0;
         for (j = 0; j < 30; j++) {
-            if (power_factory_num[i] == power_factory_num[j]) {
+            if (power_factory_num[i] == power_factory_num[j] && power_factory_num[j] != 0) {
                 count++; 
             }
         }
@@ -363,7 +363,7 @@ int vol_factory_callback()
     for (i = 0; i < 30; i++) {
         count = 0; 
         for (j = 0; j < 30; j++) {
-            if (vol_factory_num[i] == vol_factory_num[j]) {
+            if (vol_factory_num[i] == vol_factory_num[j] && vol_factory_num[j] != 0) {
                 count++;
             }
         }
@@ -409,7 +409,7 @@ int vol_always_callback()
     for (i = 0; i < 30; i++) {
         count = 0; 
         for (j = 0; j < 30; j++) {
-            if (vol_cnt_num[i] == vol_cnt_num[j]) {
+            if (vol_cnt_num[i] == vol_cnt_num[j] && vol_cnt_num[j] != 0) {
                 count++; 
             }
         }
@@ -484,37 +484,56 @@ void innotech_meter_process(void)
             innotech_flash_write("consume", (char *)&consume, sizeof(double));
             consumption = 0;
         }
-
-        pre_vol = vol_always_callback() * fix_vol_num;
-        mid_power = (float)power_always_callback() * fix_num;
-        if(energy.voltage)
+        if(innotech_factory_get() == 1)
         {
-            energy.current = mid_power / energy.voltage;
-        }
-        if(energy.current >= 15.52 && energy.current <= 16.48)
-        {
-            energy.power = 4000;
-        }else if(energy.current >= 24.25 && energy.current <= 25.75)
-        {
-            energy.power = 6250;
-        }else if(energy.current >= 31.04 && energy.current <= 32.96)
-        {
-            energy.power = 8000;
-        }else 
-        {
-            if((abs(mid_power - energy.power) > 3) && (mid_power > 5))
+            pre_vol = vol_always_callback();
+            mid_power = (float)power_always_callback();
+            if(abs(mid_power - energy.power) > 3)
             {
                 energy.power = mid_power;
-            }else if(mid_power <= 5)
+            }
+            if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
             {
-                energy.power = 0;
+                energy.voltage = pre_vol;
+            }
+            if(energy.voltage)
+            {
+                energy.current = mid_power / energy.voltage;
+            }
+        }else
+        {
+            pre_vol = vol_always_callback() * fix_vol_num;
+            mid_power = (float)power_always_callback() * fix_num;
+            if(energy.voltage)
+            {
+                energy.current = mid_power / energy.voltage;
+            }
+            if(energy.current >= 15.52 && energy.current <= 16.48)
+            {
+                energy.power = 4000;
+            }else if(energy.current >= 24.25 && energy.current <= 25.75)
+            {
+                energy.power = 6250;
+            }else if(energy.current >= 31.04 && energy.current <= 32.96)
+            {
+                energy.power = 8000;
+            }else 
+            {
+                if((abs(mid_power - energy.power) > 3) && (mid_power > 5))
+                {
+                    energy.power = mid_power;
+                }else if(mid_power <= 5)
+                {
+                    energy.power = 0;
+                }
+            }
+            // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
+            if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
+            {
+                energy.voltage = pre_vol;
             }
         }
-        // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
-        if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
-        {
-            energy.voltage = pre_vol;
-        }
+        
         
         queue_cnt = 0;
         
