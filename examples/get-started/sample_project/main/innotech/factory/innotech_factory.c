@@ -137,9 +137,11 @@ int vol_tick_callback(void)
 void innotech_factory_init(void)
 {
     uint8_t tick = 0;
+    uint16_t delay = 0;
     static uint8_t power_tick_flag = 0;
     static uint8_t vol_tick_flag = 0;
     static uint8_t current_tick_flag = 0;
+    uint8_t first_factory_buzzer = 0;
     innotech_netif_init();
     
     for(int i = 0; i < 2; i++)
@@ -161,22 +163,27 @@ void innotech_factory_init(void)
             }
             break;
         }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     
     while(factory_flag)
     {
         innotech_button_process();
         innotech_meter_process();
-        if(tick % 10 == 0)
+        innotech_lcd_process();
+
+        if(++delay > 60)
         {
-            power_tick_array[power_tick_flag++] = fix_power_factory();
-            vol_tick_array[vol_tick_flag++] = fix_vol_factory();
-            current_tick_array[current_tick_flag++] = fix_current_factory();
-            power_tick_flag %= 5;
-            vol_tick_flag %= 5;
-            current_tick_flag %= 5;
+            delay = 60;
+            if(tick % 10 == 0)
+            {
+                power_tick_array[power_tick_flag++] = fix_power_factory();
+                vol_tick_array[vol_tick_flag++] = fix_vol_factory();
+                power_tick_flag %= 5;
+                vol_tick_flag %= 5;
+            }
         }
+        
         
         if(fix_flag == 0 )
         {
@@ -185,51 +192,56 @@ void innotech_factory_init(void)
                 tick = 0;
                 power_tick = power_tick_callback();
                 vol_tick = vol_tick_callback();
-                current_tick = current_tick_callback();
-                printf("%d %d %f\n",power_tick,vol_tick,current_tick);
+                // current_tick = current_tick_callback();
+                printf("%d %d\n",power_tick,vol_tick);
                 if(check_down == 1)
                 {
-                    if(vol_tick > 0 && power_tick > 0 && current_tick > 0)
+                    if(vol_tick > 0 && power_tick > 0)
                     {
                         if(((fix_num * power_tick > 195) && (fix_num * power_tick < 205)) && ((fix_vol_num * vol_tick > 215) && (fix_vol_num * vol_tick < 225)))
                         {
                             fix_num = (double)200 / power_tick;
                             fix_vol_num = (double) 220 / vol_tick;
-                            fix_cur_num = 0.90909 / current_tick;
                             if(fix_num != 0 && fix_vol_num != 0)
                             {
                                 fix_flag = 1;
                                 innotech_flash_write("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
                                 innotech_flash_write("fix_num", (char *)&fix_num, sizeof(double));
-                                innotech_flash_write("fix_cur_num", (char *)&fix_cur_num, sizeof(double));
-                                printf("fix_num = %f fix_vol_num = %f fix_cur_num = %f\n", fix_num,fix_vol_num,fix_cur_num);
+                                printf("fix_num = %f fix_vol_num = %f\n", fix_num,fix_vol_num);
                             }
                         }
                     }
-                }else if(vol_tick > 0 && power_tick > 0 && current_tick > 0)
+                }else if(vol_tick > 0 && power_tick > 0)
                 {
                     fix_num = (double)200 / power_tick;
                     fix_vol_num = (double) 220 / vol_tick;
-                    fix_cur_num = 0.90909 / current_tick;
                     if(fix_num != 0 && fix_vol_num != 0)
                     {
                         fix_flag = 1;
                         innotech_flash_write("fix_vol_num", (char *)&fix_vol_num, sizeof(double));
                         innotech_flash_write("fix_num", (char *)&fix_num, sizeof(double));
-                        innotech_flash_write("fix_cur_num", (char *)&fix_cur_num, sizeof(double));
-                        printf("fix_num = %f fix_vol_num = %f fix_cur_num = %f\n", fix_num,fix_vol_num,fix_cur_num);
+                        printf("fix_num = %f fix_vol_num = %f \n", fix_num,fix_vol_num);
                     }
                 }
             }
         }
         
-        if((fix_power_factory() * fix_num) >= 400)
+        if(((fix_power_factory() * fix_num) >= 400) && !first_factory_buzzer)
         {
-            innotech_buzzer_pwm_write(4095);
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-            innotech_buzzer_pwm_write(0);
-            vTaskDelay(500 / portTICK_PERIOD_MS);
+            stop_flag = 0;
+            if(inntech_buzzer_timer(3) == 3)
+            {
+                first_factory_buzzer = 1;
+            }
         }
+
+        if(first_factory_buzzer)
+        {
+            stop_flag = 1;
+            innotech_buzzer_pwm_write(0);
+            idx = 0;
+        }
+        
         vTaskDelay(50 / portTICK_PERIOD_MS);
         
     }

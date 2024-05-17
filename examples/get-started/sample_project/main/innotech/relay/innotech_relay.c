@@ -16,6 +16,7 @@
 #include "innotech_relay.h"
 #include "api_bridge.h"
 #include "innotech_config.h"
+#include "innotech_meter.h"
 
 #define     ON             1
 #define     OFF            0
@@ -45,6 +46,8 @@ void innotech_set_relay_status(uint8_t state)
     innotech_hold_gpio_level(gpio_num, 0);
     innotech_set_gpio_level(gpio_num, OFF);
     innotech_hold_gpio_level(gpio_num, 1);   
+
+    innotech_protect_flag_clear();
 }
 
 /*8void innotech_relay_state_toggle(void)

@@ -77,8 +77,8 @@ static uint8_t meter_protect_flag = 0;
 
 static int mid_power = 0;
 static uint8_t buzzer_delay = 0;
-static uint8_t idx = 0;
-static uint8_t stop_flag = 0;
+uint8_t idx = 0;
+uint8_t stop_flag = 0;
 typedef struct _energy_manage_t{
     double current;
     double voltage;
@@ -318,7 +318,7 @@ int power_always_callback()
     for (i = 0; i < 30; i++) {
         count = 0;
         for (j = 0; j < 30; j++) {
-            if (power_cnt_num[i] == power_cnt_num[j]) {
+            if (power_cnt_num[i] == power_cnt_num[j] && power_cnt_num[j] != 0) {
                 count++; 
             }
         }
@@ -326,6 +326,10 @@ int power_always_callback()
             max_count = count;
             max_num = power_cnt_num[i];
         }
+    }
+    if(bl0937_getActivePower() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -340,7 +344,7 @@ int power_factory_callback()
     for (i = 0; i < 30; i++) {
         count = 0;
         for (j = 0; j < 30; j++) {
-            if (power_factory_num[i] == power_factory_num[j]) {
+            if (power_factory_num[i] == power_factory_num[j] && power_factory_num[j] != 0) {
                 count++; 
             }
         }
@@ -348,6 +352,10 @@ int power_factory_callback()
             max_count = count;
             max_num = power_factory_num[i];
         }
+    }
+    if(bl0937_getActivePower() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -363,7 +371,7 @@ int vol_factory_callback()
     for (i = 0; i < 30; i++) {
         count = 0; 
         for (j = 0; j < 30; j++) {
-            if (vol_factory_num[i] == vol_factory_num[j]) {
+            if (vol_factory_num[i] == vol_factory_num[j] && vol_factory_num[j] != 0) {
                 count++;
             }
         }
@@ -372,6 +380,10 @@ int vol_factory_callback()
             max_count = count;
             max_num = vol_factory_num[i];
         }
+    }
+    if(bl0937_getVoltage() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -409,7 +421,7 @@ int vol_always_callback()
     for (i = 0; i < 30; i++) {
         count = 0; 
         for (j = 0; j < 30; j++) {
-            if (vol_cnt_num[i] == vol_cnt_num[j]) {
+            if (vol_cnt_num[i] == vol_cnt_num[j] && vol_cnt_num[j] != 0) {
                 count++; 
             }
         }
@@ -417,6 +429,10 @@ int vol_always_callback()
             max_count = count;
             max_num = vol_cnt_num[i];
         }
+    }
+    if(bl0937_getVoltage() == 0.0)
+    {
+        max_num = 0;
     }
     return max_num;
 }
@@ -484,37 +500,56 @@ void innotech_meter_process(void)
             innotech_flash_write("consume", (char *)&consume, sizeof(double));
             consumption = 0;
         }
-
-        pre_vol = vol_always_callback() * fix_vol_num;
-        mid_power = (float)power_always_callback() * fix_num;
-        if(energy.voltage)
+        if(innotech_factory_get() == 1)
         {
-            energy.current = mid_power / energy.voltage;
-        }
-        if(energy.current >= 15.52 && energy.current <= 16.48)
-        {
-            energy.power = 4000;
-        }else if(energy.current >= 24.25 && energy.current <= 25.75)
-        {
-            energy.power = 6250;
-        }else if(energy.current >= 31.04 && energy.current <= 32.96)
-        {
-            energy.power = 8000;
-        }else 
-        {
-            if((abs(mid_power - energy.power) > 3) && (mid_power > 5))
+            pre_vol = vol_always_callback();
+            mid_power = (float)power_always_callback();
+            if(abs(mid_power - energy.power) > 3)
             {
                 energy.power = mid_power;
-            }else if(mid_power <= 5)
+            }
+            if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
             {
-                energy.power = 0;
+                energy.voltage = pre_vol;
+            }
+            if(energy.voltage)
+            {
+                energy.current = mid_power / energy.voltage;
+            }
+        }else
+        {
+            pre_vol = vol_always_callback() * fix_vol_num;
+            mid_power = (float)power_always_callback() * fix_num;
+            if(energy.voltage)
+            {
+                energy.current = mid_power / energy.voltage;
+            }
+            if(energy.current >= 15.52 && energy.current <= 16.48)
+            {
+                energy.power = 4000;
+            }else if(energy.current >= 24.25 && energy.current <= 25.75)
+            {
+                energy.power = 6250;
+            }else if(energy.current >= 31.04 && energy.current <= 32.96)
+            {
+                energy.power = 8000;
+            }else 
+            {
+                if((abs(mid_power - energy.power) > 3) && (mid_power > 5))
+                {
+                    energy.power = mid_power;
+                }else if(mid_power <= 5)
+                {
+                    energy.power = 0;
+                }
+            }
+            // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
+            if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
+            {
+                energy.voltage = pre_vol;
             }
         }
-        // printf("fix_num    =========== %f   fix_vol_num == %f\n",fix_num,fix_vol_num);
-        if(abs(pre_vol - energy.voltage) > 3 && pre_vol != 0)
-        {
-            energy.voltage = pre_vol;
-        }
+        
         
         queue_cnt = 0;
         
@@ -555,11 +590,12 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 15.52)
+            if(current >= 16.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 15.52 && current < 17.6)
+            // 
+            if(current >= 16.0 && current < 17.6)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -580,9 +616,8 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 15.52)
+            }else if(current >= 0 && current < 16.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -613,7 +648,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(power < 4000)
             {
-                meter_protect_flag = 0;
                 idx = 0;
             }
         }
@@ -622,11 +656,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 24.25)
+            if(current >= 25.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 24.25 && current < 27.5)
+            if(current >= 25.0 && current < 27.5)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -647,9 +681,8 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 24.25)
+            }else if(current >= 0 && current < 25.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -678,8 +711,7 @@ void innotech_overload_buzzer(void)
                     meter_protect_flag = 1;
                 }
             }else if(power < 6250)
-            {
-                meter_protect_flag = 0;
+            {             
                 idx = 0;
             }
         }
@@ -688,11 +720,11 @@ void innotech_overload_buzzer(void)
     {
         if(volt < 250)
         {
-            if(current >= 31.04)
+            if(current >= 32.0)
             {
                 stop_flag = 0;
             }
-            if(current >= 31.04 && current < 35.2)
+            if(current >= 32.0 && current < 35.2)
             {
                 if(inntech_buzzer_timer(12) == 12)
                 {
@@ -713,9 +745,8 @@ void innotech_overload_buzzer(void)
                     innotech_set_relay_status(0);
                     meter_protect_flag = 1;
                 }
-            }else if(current >= 0 && current < 31.04)
+            }else if(current >= 0 && current < 32.0)
             {
-                meter_protect_flag = 0;
                 stop_flag = 1;
                 innotech_buzzer_pwm_write(0);
                 idx = 0;
@@ -745,7 +776,6 @@ void innotech_overload_buzzer(void)
                 }
             }else if(power < 8000)
             {
-                meter_protect_flag = 0;
                 idx = 0;
             }
         }
@@ -788,4 +818,12 @@ void innotech_clear_consume(void)
     consume = 0;
     energy.consumption = 0;
     innotech_flash_write("consume", (char *)&consume, sizeof(double));
+}
+
+void innotech_protect_flag_clear(void)
+{
+    if(meter_protect_flag == 1)
+    {
+        meter_protect_flag = 0;
+    }
 }

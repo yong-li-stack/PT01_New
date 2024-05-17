@@ -55,8 +55,9 @@
 // }
 
 static lv_obj_t * slider;
-static int list_last = 1;
-static int list = 1;
+// static lv_obj_t * slider_outline;
+static uint32_t list_last = 1;
+static uint32_t list = 1;
 
 void slider_blink_callback(void)
 {
@@ -80,10 +81,15 @@ void ui_Screen8_screen_init(void)
     lv_obj_set_style_bg_color(ui_Screen8, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Screen8, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     /*Create a slider in the center of the display*/
-    slider = lv_slider_create(ui_Screen8);
+    slider = lv_bar_create(ui_Screen8);
+    lv_obj_set_style_outline_color(slider, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_width(slider, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_width(slider, 357);
+    lv_obj_set_height(slider, 6);
     lv_obj_center(slider);
 
-    ui_Image_gn = lv_img_create(ui_Screen13);
+    ui_Image_gn = lv_img_create(ui_Screen8);
     lv_img_set_src(ui_Image_gn, &ui_img_14_png);
     lv_obj_set_width(ui_Image_gn, LV_SIZE_CONTENT);   /// 254
     lv_obj_set_height(ui_Image_gn, LV_SIZE_CONTENT);    /// 71
@@ -94,7 +100,7 @@ void ui_Screen8_screen_init(void)
     lv_obj_clear_flag(ui_Image_gn, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
       
     lv_obj_set_style_anim_time(slider, 50000, LV_STATE_DEFAULT);
-    
+    lv_obj_set_style_bg_color(slider, lv_color_hex(0xffffff), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     lv_timer_create(slider_blink_callback, 300, NULL);
 

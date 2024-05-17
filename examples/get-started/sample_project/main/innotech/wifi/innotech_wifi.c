@@ -152,9 +152,12 @@ void mqtt_send_device_energy(void)
     char get_cmd[] = "energy";
     char id[] = "27";
     char version[] = "1.0";
-
-    mqtt_json_pack(get_cmd, id, version, payload);
-    esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0);
+    if(innotech_wifi_state_get() == 1)
+    {
+        mqtt_json_pack(get_cmd, id, version, payload);
+        esp_mqtt_client_publish(client, mqtt_type.pub_topic, payload, strlen(payload), 0, 0);
+    }
+    
 }
 
 void mqtt_send_device_info(char *cmd)
@@ -281,7 +284,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         printf("DATA=%.*s\r\n", event->data_len, event->data);
         if(memcmp(event->topic, mqtt_type.reset_set_topic, event->topic_len) == 0)
         {
-            // innotech_factory_reset();
+            innotech_factory_reset();
         }
         else if(memcmp(event->topic, mqtt_type.ota_sub_topic, event->topic_len) == 0)
         {

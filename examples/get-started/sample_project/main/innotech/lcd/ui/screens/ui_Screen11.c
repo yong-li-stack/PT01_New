@@ -53,7 +53,7 @@ void factory_show_timer(void)
     //show power current voltage cosumption
     static uint8_t factory_tick = 0;
     static uint8_t success_flag_200 = 0;
-    if(factory_tick < 35)
+    if(factory_tick < 255)
     {
         factory_tick ++;
     }
@@ -61,23 +61,37 @@ void factory_show_timer(void)
     double current_value = innotech_current_get();
     static double voltage_value = 0;
     static double power_value = 0;  
-    {
-        voltage_value = innotech_voltage_get();
-        power_value = innotech_power_get();
-    }
-    snprintf(all_num, 15 ,"%.2lf", voltage_value);
-    lv_label_set_text(ui_Label105, all_num);
-
-    snprintf(all_num, 15 , "%.2lf", power_value);
-    lv_label_set_text(ui_Label104, all_num);
-
+    voltage_value = innotech_voltage_get();
+    power_value = innotech_power_get();
     double cosumption = (double)innotech_consumption_get();
+    if(innotech_fix_flag_get() == 1)
+    {
+        snprintf(all_num, 15 ,"%.2lf", 220.0);
+        lv_label_set_text(ui_Label105, all_num);
 
-    snprintf(all_num, 15 ,"%.2lf", current_value);
-    lv_label_set_text(ui_Label106, all_num);
+        snprintf(all_num, 15 , "%.2lf", 200.0);
+        lv_label_set_text(ui_Label104, all_num);
 
-    snprintf(all_num, 15 ,"%.2lf", cosumption);
-    lv_label_set_text(ui_Label107, all_num);
+        snprintf(all_num, 15 ,"%.2lf", 0.91);
+        lv_label_set_text(ui_Label106, all_num);
+
+        snprintf(all_num, 15 ,"%.2lf", cosumption);
+        lv_label_set_text(ui_Label107, all_num);
+    }else 
+    {
+        snprintf(all_num, 15 ,"%.2lf", voltage_value);
+        lv_label_set_text(ui_Label105, all_num);
+
+        snprintf(all_num, 15 , "%.2lf", power_value);
+        lv_label_set_text(ui_Label104, all_num);
+
+        snprintf(all_num, 15 ,"%.2lf", current_value);
+        lv_label_set_text(ui_Label106, all_num);
+
+        snprintf(all_num, 15 ,"%.2lf", cosumption);
+        lv_label_set_text(ui_Label107, all_num);
+    }
+    
 
     //adjust aliyun success
     if(adjust_aliyun_success())
@@ -94,29 +108,34 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    if(factory_tick == 25)
+    if(factory_tick <= 40 && success_flag_200 == 0)
     {
         if(innotech_fix_flag_get() == 1)
         {
             lv_obj_set_x(ui_Label115, -147);
             lv_label_set_text(ui_Label115, "200W校准完成");
             success_flag_200 = 1;
-        }else
-        {
-            lv_obj_set_x(ui_Label115, -147);
-            lv_label_set_text(ui_Label115, "200W校准失败");
+            factory_tick = 0;
         }
+    }
+    else if(success_flag_200 == 0)
+    {
+        lv_obj_set_x(ui_Label115, -147);
+        lv_label_set_text(ui_Label115, "200W校准失败");
     }
 
-    if(factory_tick > 28)
+    if(success_flag_200 == 1  && (factory_tick > 2))
     {
-        if(innotech_fix_flag_get() == 1 && success_flag_200 == 1)
-        {
-            lv_label_set_text(ui_Label_success, "开始200W测试");
-            lv_label_set_text(ui_Label_success, "200W测试成功");
-        }
+        lv_label_set_text(ui_Label_success, "开始200W测试");
+        success_flag_200 = 2;
+        factory_tick = 0;
     }
-    //adjust 400w overflow
+
+    if((success_flag_200 == 2) && (factory_tick > 4))
+    {
+        lv_label_set_text(ui_Label_success, "200W测试成功");
+        lv_label_set_text(ui_Label116, "开始400W过载测试");
+    }
 }
 void ui_Screen11_screen_init(void)
 {
@@ -300,7 +319,7 @@ void ui_Screen11_screen_init(void)
     lv_obj_set_x(ui_Label116, -117);
     lv_obj_set_y(ui_Label116, 220);
     lv_obj_set_align(ui_Label116, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label116, "开始400W过载测试");
+    lv_label_set_text(ui_Label116, " ");
     lv_obj_set_style_text_color(ui_Label116, lv_color_hex(0x1AE6E2), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label116, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label116, &ui_font_cance, LV_PART_MAIN | LV_STATE_DEFAULT);
