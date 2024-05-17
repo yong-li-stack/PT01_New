@@ -108,7 +108,6 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    printf("factory_tick == %d\n",factory_tick);
     if(factory_tick >= 15 && factory_tick <=20)
     {
         if(innotech_fix_flag_get() == 1)
