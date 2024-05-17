@@ -413,12 +413,11 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         } 
         else 
         {
-            //xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
             ESP_LOGI(TAG,"connect to the AP fail");
             esp_wifi_connect();
             vTaskDelay(30000 / portTICK_PERIOD_MS);
         }
-        xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
     } 
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) 
     {
@@ -483,6 +482,8 @@ void wifi_init_sta(wifi_param_t wifi)
     if (bits & WIFI_CONNECTED_BIT) 
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
+        innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
+        innotech_config->lcd_switch = 1;
         wifi_connect_state = 1;
         if(wifi.flag == WIFI_CONFIG_FAIL)
         {
