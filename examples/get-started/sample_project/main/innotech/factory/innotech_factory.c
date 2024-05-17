@@ -137,6 +137,7 @@ int vol_tick_callback(void)
 void innotech_factory_init(void)
 {
     uint8_t tick = 0;
+    uint16_t delay = 0;
     static uint8_t power_tick_flag = 0;
     static uint8_t vol_tick_flag = 0;
     static uint8_t current_tick_flag = 0;
@@ -162,20 +163,27 @@ void innotech_factory_init(void)
             }
             break;
         }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     
     while(factory_flag)
     {
         innotech_button_process();
         innotech_meter_process();
-        if(tick % 10 == 0)
+        innotech_lcd_process();
+
+        if(++delay > 60)
         {
-            power_tick_array[power_tick_flag++] = fix_power_factory();
-            vol_tick_array[vol_tick_flag++] = fix_vol_factory();
-            power_tick_flag %= 5;
-            vol_tick_flag %= 5;
+            delay = 60;
+            if(tick % 10 == 0)
+            {
+                power_tick_array[power_tick_flag++] = fix_power_factory();
+                vol_tick_array[vol_tick_flag++] = fix_vol_factory();
+                power_tick_flag %= 5;
+                vol_tick_flag %= 5;
+            }
         }
+        
         
         if(fix_flag == 0 )
         {
@@ -203,7 +211,7 @@ void innotech_factory_init(void)
                             }
                         }
                     }
-                }else if(vol_tick > 0 && power_tick > 0 && current_tick > 0)
+                }else if(vol_tick > 0 && power_tick > 0)
                 {
                     fix_num = (double)200 / power_tick;
                     fix_vol_num = (double) 220 / vol_tick;
@@ -218,7 +226,7 @@ void innotech_factory_init(void)
             }
         }
         
-        if(((fix_power_factory() * fix_num) >= 100) && !first_factory_buzzer)
+        if(((fix_power_factory() * fix_num) >= 400) && !first_factory_buzzer)
         {
             stop_flag = 0;
             if(inntech_buzzer_timer(3) == 3)

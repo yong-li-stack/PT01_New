@@ -53,7 +53,7 @@ void factory_show_timer(void)
     //show power current voltage cosumption
     static uint8_t factory_tick = 0;
     static uint8_t success_flag_200 = 0;
-    if(factory_tick < 40)
+    if(factory_tick < 255)
     {
         factory_tick ++;
     }
@@ -108,29 +108,30 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    if(factory_tick >= 15 && factory_tick <=20)
+    if(factory_tick <= 40 && success_flag_200 == 0)
     {
         if(innotech_fix_flag_get() == 1)
         {
             lv_obj_set_x(ui_Label115, -147);
             lv_label_set_text(ui_Label115, "200W校准完成");
             success_flag_200 = 1;
-        }else
-        {
-            lv_obj_set_x(ui_Label115, -147);
-            lv_label_set_text(ui_Label115, "200W校准失败");
+            factory_tick = 0;
         }
+    }
+    else if(success_flag_200 == 0)
+    {
+        lv_obj_set_x(ui_Label115, -147);
+        lv_label_set_text(ui_Label115, "200W校准失败");
     }
 
-    if(factory_tick >= 24 && factory_tick < 26)
+    if(success_flag_200 == 1  && (factory_tick > 2))
     {
-        if(success_flag_200 == 1)
-        {
-            lv_label_set_text(ui_Label_success, "开始200W测试");
-            success_flag_200 = 2;
-        }
+        lv_label_set_text(ui_Label_success, "开始200W测试");
+        success_flag_200 = 2;
+        factory_tick = 0;
     }
-    if((success_flag_200 == 2) && (factory_tick > 26))
+
+    if((success_flag_200 == 2) && (factory_tick > 4))
     {
         lv_label_set_text(ui_Label_success, "200W测试成功");
         lv_label_set_text(ui_Label116, "开始400W过载测试");
