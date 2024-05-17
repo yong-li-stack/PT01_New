@@ -108,7 +108,8 @@ void factory_show_timer(void)
 
     
     //adjust 200w success   ui_Label115
-    if(factory_tick == 28)
+    printf("factory_tick == %d\n",factory_tick);
+    if(factory_tick >= 15 && factory_tick <=20)
     {
         if(innotech_fix_flag_get() == 1)
         {
@@ -122,7 +123,7 @@ void factory_show_timer(void)
         }
     }
 
-    if(factory_tick > 33 && factory_tick < 35)
+    if(factory_tick >= 24 && factory_tick < 26)
     {
         if(success_flag_200 == 1)
         {
@@ -130,7 +131,7 @@ void factory_show_timer(void)
             success_flag_200 = 2;
         }
     }
-    if((success_flag_200 == 2) && (factory_tick > 35))
+    if((success_flag_200 == 2) && (factory_tick > 26))
     {
         lv_label_set_text(ui_Label_success, "200W测试成功");
         lv_label_set_text(ui_Label116, "开始400W过载测试");
