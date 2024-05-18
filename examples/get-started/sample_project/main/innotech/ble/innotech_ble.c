@@ -18,6 +18,7 @@
 #include "innotech_ble.h"
 #include "innotech_utils.h"
 #include "innotech_wifi.h"
+#include "innotech_lcd.h"
 
 #include "esp_system.h"
 #include "esp_log.h"
@@ -240,28 +241,29 @@ static void innotech_ble_report_wifi_state(int state)
     esp_ble_gatts_send_indicate(heart_rate_profile_tab[PROFILE_APP_IDX].gatts_if, heart_rate_profile_tab[PROFILE_APP_IDX].conn_id, heart_rate_handle_table[IDX_CHAR_VAL_C], len, data, false);
     ESP_LOGE(GATTS_TABLE_TAG, "device report:");
     esp_log_buffer_hex(GATTS_TABLE_TAG, data, len);
+
+    if(state == 1)
+    {
+        innotech_power_switch_change_clear();
+    }
 }
 
 void bt_release_task(void)
 {
-    
-    {
-        ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
-        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-        heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-        esp_ble_gap_stop_advertising();
-        esp_ble_gatts_app_unregister(ESP_APP_ID);
-        esp_bluedroid_disable();
-        esp_bluedroid_deinit();
-        esp_bt_controller_disable();
-        esp_bt_controller_deinit();
-        // esp_bt_mem_release(ESP_BT_MODE_BLE);
-        ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
-        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-        heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-        
-        // esp_restart();
-    }
+    ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
+    heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    esp_ble_gap_stop_advertising();
+    esp_ble_gatts_app_unregister(ESP_APP_ID);
+    esp_bluedroid_disable();
+    esp_bluedroid_deinit();
+    esp_bt_controller_disable();
+    esp_bt_controller_deinit();
+    // esp_bt_mem_release(ESP_BT_MODE_BLE);
+    ESP_LOGI(GATTS_TABLE_TAG,"Current Free Memory\t%d\t\t%d\n",
+    heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+
     vTaskDelete(NULL);
 }
 
