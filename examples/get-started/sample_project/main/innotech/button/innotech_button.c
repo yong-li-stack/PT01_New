@@ -72,6 +72,7 @@ void innotech_button_process(void)
     }
     else
     {
+        factory_reset_flag = 0;
         key_count = 0;
     }
 
