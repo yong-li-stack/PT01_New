@@ -494,8 +494,6 @@ void wifi_init_sta(wifi_param_t wifi)
     if (bits & WIFI_CONNECTED_BIT) 
     {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi.ssid, wifi.password);
-        innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
-        innotech_config->lcd_switch = 1;
         wifi_connect_state = 1;
         if(wifi.flag == WIFI_CONFIG_FAIL)
         {

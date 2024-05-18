@@ -81,8 +81,12 @@
 static char *TAG = "st7701_test";
 
 static SemaphoreHandle_t    lvgl_mux    = NULL;
-static int brightness = 0;
 static TaskHandle_t lvgl_task_handle = NULL;
+
+static uint8_t last_power_switch = 0;
+static uint8_t power_switch_change = 1;
+static uint8_t last_lcd_switch = 0;
+static uint8_t first_power_on = 1;
 
 IRAM_ATTR static bool rgb_lcd_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
 {
@@ -542,18 +546,46 @@ void lvgl_init(void)
 //     BaseType_t ret_val = xTaskCreatePinnedToCore(monitor_task, "Monitor Task", 4 * 1024, NULL, configMAX_PRIORITIES - 3, NULL, 0);
 //     ESP_ERROR_CHECK_WITHOUT_ABORT((pdPASS == ret_val) ? ESP_OK : ESP_FAIL);
 // }
+
+void innotech_power_switch_change_clear(void)
+{
+    power_switch_change = 0;
+}
+
 void innotech_lcd_process(void)
 { 
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
+    if(innotech_config->power_switch == 1 && last_power_switch == 0)
+    {
+        last_power_switch = 1;
+        power_switch_change = 0;
+        first_power_on = 0;
+    }
+    else if(innotech_config->power_switch == 0 && last_power_switch == 1)
+    {
+        last_power_switch = 0;
+        power_switch_change = 1;
+    }
+    
+    if(last_lcd_switch != innotech_config->lcd_switch && first_power_on == 0)
+    {
+        last_lcd_switch = innotech_config->lcd_switch;
+        power_switch_change = 0;
+    }
 
-    if(!innotech_config->lcd_switch || !innotech_config->power_switch)
+    if(innotech_config->lcd_switch == 0)
     {
         innotech_led_pwm_write(0);
-    }else if(((innotech_config->lcd_brightness != brightness) && (!innotech_config->brightness_switch)) || (innotech_config->lcd_switch && innotech_config->power_switch))
+    }
+    else if(innotech_config->power_switch == 0 && power_switch_change == 1)
     {
-        //brightness = innotech_config->lcd_brightness * (100 - MIN_LED_LUMI) / 100 + MIN_LED_LUMI;
+        innotech_led_pwm_write(0);
+    }
+    else if(innotech_config->brightness_switch == 0)
+    {
         innotech_led_pwm_write(innotech_config->lcd_brightness);
-    }else if(innotech_config->brightness_switch)
+    }
+    else if(innotech_config->brightness_switch == 1)
     {
         innotech_led_pwm_write(100);
     }
