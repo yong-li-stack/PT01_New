@@ -20,6 +20,7 @@
 #include "innotech_config.h"
 #include "innotech_factory.h"
 #include "innotech_ota.h"
+#include "lwip/dns.h"
 
 #include "aiot_mqtt_sign.h"
 
@@ -265,6 +266,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         esp_mqtt_client_subscribe(client, mqtt_type.ota_sub_topic, 1);
         break;
     case MQTT_EVENT_DISCONNECTED:
+        disconnet_flag = 1;
+        dns_clear_cache();
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
         break;
 
@@ -329,7 +332,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         }
         break;
     case MQTT_EVENT_ERROR:
-        disconnet_flag = 1;
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
             ESP_LOGI(TAG, "Last error code reported from esp-tls: 0x%x", event->error_handle->esp_tls_last_esp_err);
