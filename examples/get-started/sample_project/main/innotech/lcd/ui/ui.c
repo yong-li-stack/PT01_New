@@ -224,7 +224,7 @@ void lvgl_blink_callback(void)
 {
     example_lvgl_lock(0);
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
-    if((innotech_reset_reason_get() == 1) && (innotech_config->power_switch == 1) && (last_blink_time == 0))
+    if((innotech_config->power_switch == 1) && (last_blink_time == 0))
     {
         lv_disp_load_scr(ui_Screen4);
         last_blink_gn = 1;
@@ -243,8 +243,10 @@ void lvgl_blink_callback(void)
             {
                 lv_disp_load_scr(ui_Screen1);
             }
+
             if(innotech_pre_wifi() == 1)
             {
+                
                 lv_disp_load_scr(ui_Screen2);
                 last_blink_time = 2;
             }
