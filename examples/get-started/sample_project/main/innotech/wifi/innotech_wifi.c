@@ -74,6 +74,7 @@ static aliyun_triad_t triad_config;
 static aliyun_matt_t mqtt_type;
 static int s_retry_num = 0;
 static uint8_t wifi_connect_state = 0;
+static uint8_t wifi_restore_state = 0;
 static char ota_taskId[50] = {0};
 static uint8_t ota_start_flag = 0;
 static uint8_t disconnet_flag = 1;
@@ -473,9 +474,15 @@ void wifi_init_sta(wifi_param_t wifi)
     memcpy(wifi_config.sta.password, wifi.password, wifi.pwd_len);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    //ESP_ERROR_CHECK(esp_wifi_start() );
-    ESP_ERROR_CHECK(esp_wifi_connect() );
-
+    if(wifi_restore_state == 1)
+    {
+        ESP_ERROR_CHECK(esp_wifi_start() );
+    }
+    else
+    {
+        ESP_ERROR_CHECK(esp_wifi_connect() );
+    }
+    
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
@@ -571,5 +578,15 @@ uint16_t innotech_wifi_scan(uint8_t* ssid)
     //     ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
     // }
     return ap_count;
+}
+
+void innotech_wifi_restore(void)
+{
+    wifi_connect_state = 0;
+    innotech_wifi_config_reset();
+    esp_mqtt_client_unregister_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler);
+    esp_mqtt_client_disconnect(client);
+    esp_wifi_restore();
+    wifi_restore_state = 1;
 }
 

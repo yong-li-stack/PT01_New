@@ -17,8 +17,12 @@
 #include "innotech_relay.h"
 #include "innotech_config.h"
 #include "innotech_factory.h"
+#include "innotech_wifi.h"
+#include "innotech_ble.h"
 #include "api_bridge.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #define BTN_GPIO_NUM          45
 
 static uint8_t factory_reset_flag = 0;
@@ -79,6 +83,9 @@ void innotech_button_process(void)
     }else if(key_count >= 300 && key_count < 600)
     {
         factory_reset_flag = 2;
+        innotech_wifi_restore();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        innotech_ble_init();
     }
 }
 
