@@ -182,6 +182,10 @@ void innotech_config_init(void)
     {
         innotech_config.power_switch = 0;
     }
+    else if(innotech_reset_reason_get() == 1 && innotech_wifi_config_flag_get() == 0)
+    {
+        innotech_config.power_switch = 1;
+    }
 }
 
 
