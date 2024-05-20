@@ -65,27 +65,25 @@ void innotech_button_process(void)
             first_key_press = 1;
         }
     }
-    else if(key_count >= 600)
-    {
-        key_count = 0;
-        innotech_factory_reset();
-    }
     else
     {
         factory_reset_flag = 0;
         key_count = 0;
     }
 
-
+    if(key_count >= 500)
+    {
+        factory_reset_flag = 1;
+    }
 
     if(key_count >= 600)
     {
-        factory_reset_flag = 1;
+        innotech_factory_reset();
     }else if(key_count >= 300 && key_count < 600)
     {
         factory_reset_flag = 2;
         innotech_wifi_restore();
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         innotech_ble_init();
     }
 }
