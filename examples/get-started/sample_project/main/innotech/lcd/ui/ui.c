@@ -217,49 +217,56 @@ const lv_img_dsc_t * ui_imgset_[48] = {&ui_img_1_png, &ui_img_10_png, &ui_img_11
 
 ///////////////////// ANIMATIONS ////////////////////
 static uint8_t last_blink_time = 0;
-static uint8_t last_blink_gn= 0;
+static uint8_t last_flag= 0;
 // static bool key_flag = 0;
 ///////////////////// FUNCTIONS ////////////////////
 void lvgl_blink_callback(void)
 {
     example_lvgl_lock(0);
     innotech_config_t *innotech_config = (innotech_config_t *)innotech_config_get_handle();
-    if((innotech_config->power_switch == 1) && (last_blink_time == 0))
+    if((innotech_config->power_switch == 1) && (last_flag == 0))
     {
         lv_disp_load_scr(ui_Screen4);
-        last_blink_gn = 1;
-        last_blink_time = 1;
-    }else if(last_blink_gn == 1)
+        last_flag = 1;
+    }else if(last_flag != 0)
     {
         if(innotech_get_ota_start_flag() == 1)
         {
             lv_disp_load_scr(ui_Screen8);
-        }else if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_blink_time == 3))
+        }else if((innotech_wifi_config_flag_get() == WIFI_CONFIG_SUC) || (last_flag == 4))
         {
             lv_disp_load_scr(ui_Screen3);//The interface for displaying time
         }else//Normal distribution network
         {
-            if(innotech_wifi_config_flag_get() != WIFI_CONFIG_SUC)
+            if((innotech_wifi_config_flag_get() != WIFI_CONFIG_SUC) && (last_flag == 1))
             {
                 lv_disp_load_scr(ui_Screen1);
+                last_flag = 2;
             }
-
-            if(innotech_pre_wifi() == 1)
+            if((innotech_pre_wifi() == 1) && (last_flag == 2)) 
             {
-                
+                last_blink_time  ++;
                 lv_disp_load_scr(ui_Screen2);
-                last_blink_time = 2;
+                if(last_blink_time == 5)
+                {
+                    last_flag = 3;
+                    last_blink_time = 0;
+                }
             }
-            if((innotech_wifi_state_get() == 1) && (last_blink_time == 2))
+            if((innotech_wifi_state_get() == 1) && (last_flag == 3))
             {
+                last_blink_time  ++;
                 lv_disp_load_scr(ui_Screen6);
-                last_blink_time = 3;
+                if(last_blink_time == 5)
+                {
+                    last_flag = 4;
+                    last_blink_time = 0;
+                }
             }
-            if((innotech_wifi_state_get() == 2) && (last_blink_time == 2))
+            if((innotech_wifi_state_get() == 2) && (last_flag == 3))
             {
                 lv_disp_load_scr(ui_Screen5);
             }
-            
         }
     }
     
