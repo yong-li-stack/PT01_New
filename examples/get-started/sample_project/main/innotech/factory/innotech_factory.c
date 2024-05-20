@@ -193,12 +193,11 @@ void innotech_factory_init(void)
                 power_tick = power_tick_callback();
                 vol_tick = vol_tick_callback();
                 // current_tick = current_tick_callback();
-                printf("%d %d\n",power_tick,vol_tick);
                 if(check_down == 1)
                 {
                     if(vol_tick > 0 && power_tick > 0)
                     {
-                        if(((fix_num * power_tick > 195) && (fix_num * power_tick < 205)) && ((fix_vol_num * vol_tick > 215) && (fix_vol_num * vol_tick < 225)))
+                        if(((fix_num * power_tick > 150) && (fix_num * power_tick < 300)) && ((fix_vol_num * vol_tick > 215) && (fix_vol_num * vol_tick < 225)))
                         {
                             fix_num = (double)200 / power_tick;
                             fix_vol_num = (double) 220 / vol_tick;
@@ -226,7 +225,7 @@ void innotech_factory_init(void)
             }
         }
         
-        if(((fix_power_factory() * fix_num) >= 400) && !first_factory_buzzer)
+        if(((power_tick_callback() * fix_num) >= 400) && ((!first_factory_buzzer) && fix_flag))
         {
             stop_flag = 0;
             if(inntech_buzzer_timer(3) == 3)
