@@ -75,13 +75,11 @@ void innotech_button_process(void)
         key_count = 0;
     }
 
-    if(key_count >= 500)
-    {
-        factory_reset_flag = 1;
-    }
 
     if(key_count >= 600)
     {
+        factory_reset_flag = 1;
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         innotech_factory_reset();
     }else if(key_count >= 300 && key_count < 600)
     {
