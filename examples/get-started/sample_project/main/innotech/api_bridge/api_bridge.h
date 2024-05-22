@@ -25,6 +25,9 @@
 /* Exported functions ------------------------------------------------------- */
 esp_err_t innotech_led_i2c_init(void);
 esp_err_t innotech_led_i2c_write(uint8_t* data, int len);
+void innotech_flash_read(char * key, char* data, size_t data_size);
+void innotech_flash_write(char * key, char* data, size_t data_size);
+void innotech_flash_init(void);
 
 #endif
 

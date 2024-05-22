@@ -1,8 +1,10 @@
-idf_component_register(SRCS "main.c"
-"innotech/device/innotech_device.c"
-"innotech/lcd/innotech_lcd.c"
-"innotech/api_bridge/api_bridge.c"
+idf_component_register(SRC_DIRS "."
+"./innotech/device"
+"./innotech/lcd"
+"./innotech/api_bridge"
+"./innotech/config"
                     INCLUDE_DIRS "."
                     "./innotech/device"
                     "./innotech/lcd"
-                    "./innotech/api_bridge")
+                    "./innotech/api_bridge"
+                    "./innotech/config")

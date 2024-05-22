@@ -21,6 +21,7 @@
 //#include "innotech_relay.h"
 //#include "innotech_button.h"
 #include "api_bridge.h"
+#include "innotech_config.h"
 
 static uint16_t time_tick = 0;
 
@@ -65,7 +66,7 @@ void innotech_device_init(void)
     innotech_lcd_init();
     //innotech_relay_init();
     //innotech_button_init();
-    //innotech_config_init();
+    innotech_config_init();
 	innotech_device_service_init();
     innotech_device_service_start();
 }
